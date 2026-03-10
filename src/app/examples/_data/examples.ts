@@ -19,6 +19,7 @@ export const examples: ExampleMeta[] = [
   { slug: "raster-tiles", title: "Raster Tiles", description: "Overlay a Stamen Watercolor tile layer on the map.", category: "MapLibre Layers" },
   { slug: "image-overlay", title: "Image Overlay", description: "Overlay a georeferenced weather radar image on the map.", category: "MapLibre Layers" },
   { slug: "video-overlay", title: "Video Overlay", description: "Overlay georeferenced drone video footage on the map.", category: "MapLibre Layers" },
+  { slug: "interpolate-heatmap", title: "Interpolate Heatmap", description: "Real-time global temperature visualization using IDW interpolation with live Open-Meteo data.", category: "MapLibre Layers" },
   // ── Controls & Interactions ────────────────────────────────────
   { slug: "legend", title: "Interactive Legend", description: "Click legend items to filter US regions on the map.", category: "Controls" },
   { slug: "layer-control", title: "Layer Control", description: "Toggle parks, route, and marker layers on/off.", category: "Controls" },
@@ -27,12 +28,17 @@ export const examples: ExampleMeta[] = [
   { slug: "style-switcher", title: "Style Switcher", description: "Toggle between different map styles on the fly.", category: "Controls" },
   { slug: "3d-perspective", title: "3D Perspective", description: "Control pitch, bearing, and zoom with sliders and presets.", category: "Controls" },
   { slug: "isochrone", title: "Isochrone Map", description: "Visualize travel time or distance zones from a draggable origin point.", category: "Controls" },
+  // ── Valhalla Routing ───────────────────────────────────────────
+  { slug: "trip-planner", title: "Trip Planner", description: "Multi-day itinerary generator with POI suggestions using Valhalla routing.", category: "Valhalla Routing" },
+  // ── Featured ────────────────────────────────────────────────────
+  { slug: "drone-flight", title: "Drone Flight", description: "Cinematic drone flight animation along a GeoJSON path with animated trail and camera follow.", category: "Featured" },
   // ── Animation & Globe ──────────────────────────────────────────
   { slug: "flyto", title: "FlyTo Cities", description: "Smooth camera animations to cities around the world.", category: "Animation & Globe" },
   { slug: "globe", title: "Globe", description: "3D globe projection with auto-rotation.", category: "Animation & Globe" },
   { slug: "animated-route", title: "Animated Route", description: "A route that progressively draws itself across the map.", category: "Animation & Globe" },
   { slug: "earthquake-globe", title: "Earthquake Globe", description: "Live USGS earthquake data rendered on a 3D globe.", category: "Animation & Globe" },
-  { slug: "weather", title: "Weather Dashboard", description: "Real-time temperatures from Open-Meteo for 15 world cities.", category: "Animation & Globe" },
+  { slug: "weather", title: "Weather Markers", description: "Real-time temperatures from Open-Meteo for 15 world cities.", category: "Animation & Globe" },
+  { slug: "weather-dashboard", title: "Weather Dashboard", description: "Global weather explorer with real-time data, AQI badges, geocoding search, and 7-day forecasts for 25 major cities.", category: "Animation & Globe" },
   // ── deck.gl ────────────────────────────────────────────────────
   { slug: "deckgl-scatterplot", title: "Scatterplot", description: "1,000 WebGL-rendered scatter points with deck.gl.", category: "deck.gl" },
   { slug: "deckgl-arc", title: "Arc Layer", description: "Great-circle arcs connecting world cities.", category: "deck.gl" },
@@ -50,6 +56,8 @@ export const categories = [
   "Core",
   "MapLibre Layers",
   "Controls",
+  "Valhalla Routing",
+  "Featured",
   "Animation & Globe",
   "deck.gl",
 ];

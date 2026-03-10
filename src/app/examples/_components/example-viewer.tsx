@@ -34,6 +34,7 @@ import { BuildingsCard } from "./buildings-card";
 import { RasterCard } from "./raster-card";
 import { ImageCard } from "./image-card";
 import { VideoCard } from "./video-card";
+import { InterpolateHeatmapCard } from "./interpolate-heatmap-card";
 import { LegendCard } from "./legend-card";
 import { LayerControlCard } from "./layer-control-card";
 import { ProximityCard } from "./proximity-card";
@@ -41,11 +42,14 @@ import { MapCompareCard } from "./map-compare-card";
 import { StyleSwitcherExample } from "./style-switcher-example";
 import { PitchBearingExample } from "./pitch-bearing-example";
 import { IsochroneCard } from "./isochrone-card";
+import { TripPlannerCard } from "./trip-planner-card";
+import { DroneFlightCard } from "./drone-flight-card";
 import { FlyToExample } from "./flyto-example";
 import { GlobeExample } from "./globe-example";
 import { AnimatedRouteExample } from "./animated-route-example";
 import { EarthquakeGlobeCard } from "./earthquake-globe-card";
 import { WeatherCard } from "./weather-card";
+import { WeatherDashboardCard } from "./weather-dashboard-card";
 import { DeckglScatterplotCard } from "./deckgl-scatterplot-card";
 import { DeckglArcCard } from "./deckgl-arc-card";
 import { DeckglHexagonCard } from "./deckgl-hexagon-card";
@@ -69,6 +73,7 @@ const componentMap: Record<string, ComponentType> = {
   "raster-tiles": RasterCard,
   "image-overlay": ImageCard,
   "video-overlay": VideoCard,
+  "interpolate-heatmap": InterpolateHeatmapCard,
   "legend": LegendCard,
   "layer-control": LayerControlCard,
   "proximity": ProximityCard,
@@ -76,11 +81,14 @@ const componentMap: Record<string, ComponentType> = {
   "style-switcher": StyleSwitcherExample,
   "3d-perspective": PitchBearingExample,
   "isochrone": IsochroneCard,
+  "trip-planner": TripPlannerCard,
+  "drone-flight": DroneFlightCard,
   "flyto": FlyToExample,
   "globe": GlobeExample,
   "animated-route": AnimatedRouteExample,
   "earthquake-globe": EarthquakeGlobeCard,
   "weather": WeatherCard,
+  "weather-dashboard": WeatherDashboardCard,
   "deckgl-scatterplot": DeckglScatterplotCard,
   "deckgl-arc": DeckglArcCard,
   "deckgl-hexagon": DeckglHexagonCard,
