@@ -43,17 +43,15 @@ function DayNightInner({ sunPos }: { sunPos: SunPosition }) {
     const sunAzimuth = ((sunPos.lng % 360) + 360) % 360;
     const sunAltitude = Math.max(0, 90 - Math.abs(sunPos.lat));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (map as any).setFog({
-      color: "#d4e5f7",
-      "horizon-blend": 0.05,
-      "high-color": "#245cdf",
-      "space-color": "#0b0d2a",
-      "star-intensity": 0.6,
+    map.setSky({
+      "sky-color": "#245cdf",
+      "horizon-color": "#d4e5f7",
+      "fog-color": "#d4e5f7",
+      "atmosphere-blend": 0.8,
+      "sky-horizon-blend": 0.5,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (map as any).setLight({
+    map.setLight({
       anchor: "map",
       position: [1.5, sunAzimuth, sunAltitude],
       intensity: 0.5,

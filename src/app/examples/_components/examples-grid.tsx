@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, type ComponentType } from "react";
+import { useRef, useState, useEffect, useCallback, type ComponentType } from "react";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -181,6 +181,28 @@ const componentMap: Record<string, ComponentType> = {
   "actransit": ActransitCard,
 };
 
+// Limit concurrent WebGL contexts to avoid browser limits (typically 16)
+const MAX_ACTIVE = 6;
+let activeCount = 0;
+const waitQueue: Array<() => void> = [];
+
+function acquireSlot(): Promise<void> {
+  if (activeCount < MAX_ACTIVE) {
+    activeCount++;
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => waitQueue.push(resolve));
+}
+
+function releaseSlot() {
+  activeCount--;
+  const next = waitQueue.shift();
+  if (next) {
+    activeCount++;
+    next();
+  }
+}
+
 function LazyExampleCard({
   slug,
   title,
@@ -193,7 +215,9 @@ function LazyExampleCard({
   Component: ComponentType;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  const [inView, setInView] = useState(false);
+  const [canRender, setCanRender] = useState(false);
+  const slotAcquired = useRef(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -201,14 +225,49 @@ function LazyExampleCard({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setVisible(entry.isIntersecting);
+        setInView(entry.isIntersecting);
       },
-      { rootMargin: "50px" }
+      { rootMargin: "0px" }
     );
 
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  // Manage slot acquisition/release based on visibility
+  useEffect(() => {
+    if (inView && !slotAcquired.current) {
+      let cancelled = false;
+      acquireSlot().then(() => {
+        if (cancelled) {
+          releaseSlot();
+          return;
+        }
+        slotAcquired.current = true;
+        setCanRender(true);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+    if (!inView && slotAcquired.current) {
+      slotAcquired.current = false;
+      setCanRender(false);
+      releaseSlot();
+    }
+  }, [inView]);
+
+  // Cleanup on unmount
+  const cleanup = useCallback(() => {
+    if (slotAcquired.current) {
+      slotAcquired.current = false;
+      releaseSlot();
+    }
+  }, []);
+
+  useEffect(() => cleanup, [cleanup]);
+
+  const visible = inView && canRender;
 
   return (
     <div

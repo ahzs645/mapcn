@@ -8,16 +8,17 @@ type AtmosphereMode = "dawn" | "day" | "dusk" | "night";
 
 interface SkyPreset {
   skyColor: string;
+  horizonColor: string;
   fogColor: string;
-  starIntensity: number;
-  horizonBlend: number;
+  atmosphereBlend: number;
+  skyHorizonBlend: number;
 }
 
 const SKY_PRESETS: Record<AtmosphereMode, SkyPreset> = {
-  dawn: { skyColor: "#ffb347", fogColor: "#ffd4a0", starIntensity: 0.2, horizonBlend: 0.08 },
-  day: { skyColor: "#87ceeb", fogColor: "#ffffff", starIntensity: 0.0, horizonBlend: 0.03 },
-  dusk: { skyColor: "#c46b8a", fogColor: "#e8a0b0", starIntensity: 0.3, horizonBlend: 0.08 },
-  night: { skyColor: "#0a0a2e", fogColor: "#0d0d3a", starIntensity: 1.0, horizonBlend: 0.1 },
+  dawn: { skyColor: "#ffb347", horizonColor: "#ffd4a0", fogColor: "#ffe0b0", atmosphereBlend: 0.8, skyHorizonBlend: 0.5 },
+  day: { skyColor: "#87ceeb", horizonColor: "#ffffff", fogColor: "#ffffff", atmosphereBlend: 1.0, skyHorizonBlend: 0.8 },
+  dusk: { skyColor: "#c46b8a", horizonColor: "#e8a0b0", fogColor: "#d08090", atmosphereBlend: 0.7, skyHorizonBlend: 0.5 },
+  night: { skyColor: "#0a0a2e", horizonColor: "#0d0d3a", fogColor: "#050520", atmosphereBlend: 0.3, skyHorizonBlend: 0.3 },
 };
 
 function GlobeAtmosphereInner({ mode }: { mode: AtmosphereMode }) {
@@ -28,27 +29,13 @@ function GlobeAtmosphereInner({ mode }: { mode: AtmosphereMode }) {
       if (!map) return;
       const preset = SKY_PRESETS[m];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (map as any).setFog({
-        color: preset.fogColor,
-        "horizon-blend": preset.horizonBlend,
-        "high-color": preset.skyColor,
-        "space-color": preset.skyColor,
-        "star-intensity": preset.starIntensity,
+      map.setSky({
+        "sky-color": preset.skyColor,
+        "horizon-color": preset.horizonColor,
+        "fog-color": preset.fogColor,
+        "atmosphere-blend": preset.atmosphereBlend,
+        "sky-horizon-blend": preset.skyHorizonBlend,
       });
-
-      if (!map.getLayer("sky-layer")) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        map.addLayer({
-          id: "sky-layer",
-          type: "sky" as any,
-          paint: {
-            "sky-type": "atmosphere",
-            "sky-atmosphere-sun": [0, 90],
-            "sky-atmosphere-sun-intensity": 5,
-          } as any,
-        });
-      }
     },
     [map],
   );
