@@ -1,15 +1,13 @@
 "use client";
 
 import { useRef, useState, useEffect, type ComponentType } from "react";
-import { Maximize2 } from "lucide-react";
+import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  examples as examplesMeta,
+  categories,
+} from "../_data/examples";
 
 // Core
 import { BasicMapCard } from "./basic-map-card";
@@ -31,6 +29,7 @@ import { ProximityCard } from "./proximity-card";
 import { MapCompareCard } from "./map-compare-card";
 import { StyleSwitcherExample } from "./style-switcher-example";
 import { PitchBearingExample } from "./pitch-bearing-example";
+import { IsochroneCard } from "./isochrone-card";
 // Animation & 3D
 import { FlyToExample } from "./flyto-example";
 import { GlobeExample } from "./globe-example";
@@ -49,73 +48,55 @@ import { DeckglContourCard } from "./deckgl-contour-card";
 import { DeckglGridCard } from "./deckgl-grid-card";
 import { DeckglScreenGridCard } from "./deckgl-screengrid-card";
 
-interface Example {
-  title: string;
-  description: string;
-  component: ComponentType;
-  category: string;
-}
-
-const examples: Example[] = [
-  // ── Core ───────────────────────────────────────────────────────
-  { title: "Basic Map", description: "A simple map with zoom controls and default styling.", component: BasicMapCard, category: "Core" },
-  { title: "Markers & Tooltips", description: "Place interactive markers with hover tooltips on the map.", component: MarkersCard, category: "Core" },
-  { title: "Route", description: "Draw a line connecting coordinates with numbered stops.", component: RouteCard, category: "Core" },
-  { title: "Clustered Points", description: "Cluster thousands of earthquake points for efficient rendering.", component: ClusterCard, category: "Core" },
-  // ── MapLibre Layers ────────────────────────────────────────────
-  { title: "GeoJSON Polygons", description: "Render GeoJSON polygon data with fill and stroke styling.", component: GeoJsonCard, category: "MapLibre Layers" },
-  { title: "Choropleth", description: "US states colored by unemployment rate with hover info.", component: ChoroplethExample, category: "MapLibre Layers" },
-  { title: "Heatmap", description: "Visualize earthquake density with a weighted heatmap layer.", component: HeatmapCard, category: "MapLibre Layers" },
-  { title: "3D Buildings", description: "Extruded polygons with data-driven height and color.", component: BuildingsCard, category: "MapLibre Layers" },
-  { title: "Raster Tiles", description: "Overlay a Stamen Watercolor tile layer on the map.", component: RasterCard, category: "MapLibre Layers" },
-  { title: "Image Overlay", description: "Overlay a georeferenced weather radar image on the map.", component: ImageCard, category: "MapLibre Layers" },
-  { title: "Video Overlay", description: "Overlay georeferenced drone video footage on the map.", component: VideoCard, category: "MapLibre Layers" },
-  // ── Controls & Interactions ────────────────────────────────────
-  { title: "Interactive Legend", description: "Click legend items to filter US regions on the map.", component: LegendCard, category: "Controls" },
-  { title: "Layer Control", description: "Toggle parks, route, and marker layers on/off.", component: LayerControlCard, category: "Controls" },
-  { title: "Proximity Map", description: "Visualize distances between locations with color-coded lines.", component: ProximityCard, category: "Controls" },
-  { title: "Map Compare", description: "Swipe to compare light and dark map styles side by side.", component: MapCompareCard, category: "Controls" },
-  { title: "Style Switcher", description: "Toggle between different map styles on the fly.", component: StyleSwitcherExample, category: "Controls" },
-  { title: "3D Perspective", description: "Control pitch, bearing, and zoom with sliders and presets.", component: PitchBearingExample, category: "Controls" },
-  // ── Animation & Globe ──────────────────────────────────────────
-  { title: "FlyTo Cities", description: "Smooth camera animations to cities around the world.", component: FlyToExample, category: "Animation & Globe" },
-  { title: "Globe", description: "3D globe projection with auto-rotation.", component: GlobeExample, category: "Animation & Globe" },
-  { title: "Animated Route", description: "A route that progressively draws itself across the map.", component: AnimatedRouteExample, category: "Animation & Globe" },
-  { title: "Earthquake Globe", description: "Live USGS earthquake data rendered on a 3D globe.", component: EarthquakeGlobeCard, category: "Animation & Globe" },
-  { title: "Weather Dashboard", description: "Real-time temperatures from Open-Meteo for 15 world cities.", component: WeatherCard, category: "Animation & Globe" },
-  // ── deck.gl ────────────────────────────────────────────────────
-  { title: "Scatterplot", description: "1,000 WebGL-rendered scatter points with deck.gl.", component: DeckglScatterplotCard, category: "deck.gl" },
-  { title: "Arc Layer", description: "Great-circle arcs connecting world cities.", component: DeckglArcCard, category: "deck.gl" },
-  { title: "Hexagon Layer", description: "3D hexagonal binning aggregation with elevation.", component: DeckglHexagonCard, category: "deck.gl" },
-  { title: "Trips Animation", description: "Animated NYC taxi trips with real trajectory data.", component: DeckglTripsCard, category: "deck.gl" },
-  { title: "Heatmap (deck.gl)", description: "GPU-accelerated density heatmap with deck.gl.", component: DeckglHeatmapCard, category: "deck.gl" },
-  { title: "GeoJSON 3D", description: "3D extruded GeoJSON polygons with deck.gl.", component: DeckglGeoJsonCard, category: "deck.gl" },
-  { title: "Column Layer", description: "3D columns showing US city populations.", component: DeckglColumnCard, category: "deck.gl" },
-  { title: "Contour Layer", description: "Density contour isolines from point data.", component: DeckglContourCard, category: "deck.gl" },
-  { title: "Grid Layer", description: "3D grid aggregation with elevation scaling.", component: DeckglGridCard, category: "deck.gl" },
-  { title: "Screen Grid", description: "Screen-space grid density aggregation.", component: DeckglScreenGridCard, category: "deck.gl" },
-];
-
-const categories = [
-  "Core",
-  "MapLibre Layers",
-  "Controls",
-  "Animation & Globe",
-  "deck.gl",
-];
+const componentMap: Record<string, ComponentType> = {
+  "basic-map": BasicMapCard,
+  "markers": MarkersCard,
+  "route": RouteCard,
+  "cluster": ClusterCard,
+  "geojson": GeoJsonCard,
+  "choropleth": ChoroplethExample,
+  "heatmap": HeatmapCard,
+  "3d-buildings": BuildingsCard,
+  "raster-tiles": RasterCard,
+  "image-overlay": ImageCard,
+  "video-overlay": VideoCard,
+  "legend": LegendCard,
+  "layer-control": LayerControlCard,
+  "proximity": ProximityCard,
+  "map-compare": MapCompareCard,
+  "style-switcher": StyleSwitcherExample,
+  "3d-perspective": PitchBearingExample,
+  "isochrone": IsochroneCard,
+  "flyto": FlyToExample,
+  "globe": GlobeExample,
+  "animated-route": AnimatedRouteExample,
+  "earthquake-globe": EarthquakeGlobeCard,
+  "weather": WeatherCard,
+  "deckgl-scatterplot": DeckglScatterplotCard,
+  "deckgl-arc": DeckglArcCard,
+  "deckgl-hexagon": DeckglHexagonCard,
+  "deckgl-trips": DeckglTripsCard,
+  "deckgl-heatmap": DeckglHeatmapCard,
+  "deckgl-geojson": DeckglGeoJsonCard,
+  "deckgl-column": DeckglColumnCard,
+  "deckgl-contour": DeckglContourCard,
+  "deckgl-grid": DeckglGridCard,
+  "deckgl-screengrid": DeckglScreenGridCard,
+};
 
 function LazyExampleCard({
+  slug,
   title,
   description,
   Component,
 }: {
+  slug: string;
   title: string;
   description: string;
   Component: ComponentType;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
-  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -133,70 +114,41 @@ function LazyExampleCard({
   }, []);
 
   return (
-    <>
-      <div
-        ref={ref}
-        className={cn(
-          "group rounded-xl overflow-hidden border border-border/50 bg-card shadow-sm transition-shadow hover:shadow-md"
-        )}
-      >
-        <div className="relative aspect-[4/3] overflow-hidden">
-          {visible ? (
-            <>
-              <Component />
-              <button
-                onClick={() => setExpanded(true)}
-                className="absolute top-2 right-2 z-10 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-background"
-                aria-label={`Expand ${title}`}
-              >
-                <Maximize2 className="size-3.5 text-foreground" />
-              </button>
-            </>
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
-              <div className="flex gap-1">
-                <span className="size-1.5 rounded-full bg-muted-foreground/40 animate-pulse" />
-                <span className="size-1.5 rounded-full bg-muted-foreground/40 animate-pulse [animation-delay:150ms]" />
-                <span className="size-1.5 rounded-full bg-muted-foreground/40 animate-pulse [animation-delay:300ms]" />
-              </div>
+    <div
+      ref={ref}
+      className={cn(
+        "group rounded-xl overflow-hidden border border-border/50 bg-card shadow-sm transition-shadow hover:shadow-md"
+      )}
+    >
+      <div className="relative aspect-[4/3] overflow-hidden">
+        {visible ? (
+          <>
+            <Component />
+            <Link
+              href={`/examples/${slug}`}
+              className="absolute top-2 right-2 z-10 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background"
+              aria-label={`Open ${title}`}
+            >
+              <ExternalLink className="size-3.5 text-foreground" />
+            </Link>
+          </>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+            <div className="flex gap-1">
+              <span className="size-1.5 rounded-full bg-muted-foreground/40 animate-pulse" />
+              <span className="size-1.5 rounded-full bg-muted-foreground/40 animate-pulse [animation-delay:150ms]" />
+              <span className="size-1.5 rounded-full bg-muted-foreground/40 animate-pulse [animation-delay:300ms]" />
             </div>
-          )}
-        </div>
-        <div className="px-4 py-3 border-t border-border/30">
-          <h3 className="text-sm font-medium text-foreground">{title}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-            {description}
-          </p>
-        </div>
-      </div>
-
-      <Dialog open={expanded} onOpenChange={setExpanded}>
-        <DialogContent
-          className="max-w-[95vw] w-[95vw] h-[90vh] p-0 gap-0 overflow-hidden"
-          showCloseButton={false}
-        >
-          <DialogHeader className="px-5 py-3 border-b border-border/30 shrink-0">
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="text-base">{title}</DialogTitle>
-                <DialogDescription className="mt-0.5">
-                  {description}
-                </DialogDescription>
-              </div>
-              <button
-                onClick={() => setExpanded(false)}
-                className="rounded-md border border-border/50 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
-              >
-                Esc
-              </button>
-            </div>
-          </DialogHeader>
-          <div className="flex-1 min-h-0">
-            {expanded && <Component />}
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        )}
+      </div>
+      <Link href={`/examples/${slug}`} className="block px-4 py-3 border-t border-border/30">
+        <h3 className="text-sm font-medium text-foreground">{title}</h3>
+        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+          {description}
+        </p>
+      </Link>
+    </div>
   );
 }
 
@@ -204,7 +156,7 @@ export function ExamplesGrid() {
   return (
     <>
       {categories.map((category) => {
-        const categoryExamples = examples.filter(
+        const categoryExamples = examplesMeta.filter(
           (e) => e.category === category
         );
         return (
@@ -213,14 +165,19 @@ export function ExamplesGrid() {
               {category}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {categoryExamples.map((example) => (
-                <LazyExampleCard
-                  key={example.title}
-                  title={example.title}
-                  description={example.description}
-                  Component={example.component}
-                />
-              ))}
+              {categoryExamples.map((example) => {
+                const Component = componentMap[example.slug];
+                if (!Component) return null;
+                return (
+                  <LazyExampleCard
+                    key={example.slug}
+                    slug={example.slug}
+                    title={example.title}
+                    description={example.description}
+                    Component={Component}
+                  />
+                );
+              })}
             </div>
           </section>
         );
@@ -229,4 +186,4 @@ export function ExamplesGrid() {
   );
 }
 
-export const exampleCount = examples.length;
+export const exampleCount = examplesMeta.length;
