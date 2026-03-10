@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Heart } from "lucide-react";
 
 import { Logo } from "@/components/logo";
@@ -20,6 +21,9 @@ export function Header({ className }: { className?: string }) {
         <Logo />
 
         <div className="flex items-center gap-2 h-4.5">
+          <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
+            <Link href="/examples">Examples</Link>
+          </Button>
           <CommandSearch />
           <Separator orientation="vertical" className="hidden md:block" />
           <Tooltip>
