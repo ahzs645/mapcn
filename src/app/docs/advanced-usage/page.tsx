@@ -71,7 +71,7 @@ export default function AdvancedPage() {
     <DocsLayout
       title="Advanced"
       description="Access the underlying MapLibre GL instance for advanced customization."
-      prev={{ title: "Clusters", href: "/docs/clusters" }}
+      prev={{ title: "Image Layer", href: "/docs/image-layer" }}
       toc={[
         { title: "Using a Ref", slug: "using-a-ref" },
         { title: "Using the Hook", slug: "using-the-hook" },

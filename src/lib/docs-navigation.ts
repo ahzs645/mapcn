@@ -10,6 +10,11 @@ import {
   Settings,
   Layers,
   LucideIcon,
+  Shapes,
+  Flame,
+  Building2,
+  Image,
+  Grid3x3,
 } from "lucide-react";
 
 export interface NavItem {
@@ -41,6 +46,16 @@ export const docsNavigation: NavGroup[] = [
       { title: "Popups", href: "/docs/popups", icon: MessageSquare },
       { title: "Routes", href: "/docs/routes", icon: Route },
       { title: "Clusters", href: "/docs/clusters", icon: Layers },
+    ],
+  },
+  {
+    title: "Layers",
+    items: [
+      { title: "GeoJSON", href: "/docs/geojson-layer", icon: Shapes },
+      { title: "Heatmap", href: "/docs/heatmap", icon: Flame },
+      { title: "3D Buildings", href: "/docs/3d-buildings", icon: Building2 },
+      { title: "Raster", href: "/docs/raster-layer", icon: Grid3x3 },
+      { title: "Image", href: "/docs/image-layer", icon: Image },
       { title: "Advanced", href: "/docs/advanced-usage", icon: Wrench },
     ],
   },
