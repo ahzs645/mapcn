@@ -69,6 +69,32 @@ export const examples: ExampleMeta[] = [
   { slug: "deckgl-bitmap", title: "Bitmap Layer", description: "Georeferenced image overlay on the map.", category: "deck.gl" },
   { slug: "deckgl-great-circle", title: "Great Circle", description: "Great circle arcs for global flight paths.", category: "deck.gl" },
   { slug: "deckgl-grid-cell", title: "Grid Cell Layer", description: "3D grid cell visualization with value-based coloring.", category: "deck.gl" },
+  // ── deck.gl Spatial Indexing ─────────────────────────────────────
+  { slug: "deckgl-h3", title: "H3 Hexagons", description: "Uber H3 hexagonal spatial indexing with extruded cells.", category: "deck.gl Spatial" },
+  { slug: "deckgl-h3-cluster", title: "H3 Cluster", description: "Grouped H3 hexagons as merged cluster regions.", category: "deck.gl Spatial" },
+  { slug: "deckgl-s2", title: "S2 Layer", description: "Google S2 geometry spherical cells for uniform coverage.", category: "deck.gl Spatial" },
+  { slug: "deckgl-geohash", title: "Geohash Layer", description: "Geohash spatial indexing with automatic cell boundaries.", category: "deck.gl Spatial" },
+  { slug: "deckgl-quadkey", title: "Quadkey Layer", description: "Bing Maps Quadkey tile system visualization.", category: "deck.gl Spatial" },
+  // ── deck.gl Geographic ──────────────────────────────────────────
+  { slug: "deckgl-mvt", title: "MVT Layer", description: "Mapbox Vector Tiles with custom styling using deck.gl.", category: "deck.gl Geographic" },
+  { slug: "deckgl-tile", title: "Tile Layer", description: "Generic tile loading with custom sublayer rendering.", category: "deck.gl Geographic" },
+  { slug: "deckgl-wms", title: "WMS Layer", description: "Web Map Service integration with tiled loading.", category: "deck.gl Geographic" },
+  { slug: "deckgl-terrain", title: "Terrain Layer", description: "3D terrain visualization with elevation data and textures.", category: "deck.gl Geographic" },
+  // ── deck.gl 3D ──────────────────────────────────────────────────
+  { slug: "deckgl-scenegraph", title: "Scenegraph", description: "Animated glTF/GLB 3D models at data points.", category: "deck.gl 3D" },
+  { slug: "deckgl-simple-mesh", title: "Simple Mesh", description: "Instanced 3D mesh objects using luma.gl geometries.", category: "deck.gl 3D" },
+  { slug: "deckgl-point-cloud", title: "Point Cloud", description: "3D point cloud visualization from generated data.", category: "deck.gl 3D" },
+  // ── Satellite & Raster ──────────────────────────────────────────
+  { slug: "deckgl-cog", title: "COG Layer", description: "Cloud-Optimized GeoTIFF satellite imagery visualization.", category: "Satellite & Raster" },
+  { slug: "deckgl-landcover", title: "Land Cover", description: "NLCD land use classification with colored columns.", category: "Satellite & Raster" },
+  { slug: "deckgl-naip", title: "NAIP Mosaic", description: "USGS aerial imagery mosaic with tiled loading.", category: "Satellite & Raster" },
+  // ── LiDAR Point Clouds ──────────────────────────────────────────
+  { slug: "lidar-copc", title: "COPC Streaming", description: "Cloud-Optimized Point Cloud terrain visualization.", category: "LiDAR" },
+  { slug: "lidar-ept", title: "EPT Streaming", description: "Entwine Point Tile urban point cloud visualization.", category: "LiDAR" },
+  { slug: "lidar-classification", title: "Classification Filter", description: "ASPRS classification-colored LiDAR point cloud.", category: "LiDAR" },
+  { slug: "lidar-multiple", title: "Multiple Sources", description: "Multiple point cloud datasets in a single view.", category: "LiDAR" },
+  // ── ProMap ──────────────────────────────────────────────────────
+  { slug: "promap", title: "Home Price Explorer", description: "US home price bubble map with city-level visualization.", category: "Featured" },
 ];
 
 export const categories = [
@@ -79,6 +105,11 @@ export const categories = [
   "Featured",
   "Animation & Globe",
   "deck.gl",
+  "deck.gl Spatial",
+  "deck.gl Geographic",
+  "deck.gl 3D",
+  "Satellite & Raster",
+  "LiDAR",
 ];
 
 export function getExampleBySlug(slug: string): ExampleMeta | undefined {

@@ -62,6 +62,32 @@ import { DeckglIconCard } from "./deckgl-icon-card";
 import { DeckglBitmapCard } from "./deckgl-bitmap-card";
 import { DeckglGreatCircleCard } from "./deckgl-great-circle-card";
 import { DeckglGridCellCard } from "./deckgl-grid-cell-card";
+// deck.gl Spatial Indexing
+import { DeckglH3Card } from "./deckgl-h3-card";
+import { DeckglH3ClusterCard } from "./deckgl-h3-cluster-card";
+import { DeckglS2Card } from "./deckgl-s2-card";
+import { DeckglGeohashCard } from "./deckgl-geohash-card";
+import { DeckglQuadkeyCard } from "./deckgl-quadkey-card";
+// deck.gl Geographic
+import { DeckglMvtCard } from "./deckgl-mvt-card";
+import { DeckglTileCard } from "./deckgl-tile-card";
+import { DeckglWmsCard } from "./deckgl-wms-card";
+import { DeckglTerrainCard } from "./deckgl-terrain-card";
+// deck.gl 3D
+import { DeckglScenegraphCard } from "./deckgl-scenegraph-card";
+import { DeckglSimpleMeshCard } from "./deckgl-simple-mesh-card";
+import { DeckglPointCloudCard } from "./deckgl-point-cloud-card";
+// Satellite & Raster
+import { DeckglCogCard } from "./deckgl-cog-card";
+import { DeckglLandcoverCard } from "./deckgl-landcover-card";
+import { DeckglNaipCard } from "./deckgl-naip-card";
+// LiDAR
+import { LidarCopcCard } from "./lidar-copc-card";
+import { LidarEptCard } from "./lidar-ept-card";
+import { LidarClassificationCard } from "./lidar-classification-card";
+import { LidarMultipleCard } from "./lidar-multiple-card";
+// ProMap
+import { PromapCard } from "./promap-card";
 // Valhalla Routing (additional)
 import { ValhallaRoutePlanningCard } from "./valhalla-route-planning-card";
 import { ValhallaDeliveryTrackingCard } from "./valhalla-delivery-tracking-card";
@@ -123,6 +149,26 @@ const componentMap: Record<string, ComponentType> = {
   "deckgl-bitmap": DeckglBitmapCard,
   "deckgl-great-circle": DeckglGreatCircleCard,
   "deckgl-grid-cell": DeckglGridCellCard,
+  "deckgl-h3": DeckglH3Card,
+  "deckgl-h3-cluster": DeckglH3ClusterCard,
+  "deckgl-s2": DeckglS2Card,
+  "deckgl-geohash": DeckglGeohashCard,
+  "deckgl-quadkey": DeckglQuadkeyCard,
+  "deckgl-mvt": DeckglMvtCard,
+  "deckgl-tile": DeckglTileCard,
+  "deckgl-wms": DeckglWmsCard,
+  "deckgl-terrain": DeckglTerrainCard,
+  "deckgl-scenegraph": DeckglScenegraphCard,
+  "deckgl-simple-mesh": DeckglSimpleMeshCard,
+  "deckgl-point-cloud": DeckglPointCloudCard,
+  "deckgl-cog": DeckglCogCard,
+  "deckgl-landcover": DeckglLandcoverCard,
+  "deckgl-naip": DeckglNaipCard,
+  "lidar-copc": LidarCopcCard,
+  "lidar-ept": LidarEptCard,
+  "lidar-classification": LidarClassificationCard,
+  "lidar-multiple": LidarMultipleCard,
+  "promap": PromapCard,
   "route-planning": ValhallaRoutePlanningCard,
   "delivery-tracking": ValhallaDeliveryTrackingCard,
   "multi-stop": ValhallaMultiStopCard,
