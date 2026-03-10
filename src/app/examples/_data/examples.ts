@@ -30,11 +30,21 @@ export const examples: ExampleMeta[] = [
   { slug: "isochrone", title: "Isochrone Map", description: "Visualize travel time or distance zones from a draggable origin point.", category: "Controls" },
   // ── Valhalla Routing ───────────────────────────────────────────
   { slug: "trip-planner", title: "Trip Planner", description: "Multi-day itinerary generator with POI suggestions using Valhalla routing.", category: "Valhalla Routing" },
-  // ── Featured ────────────────────────────────────────────────────
+  { slug: "route-planning", title: "Route Planning", description: "A to B routing with alternate routes using Valhalla routing API.", category: "Valhalla Routing" },
+  { slug: "delivery-tracking", title: "Delivery Tracking", description: "Live delivery simulation with ETA updates using Valhalla routing.", category: "Valhalla Routing" },
+  { slug: "multi-stop", title: "Multi-Stop Routes", description: "Traveling salesman route optimization with draggable waypoints.", category: "Valhalla Routing" },
+  { slug: "trip-playback", title: "Trip Playback", description: "Animated route replay with timeline scrubbing using Valhalla routing.", category: "Valhalla Routing" },
+  // ── Featured ───────────────────────────────────────────────────
   { slug: "drone-flight", title: "Drone Flight", description: "Cinematic drone flight animation along a GeoJSON path with animated trail and camera follow.", category: "Featured" },
+  { slug: "hhi-map", title: "HHI Map", description: "US market concentration visualization with interactive choropleth filtering.", category: "Featured" },
+  { slug: "nyc-snow", title: "NYC Snow Plowing", description: "3D visualization of snow accumulation on NYC streets with borough selection.", category: "Featured" },
+  { slug: "actransit", title: "AC Transit", description: "Simulated real-time bus tracking with route visualization.", category: "Featured" },
+  { slug: "wind", title: "Wind Animation", description: "Global wind speed and direction visualization with color-coded particles.", category: "Featured" },
   // ── Animation & Globe ──────────────────────────────────────────
   { slug: "flyto", title: "FlyTo Cities", description: "Smooth camera animations to cities around the world.", category: "Animation & Globe" },
   { slug: "globe", title: "Globe", description: "3D globe projection with auto-rotation.", category: "Animation & Globe" },
+  { slug: "globe-atmosphere", title: "Globe Atmosphere", description: "Interactive dawn, day, dusk, and night atmosphere modes on a 3D globe.", category: "Animation & Globe" },
+  { slug: "globe-day-night", title: "Globe Day/Night", description: "Real-time sun tracking with day/night visualization on a 3D globe.", category: "Animation & Globe" },
   { slug: "animated-route", title: "Animated Route", description: "A route that progressively draws itself across the map.", category: "Animation & Globe" },
   { slug: "earthquake-globe", title: "Earthquake Globe", description: "Live USGS earthquake data rendered on a 3D globe.", category: "Animation & Globe" },
   { slug: "weather", title: "Weather Markers", description: "Real-time temperatures from Open-Meteo for 15 world cities.", category: "Animation & Globe" },
@@ -50,6 +60,15 @@ export const examples: ExampleMeta[] = [
   { slug: "deckgl-contour", title: "Contour Layer", description: "Density contour isolines from point data.", category: "deck.gl" },
   { slug: "deckgl-grid", title: "Grid Layer", description: "3D grid aggregation with elevation scaling.", category: "deck.gl" },
   { slug: "deckgl-screengrid", title: "Screen Grid", description: "Screen-space grid density aggregation.", category: "deck.gl" },
+  { slug: "deckgl-line", title: "Line Layer", description: "Render line segments between source and target positions.", category: "deck.gl" },
+  { slug: "deckgl-path", title: "Path Layer", description: "Render continuous paths with multiple vertices.", category: "deck.gl" },
+  { slug: "deckgl-polygon", title: "Polygon Layer", description: "Render filled and stroked polygons with deck.gl.", category: "deck.gl" },
+  { slug: "deckgl-solid-polygon", title: "Solid Polygon", description: "3D extruded solid polygon buildings visualization.", category: "deck.gl" },
+  { slug: "deckgl-text", title: "Text Layer", description: "Render text labels at geographic locations.", category: "deck.gl" },
+  { slug: "deckgl-icon", title: "Icon Layer", description: "Render icons and sprites at geographic locations.", category: "deck.gl" },
+  { slug: "deckgl-bitmap", title: "Bitmap Layer", description: "Georeferenced image overlay on the map.", category: "deck.gl" },
+  { slug: "deckgl-great-circle", title: "Great Circle", description: "Great circle arcs for global flight paths.", category: "deck.gl" },
+  { slug: "deckgl-grid-cell", title: "Grid Cell Layer", description: "3D grid cell visualization with value-based coloring.", category: "deck.gl" },
 ];
 
 export const categories = [

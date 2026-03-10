@@ -486,7 +486,7 @@ function ControlPanel({
 
   function handleInput(value: string) {
     setQuery(value);
-    clearTimeout(debounceRef.current);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => onSearch(value), 300);
   }
 

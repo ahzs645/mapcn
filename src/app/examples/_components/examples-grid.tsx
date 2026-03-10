@@ -53,6 +53,28 @@ import { DeckglColumnCard } from "./deckgl-column-card";
 import { DeckglContourCard } from "./deckgl-contour-card";
 import { DeckglGridCard } from "./deckgl-grid-card";
 import { DeckglScreenGridCard } from "./deckgl-screengrid-card";
+import { DeckglLineCard } from "./deckgl-line-card";
+import { DeckglPathCard } from "./deckgl-path-card";
+import { DeckglPolygonCard } from "./deckgl-polygon-card";
+import { DeckglSolidPolygonCard } from "./deckgl-solid-polygon-card";
+import { DeckglTextCard } from "./deckgl-text-card";
+import { DeckglIconCard } from "./deckgl-icon-card";
+import { DeckglBitmapCard } from "./deckgl-bitmap-card";
+import { DeckglGreatCircleCard } from "./deckgl-great-circle-card";
+import { DeckglGridCellCard } from "./deckgl-grid-cell-card";
+// Valhalla Routing (additional)
+import { ValhallaRoutePlanningCard } from "./valhalla-route-planning-card";
+import { ValhallaDeliveryTrackingCard } from "./valhalla-delivery-tracking-card";
+import { ValhallaMultiStopCard } from "./valhalla-multi-stop-card";
+import { ValhallaTripPlaybackCard } from "./valhalla-trip-playback-card";
+// Globe
+import { GlobeAtmosphereCard } from "./globe-atmosphere-card";
+import { GlobeDayNightCard } from "./globe-day-night-card";
+// Featured (additional)
+import { HhiMapCard } from "./hhi-map-card";
+import { NycSnowPlowingCard } from "./nyc-snow-plowing-card";
+import { WindCard } from "./wind-card";
+import { ActransitCard } from "./actransit-card";
 
 const componentMap: Record<string, ComponentType> = {
   "basic-map": BasicMapCard,
@@ -92,6 +114,25 @@ const componentMap: Record<string, ComponentType> = {
   "deckgl-contour": DeckglContourCard,
   "deckgl-grid": DeckglGridCard,
   "deckgl-screengrid": DeckglScreenGridCard,
+  "deckgl-line": DeckglLineCard,
+  "deckgl-path": DeckglPathCard,
+  "deckgl-polygon": DeckglPolygonCard,
+  "deckgl-solid-polygon": DeckglSolidPolygonCard,
+  "deckgl-text": DeckglTextCard,
+  "deckgl-icon": DeckglIconCard,
+  "deckgl-bitmap": DeckglBitmapCard,
+  "deckgl-great-circle": DeckglGreatCircleCard,
+  "deckgl-grid-cell": DeckglGridCellCard,
+  "route-planning": ValhallaRoutePlanningCard,
+  "delivery-tracking": ValhallaDeliveryTrackingCard,
+  "multi-stop": ValhallaMultiStopCard,
+  "trip-playback": ValhallaTripPlaybackCard,
+  "globe-atmosphere": GlobeAtmosphereCard,
+  "globe-day-night": GlobeDayNightCard,
+  "hhi-map": HhiMapCard,
+  "nyc-snow": NycSnowPlowingCard,
+  "wind": WindCard,
+  "actransit": ActransitCard,
 };
 
 function LazyExampleCard({
