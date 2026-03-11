@@ -95,6 +95,8 @@ export const examples: ExampleMeta[] = [
   { slug: "lidar-multiple", title: "Multiple Sources", description: "Multiple point cloud datasets in a single view.", category: "LiDAR" },
   // ── ProMap ──────────────────────────────────────────────────────
   { slug: "promap", title: "Home Price Explorer", description: "US home price bubble map with city-level visualization.", category: "Featured" },
+  // ── Timeline ──────────────────────────────────────────────────────
+  { slug: "timeline", title: "Timeline Map", description: "NASA Worldview-style time-series map with animated playback, layer management, and disturbance data overlay.", category: "Featured" },
 ];
 
 export const categories = [
