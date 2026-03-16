@@ -225,5 +225,5 @@ code .line::before {
   margin-right: 1.5rem;
   display: inline-block;
   text-align: right;
-  color: var(--code-number)
+  color: var(--code-number);
 }

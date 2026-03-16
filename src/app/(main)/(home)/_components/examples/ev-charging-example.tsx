@@ -132,18 +132,12 @@ export function EVChargingExample() {
               latitude={station.lat}
             >
               <MarkerContent>
-                <div
-                  className={`${config.bg} rounded-full p-1.5 shadow-lg ${
-                    station.status !== "offline"
-                      ? `shadow-${config.bg.replace("bg-", "")}/30`
-                      : ""
-                  }`}
-                >
-                  <Zap className="size-3 text-white fill-white" />
+                <div className={`${config.bg} rounded-full p-1.5 shadow-lg`}>
+                  <Zap className="size-3 fill-white text-white" />
                 </div>
               </MarkerContent>
               <MarkerTooltip>
-                <div className="text-xs space-y-0.5">
+                <div className="space-y-0.5 text-xs">
                   <div className="font-medium">{station.name}</div>
                   <div className="flex items-center gap-1">
                     <span className={`size-1.5 rounded-full ${config.bg}`} />

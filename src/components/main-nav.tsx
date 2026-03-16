@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 
 import { siteNavigation } from "@/lib/site-navigation";
@@ -11,10 +9,10 @@ export function MainNav({ className, ...props }: React.ComponentProps<"nav">) {
     .find((group) => group.title === "Pages")
     ?.items.filter((item) => item.title !== "Home");
 
-  if (!navItems) return null;
+  if (!navItems?.length) return null;
 
   return (
-    <nav className={cn("items-center gap-1", className)} {...props}>
+    <nav className={cn("flex items-center gap-1", className)} {...props}>
       {navItems.map((item) => (
         <Button
           key={item.href}
