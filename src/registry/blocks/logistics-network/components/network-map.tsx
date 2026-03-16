@@ -81,7 +81,7 @@ export function NetworkMap({ hubs, routes }: NetworkMapProps) {
               <p className="font-medium">{hub.city}</p>
               <p className="text-muted-foreground mt-1">
                 {hub.shipments.toLocaleString()} shipments
-                <span className="mx-1.5">·</span>
+                <span className="mx-1">•</span>
                 {regionLabels[hub.region]}
               </p>
             </MarkerTooltip>

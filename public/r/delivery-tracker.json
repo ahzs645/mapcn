@@ -7,7 +7,7 @@
     "lucide-react"
   ],
   "registryDependencies": [
-    "map",
+    "@mapcn/map",
     "card",
     "badge",
     "button"

@@ -5,7 +5,7 @@
   "description": "Globe-projected heatmap visualizing earthquake density with zoom-dependent styling.",
   "dependencies": [],
   "registryDependencies": [
-    "map",
+    "@mapcn/map",
     "card"
   ],
   "files": [

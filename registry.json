@@ -34,7 +34,7 @@
       "title": "Analytics Map",
       "description": "Real-time analytics overview with a world map, breakdown cards, and device stats.",
       "dependencies": ["recharts", "lucide-react"],
-      "registryDependencies": ["map", "card", "chart"],
+      "registryDependencies": ["@mapcn/map", "card", "chart"],
       "files": [
         {
           "path": "src/registry/blocks/analytics-map/page.tsx",
@@ -68,7 +68,7 @@
       "title": "Logistics Network",
       "description": "Domestic logistics map with a sidebar of stats.",
       "dependencies": ["lucide-react"],
-      "registryDependencies": ["map", "card", "badge", "button"],
+      "registryDependencies": ["@mapcn/map", "sidebar", "separator"],
       "files": [
         {
           "path": "src/registry/blocks/logistics-network/page.tsx",
@@ -107,7 +107,7 @@
       "title": "Heatmap",
       "description": "Globe-projected heatmap visualizing earthquake density with zoom-dependent styling.",
       "dependencies": [],
-      "registryDependencies": ["map", "card"],
+      "registryDependencies": ["@mapcn/map", "card"],
       "files": [
         {
           "path": "src/registry/blocks/heatmap/page.tsx",
@@ -123,7 +123,7 @@
       "title": "Delivery Tracker",
       "description": "Live order tracking with route progress, courier position, and order details.",
       "dependencies": ["lucide-react"],
-      "registryDependencies": ["map", "card", "badge", "button"],
+      "registryDependencies": ["@mapcn/map", "card", "badge", "button"],
       "files": [
         {
           "path": "src/registry/blocks/delivery-tracker/page.tsx",

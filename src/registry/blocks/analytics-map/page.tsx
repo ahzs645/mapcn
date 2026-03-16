@@ -55,12 +55,7 @@ export function AnalyticsMapBlock() {
                 <p className="text-muted-foreground font-medium">
                   {location.city}
                 </p>
-                <p className="mt-1">
-                  <span className="font-medium tabular-nums">
-                    {location.size}
-                  </span>{" "}
-                  active users
-                </p>
+                <p className="mt-0.5">{location.size} active users</p>
               </MarkerTooltip>
             </MapMarker>
           ))}
