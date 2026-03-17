@@ -23,7 +23,6 @@
   <img src="public/banner.png" alt="mapcn banner" />
 </p>
 
-
 ## Features
 
 - 🎨 **Theme-aware** — Automatically adapts to light/dark mode

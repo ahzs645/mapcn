@@ -60,7 +60,6 @@ export function ThemeToggle() {
           size="icon-sm"
         >
           {resolvedTheme === "dark" ? <Moon /> : <Sun />}
-          <span className="sr-only">Toggle theme</span>
         </Button>
       </TooltipTrigger>
       <TooltipContent className="flex items-center gap-2 pr-1">

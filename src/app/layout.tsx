@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 
+import "@/styles/globals.css";
+
 import { ThemeProvider } from "@/components/theme-provider";
-import "./globals.css";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -100,9 +102,9 @@ export default function RootLayout({
       className={`${geist.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
-      <body className="font-sans antialiased min-h-screen flex flex-col">
+      <body className="font-sans antialiased">
         <ThemeProvider>
-          <div className="flex-1">{children}</div>
+          <TooltipProvider>{children}</TooltipProvider>
           <Analytics />
         </ThemeProvider>
       </body>

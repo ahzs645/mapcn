@@ -19,7 +19,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
-import { docsNavigation } from "@/lib/docs-navigation";
+import { siteNavigation } from "@/lib/site-navigation";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 
@@ -47,17 +47,17 @@ export function CommandSearch({ className }: { className?: string }) {
   return (
     <>
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
         onClick={() => setOpen(true)}
         aria-label="Search documentation"
         className={cn(
-          "hidden group md:flex items-center w-[200px] dark:border-border/60 border-border/80 text-muted-foreground",
+          "hidden md:flex h-8 w-48 items-center gap-2 rounded-md border border-border/50 bg-muted/40 px-2.5 text-muted-foreground hover:bg-muted/70 hover:text-foreground",
           className
         )}
       >
-        <SearchIcon className="size-3.5 shrink-0" />
-        <span>Search docs...</span>
+        <SearchIcon className="size-3.5" />
+        <span>Search...</span>
         <KbdGroup className="ml-auto">
           <Kbd>⌘</Kbd>
           <Kbd>K</Kbd>
@@ -66,12 +66,12 @@ export function CommandSearch({ className }: { className?: string }) {
       <CommandDialog
         open={open}
         onOpenChange={setOpen}
-        title="Search Documentation"
-        description="Search for documentation pages and components"
+        title="Search..."
+        description="Jump to pages, components, and docs"
         showCloseButton={false}
       >
         <CommandInput
-          placeholder="Search documentation..."
+          placeholder="Search..."
           className="border-none text-sm h-10"
         />
         <CommandList>
@@ -81,7 +81,7 @@ export function CommandSearch({ className }: { className?: string }) {
               <span>No results found.</span>
             </div>
           </CommandEmpty>
-          {docsNavigation.map((group) => (
+          {siteNavigation.map((group) => (
             <CommandGroup key={group.title} heading={group.title}>
               {group.items.map((item) => (
                 <CommandItem
