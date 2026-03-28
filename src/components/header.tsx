@@ -21,9 +21,9 @@ export function Header({ className }: { className?: string }) {
     <header
       className={cn("bg-background sticky top-0 z-50 h-14 w-full", className)}
     >
-      <nav className="container flex size-full items-center gap-2">
+      <nav className="container flex size-full items-center">
         <MobileNav />
-        <Logo className="hidden shrink-0 lg:flex" />
+        <Logo className="mr-3 hidden shrink-0 lg:flex" />
         <MainNav className="hidden lg:flex" />
 
         <div className="ml-auto flex h-4.5 items-center gap-2">
@@ -31,7 +31,7 @@ export function Header({ className }: { className?: string }) {
             <Link href="/examples">Examples</Link>
           </Button>
           <CommandSearch />
-          <Separator orientation="vertical" className="hidden md:block" />
+          <Separator orientation="vertical" className="ml-2 hidden md:block" />
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="sm" asChild>

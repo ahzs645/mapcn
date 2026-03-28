@@ -46,7 +46,7 @@ function PageHeader({
 
         <section
           className={cn(
-            "container mx-auto flex w-full max-w-6xl flex-col gap-4 py-16 md:py-24 lg:pt-26 lg:pb-24",
+            "container mx-auto flex w-full max-w-6xl flex-col gap-4 py-16 md:py-20 lg:py-24",
             align === "center"
               ? "items-center text-center"
               : "items-start text-left",

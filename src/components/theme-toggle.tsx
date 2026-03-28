@@ -25,27 +25,6 @@ export function ThemeToggle() {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      // Don't trigger if typing in an input/textarea
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement ||
-        (e.target as HTMLElement)?.isContentEditable
-      ) {
-        return;
-      }
-
-      if ((e.key === "t" || e.key === "T") && !e.metaKey && !e.ctrlKey) {
-        e.preventDefault();
-        toggleTheme();
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [toggleTheme]);
-
   if (!mounted) {
     return <Skeleton className="size-8" />;
   }

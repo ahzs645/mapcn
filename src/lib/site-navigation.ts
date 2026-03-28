@@ -1,23 +1,4 @@
-import {
-  BookOpen,
-  Braces,
-  Code,
-  Home,
-  Layers,
-  LayoutGrid,
-  LucideIcon,
-  Map,
-  MapPin,
-  MessageSquare,
-  Route,
-  Settings,
-  Shapes,
-  Flame,
-  Building2,
-  Image,
-  Grid3x3,
-  Wrench,
-} from "lucide-react";
+import { BookOpen, CornerDownRight, Layers2, LucideIcon } from "lucide-react";
 
 export interface MainNavItem {
   href: string;
@@ -41,39 +22,39 @@ export const docsNavigation: SiteNavigationGroup[] = [
     title: "Basics",
     items: [
       { title: "Getting Started", href: "/docs", icon: BookOpen },
-      { title: "Installation", href: "/docs/installation", icon: Code },
-      { title: "API Reference", href: "/docs/api-reference", icon: Braces },
+      { title: "Installation", href: "/docs/installation", icon: BookOpen },
+      { title: "API Reference", href: "/docs/api-reference", icon: BookOpen },
     ],
   },
   {
     title: "Components",
     items: [
-      { title: "Map", href: "/docs/basic-map", icon: Map },
-      { title: "Controls", href: "/docs/controls", icon: Settings },
-      { title: "Markers", href: "/docs/markers", icon: MapPin },
-      { title: "Popups", href: "/docs/popups", icon: MessageSquare },
-      { title: "Routes", href: "/docs/routes", icon: Route },
-      { title: "Clusters", href: "/docs/clusters", icon: Layers },
+      { title: "Map", href: "/docs/basic-map", icon: Layers2 },
+      { title: "Controls", href: "/docs/controls", icon: Layers2 },
+      { title: "Markers", href: "/docs/markers", icon: Layers2 },
+      { title: "Popups", href: "/docs/popups", icon: Layers2 },
+      { title: "Routes", href: "/docs/routes", icon: Layers2 },
+      { title: "Clusters", href: "/docs/clusters", icon: Layers2 },
+      { title: "Advanced", href: "/docs/advanced-usage", icon: Layers2 },
     ],
   },
   {
     title: "Layers",
     items: [
-      { title: "GeoJSON", href: "/docs/geojson-layer", icon: Shapes },
-      { title: "Heatmap", href: "/docs/heatmap", icon: Flame },
-      { title: "3D Buildings", href: "/docs/3d-buildings", icon: Building2 },
-      { title: "Raster", href: "/docs/raster-layer", icon: Grid3x3 },
-      { title: "Image", href: "/docs/image-layer", icon: Image },
-      { title: "Advanced", href: "/docs/advanced-usage", icon: Wrench },
+      { title: "GeoJSON", href: "/docs/geojson-layer", icon: Layers2 },
+      { title: "Heatmap", href: "/docs/heatmap", icon: Layers2 },
+      { title: "3D Buildings", href: "/docs/3d-buildings", icon: Layers2 },
+      { title: "Raster", href: "/docs/raster-layer", icon: Layers2 },
+      { title: "Image", href: "/docs/image-layer", icon: Layers2 },
     ],
   },
 ];
 
 const navItems: SiteNavigationItem[] = [
-  { title: "Home", href: "/", icon: Home },
-  { title: "Docs", href: "/docs", icon: BookOpen },
-  { title: "Components", href: "/docs/basic-map", icon: Map },
-  { title: "Blocks", href: "/blocks", icon: LayoutGrid },
+  { title: "Home", href: "/", icon: CornerDownRight },
+  { title: "Docs", href: "/docs", icon: CornerDownRight },
+  { title: "Components", href: "/docs/basic-map", icon: CornerDownRight },
+  { title: "Blocks", href: "/blocks", icon: CornerDownRight },
 ];
 
 export const siteNavigation: SiteNavigationGroup[] = [

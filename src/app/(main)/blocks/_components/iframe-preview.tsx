@@ -7,7 +7,7 @@ interface IframePreviewProps {
 
 export function IframePreview({ src, title }: IframePreviewProps) {
   return (
-    <div className="relative w-full overflow-hidden rounded-xl border h-(--block-preview-height)">
+    <div className="relative h-(--block-preview-height) w-full overflow-hidden rounded-xl border">
       <iframe src={src} title={title} className="size-full border-0" />
     </div>
   );

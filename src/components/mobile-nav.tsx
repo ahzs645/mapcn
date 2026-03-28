@@ -13,6 +13,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { siteNavigation } from "@/lib/site-navigation";
+import { Logo } from "./logo";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -31,7 +32,9 @@ export function MobileNav() {
       </SheetTrigger>
       <SheetContent side="left" className="rounded-r-xl">
         <SheetHeader>
-          <SheetTitle className="sr-only">Sidebar</SheetTitle>
+          <SheetTitle>
+            <Logo isLink={false} />
+          </SheetTitle>
         </SheetHeader>
         <div className="overflow-y-auto px-2">
           <nav className="space-y-6">
@@ -46,7 +49,7 @@ export function MobileNav() {
                       <Link
                         href={item.href}
                         onClick={() => setOpen(false)}
-                        className="flex items-center px-3 py-2.5"
+                        className="active:text-muted-foreground flex items-center px-3 py-2 text-lg"
                       >
                         {item.title}
                       </Link>

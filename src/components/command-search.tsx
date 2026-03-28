@@ -50,10 +50,10 @@ export function CommandSearch({ className }: { className?: string }) {
         variant="ghost"
         size="sm"
         onClick={() => setOpen(true)}
-        aria-label="Search documentation"
+        aria-label="Jump to pages, components, and docs"
         className={cn(
-          "hidden md:flex h-8 w-48 items-center gap-2 rounded-md border border-border/50 bg-muted/40 px-2.5 text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-          className
+          "border-border/50 bg-muted/40 text-muted-foreground hover:bg-muted/70 hover:text-foreground hidden h-8 w-48 items-center gap-2 rounded-md border px-2.5 md:flex",
+          className,
         )}
       >
         <SearchIcon className="size-3.5" />
@@ -72,10 +72,10 @@ export function CommandSearch({ className }: { className?: string }) {
       >
         <CommandInput
           placeholder="Search..."
-          className="border-none text-sm h-10"
+          className="h-10 border-none text-sm"
         />
         <CommandList>
-          <CommandEmpty className="py-8 text-muted-foreground text-sm">
+          <CommandEmpty className="text-muted-foreground py-8 text-sm">
             <div className="flex flex-col items-center gap-1.5">
               <FileText className="size-5 opacity-40" />
               <span>No results found.</span>
@@ -97,7 +97,7 @@ export function CommandSearch({ className }: { className?: string }) {
             </CommandGroup>
           ))}
         </CommandList>
-        <div className="border-t p-3 text-xs text-muted-foreground/80 flex items-center justify-between">
+        <div className="text-muted-foreground/80 flex items-center justify-between border-t p-3 text-xs">
           <div className="flex items-center gap-2.5">
             <span className="flex items-center gap-1.5">
               <Kbd>
