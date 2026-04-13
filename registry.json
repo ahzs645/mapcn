@@ -135,6 +135,37 @@
       "meta": {
         "iframeHeight": "680px"
       }
+    },
+    {
+      "name": "air-quality",
+      "type": "registry:block",
+      "title": "Air Quality Monitor",
+      "description": "Full-screen air quality map with AQI sensor markers, overview card, and threshold legend.",
+      "dependencies": ["recharts"],
+      "registryDependencies": ["@mapcn/map", "card", "chart"],
+      "files": [
+        {
+          "path": "src/registry/blocks/air-quality/page.tsx",
+          "type": "registry:page",
+          "target": "app/air-quality/page.tsx"
+        },
+        {
+          "path": "src/registry/blocks/air-quality/data.ts",
+          "type": "registry:component",
+          "target": "app/air-quality/data.ts"
+        },
+        {
+          "path": "src/registry/blocks/air-quality/components/aqi-overview-card.tsx",
+          "type": "registry:component",
+          "target": "app/air-quality/components/aqi-overview-card.tsx"
+        },
+        {
+          "path": "src/registry/blocks/air-quality/components/threshold-legend.tsx",
+          "type": "registry:component",
+          "target": "app/air-quality/components/threshold-legend.tsx"
+        }
+      ],
+      "categories": ["monitoring", "environmental"]
     }
   ]
 }

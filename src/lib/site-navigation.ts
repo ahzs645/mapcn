@@ -54,6 +54,7 @@ const navItems: SiteNavigationItem[] = [
   { title: "Home", href: "/", icon: CornerDownRight },
   { title: "Docs", href: "/docs", icon: CornerDownRight },
   { title: "Components", href: "/docs/basic-map", icon: CornerDownRight },
+  { title: "Examples", href: "/examples", icon: CornerDownRight },
   { title: "Blocks", href: "/blocks", icon: CornerDownRight },
 ];
 

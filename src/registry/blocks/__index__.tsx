@@ -9,4 +9,5 @@ export const blockComponents: Record<
   heatmap: React.lazy(() => import("./heatmap/page")),
   "delivery-tracker": React.lazy(() => import("./delivery-tracker/page")),
   "logistics-network": React.lazy(() => import("./logistics-network/page")),
+  "air-quality": React.lazy(() => import("./air-quality/page")),
 };
