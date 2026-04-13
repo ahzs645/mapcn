@@ -57,35 +57,30 @@ export function DocsToc({ items, className }: DocsTocProps) {
   }
 
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
-      <p className="text-muted-foreground mb-2 flex items-center gap-1.5 text-xs font-medium">
+    <nav aria-label="On this page" className={cn("flex flex-col", className)}>
+      <p className="text-sidebar-foreground/70 mb-3 text-[13px] font-medium tracking-tight">
         On This Page
       </p>
-      <div className="relative">
-        <div className="bg-border absolute top-1 bottom-1 left-0 w-px" />
-        <div className="flex flex-col gap-1">
-          {items.map((item) => {
-            const isActive = item.slug === activeHeading;
-            return (
-              <a
-                key={item.slug}
-                href={`#${item.slug}`}
-                className={cn(
-                  "relative py-1 pl-3 text-[0.8rem] no-underline transition-colors",
-                  isActive
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {isActive && (
-                  <div className="bg-foreground absolute top-1 bottom-1 left-0 w-px rounded-full" />
-                )}
-                {item.title}
-              </a>
-            );
-          })}
-        </div>
+
+      <div className="flex flex-col gap-0.5">
+        {items.map((item) => {
+          const isActive = item.slug === activeHeading;
+          return (
+            <a
+              key={item.slug}
+              href={`#${item.slug}`}
+              className={cn(
+                "py-1 text-sm no-underline transition-colors",
+                isActive
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {item.title}
+            </a>
+          );
+        })}
       </div>
-    </div>
+    </nav>
   );
 }

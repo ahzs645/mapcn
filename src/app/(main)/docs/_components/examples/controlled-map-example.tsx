@@ -12,9 +12,9 @@ export function ControlledMapExample() {
   });
 
   return (
-    <div className="h-[400px] relative w-full">
+    <div className="relative h-[420px] w-full">
       <Map viewport={viewport} onViewportChange={setViewport} />
-      <div className="absolute top-2 left-2 z-10 flex flex-wrap gap-x-3 gap-y-1 text-xs font-mono bg-background/80 backdrop-blur px-2 py-1.5 rounded border">
+      <div className="bg-background/80 absolute top-2 left-2 z-10 flex flex-wrap gap-x-3 gap-y-1 rounded border px-2 py-1.5 font-mono text-xs backdrop-blur">
         <span>
           <span className="text-muted-foreground">lng:</span>{" "}
           {viewport.center[0].toFixed(3)}

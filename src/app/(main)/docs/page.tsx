@@ -45,11 +45,11 @@ export default function IntroductionPage() {
   return (
     <DocsLayout
       title="Introduction"
-      description="Beautiful, accessible map components."
+      description="Copy-paste map components for React."
       next={{ title: "Installation", href: "/docs/installation" }}
       toc={[
+        { title: "Philosophy", slug: "philosophy" },
         { title: "Why mapcn?", slug: "why-mapcn" },
-        { title: "Why MapLibre Directly?", slug: "why-maplibre-directly" },
         { title: "Any Map Style", slug: "any-map-style" },
         { title: "Features", slug: "features" },
       ]}
@@ -73,56 +73,49 @@ export default function IntroductionPage() {
         </p>
       </DocsSection>
 
+      <DocsSection title="Philosophy">
+        <p>
+          mapcn follows the shadcn model for maps: copy-paste components you can
+          own, with zero lock-in and sensible defaults that work immediately.
+        </p>
+        <p>
+          Maps are often treated as black boxes hidden behind wrapper libraries
+          and configuration-heavy SDKs. mapcn takes a different approach. It
+          stays close to MapLibre, keeps the API familiar, and lets you drop
+          down to the raw map instance whenever you need more control.
+        </p>
+        <p>
+          The goal is simple: make maps feel like the rest of your UI stack -
+          composable, themeable, accessible, and easy to customize with Tailwind
+          and shadcn patterns.
+        </p>
+      </DocsSection>
+
       <DocsSection title="Why mapcn?">
         <p>
-          There&apos;s no proper copy-paste, easy-to-use map integration for
-          React. Most solutions require complex configurations, API keys, or
-          heavy wrapper libraries. mapcn solves this:
+          Most React map setups are either too opinionated or too heavy. mapcn
+          is built for teams that want to ship quickly without giving up
+          control:
         </p>
         <ul>
           <li>
-            <strong className="text-foreground">One Command:</strong> Run the
-            install, get a working map. No config files, no API keys, no setup.
-          </li>
-          <li>
             <strong className="text-foreground">Own Your Code:</strong> Copy the
-            components into your project. Modify anything.
+            components into your project and customize everything.
           </li>
           <li>
-            <strong className="text-foreground">No Wrapper Overhead:</strong>{" "}
-            Built directly on MapLibre. Drop to the raw API whenever you need.
+            <strong className="text-foreground">Start Fast:</strong> Run one
+            command and render your first map with production-ready defaults.
           </li>
           <li>
-            <strong className="text-foreground">Looks Good Already:</strong>{" "}
-            Thoughtful defaults with dark mode. Style with Tailwind as needed.
+            <strong className="text-foreground">Scale Safely:</strong> Build on
+            top of MapLibre directly, then drop to raw APIs when needed.
           </li>
           <li>
-            <strong className="text-foreground">Works Anywhere:</strong> Bring
-            your own tiles — MapTiler, Carto, OSM, or any MapLibre-compatible
-            source.
+            <strong className="text-foreground">Design-System Friendly:</strong>{" "}
+            Styled with Tailwind and made to fit naturally with shadcn/ui
+            patterns.
           </li>
         </ul>
-      </DocsSection>
-
-      <DocsSection title="Why MapLibre Directly?">
-        <p>
-          mapcn uses{" "}
-          <DocsLink href="https://maplibre.org" external>
-            MapLibre
-          </DocsLink>{" "}
-          directly instead of wrapper libraries like{" "}
-          <DocsLink href="https://visgl.github.io/react-map-gl" external>
-            react-map-gl
-          </DocsLink>
-          . This keeps components close to the underlying API — when you copy a
-          mapcn component, you fully own the map instance without extra
-          framework dependencies.
-        </p>
-        <p>
-          UI elements like markers, popups, and tooltips are rendered via React
-          portals, giving you complete styling freedom. You can drop down to raw
-          MapLibre APIs anytime without &quot;escaping&quot; a wrapper.
-        </p>
       </DocsSection>
 
       <DocsSection title="Any Map Style">
@@ -135,10 +128,10 @@ export default function IntroductionPage() {
         </p>
         <ul>
           <li>
-            <DocsLink href="https://www.maptiler.com" external>
-              MapTiler
+            <DocsLink href="https://www.openstreetmap.org" external>
+              OpenStreetMap
             </DocsLink>{" "}
-            - Beautiful vector tiles with extensive customization options
+            - Community-driven, open-source map data
           </li>
           <li>
             <DocsLink href="https://carto.com/basemaps" external>
@@ -147,10 +140,10 @@ export default function IntroductionPage() {
             - Clean, minimal basemaps perfect for data visualization
           </li>
           <li>
-            <DocsLink href="https://www.openstreetmap.org" external>
-              OpenStreetMap
+            <DocsLink href="https://www.maptiler.com" external>
+              MapTiler
             </DocsLink>{" "}
-            - Community-driven, open-source map data
+            - Beautiful vector tiles with extensive customization options
           </li>
           <li>
             <DocsLink href="https://stadiamaps.com" external>
@@ -169,19 +162,19 @@ export default function IntroductionPage() {
       </DocsSection>
 
       <DocsSection title="Features">
-        <div className="grid gap-4 sm:grid-cols-2 mt-4 not-prose">
+        <div className="not-prose mt-4 grid gap-4 sm:grid-cols-2">
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="rounded-lg border bg-card p-4 space-y-2"
+              className="bg-card space-y-2 rounded-lg border p-4"
             >
               <div className="flex items-center gap-2">
-                <div className="flex size-8 items-center justify-center rounded-md bg-primary/10">
-                  <feature.icon className="size-4 text-primary" />
+                <div className="bg-primary/10 flex size-8 items-center justify-center rounded-md">
+                  <feature.icon className="text-primary size-4" />
                 </div>
-                <h3 className="font-medium text-foreground">{feature.title}</h3>
+                <h3 className="text-foreground font-medium">{feature.title}</h3>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {feature.description}
               </p>
             </div>

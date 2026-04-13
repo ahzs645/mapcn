@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { createContext, useContext } from "react";
+import { createContext, useContext, type CSSProperties } from "react";
 
 type HeaderAlign = "center" | "left";
 
@@ -34,12 +34,13 @@ function PageHeader({
         {showBackground && (
           <div className="pointer-events-none absolute inset-x-0 -inset-y-10 overflow-hidden">
             <div
-              className="absolute inset-0 opacity-[0.20] dark:opacity-[0.12]"
+              className="absolute inset-0 opacity-[0.16] dark:opacity-[0.12]"
               style={{
                 backgroundImage: `radial-gradient(circle, currentColor 1px, transparent 1px)`,
                 backgroundSize: "24px 24px",
               }}
             />
+
             <div className="from-background to-background absolute inset-0 bg-linear-to-b via-transparent" />
           </div>
         )}
@@ -76,10 +77,15 @@ function PageHeaderHeading({
   return (
     <Comp
       className={cn(
-        "animate-fade-up max-w-4xl text-4xl font-semibold tracking-tight delay-100 sm:text-5xl md:text-6xl",
+        "animate-fade-up animate-stagger max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl",
         align === "center" ? "text-center" : "text-left",
         className,
       )}
+      style={
+        {
+          "--stagger": 1,
+        } as CSSProperties
+      }
     >
       <span className="from-foreground via-foreground to-foreground/65 bg-linear-to-b bg-clip-text text-transparent">
         {children}
@@ -102,32 +108,25 @@ function PageHeaderDescription({
   return (
     <p
       className={cn(
-        "text-muted-foreground animate-fade-up max-w-2xl leading-relaxed delay-200 sm:text-lg sm:leading-relaxed md:text-xl md:leading-relaxed",
+        "text-muted-foreground animate-fade-up animate-stagger max-w-2xl leading-relaxed sm:text-lg sm:leading-relaxed md:text-xl md:leading-relaxed",
         align === "center" ? "text-center" : "text-left",
         className,
       )}
+      style={
+        {
+          "--stagger": 2,
+        } as CSSProperties
+      }
     >
       {children}
     </p>
   );
 }
 
-interface PageContentProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
-function PageContent({ children, className }: PageContentProps) {
-  return (
-    <div className={cn("animate-fade-up w-full max-w-lg delay-300", className)}>
-      {children}
-    </div>
-  );
-}
-
 interface PageActionsProps {
   children: React.ReactNode;
   className?: string;
+  stagger?: number;
 }
 
 function PageActions({ children, className }: PageActionsProps) {
@@ -136,20 +135,19 @@ function PageActions({ children, className }: PageActionsProps) {
   return (
     <div
       className={cn(
-        "animate-fade-up mt-3 flex flex-wrap items-center gap-3 delay-400",
+        "animate-fade-up animate-stagger mt-3 flex flex-wrap items-center gap-3",
         align === "center" ? "justify-center" : "justify-start",
         className,
       )}
+      style={
+        {
+          "--stagger": 3,
+        } as CSSProperties
+      }
     >
       {children}
     </div>
   );
 }
 
-export {
-  PageHeader,
-  PageHeaderHeading,
-  PageHeaderDescription,
-  PageContent,
-  PageActions,
-};
+export { PageHeader, PageHeaderHeading, PageHeaderDescription, PageActions };

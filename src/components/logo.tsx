@@ -9,25 +9,20 @@ interface LogoProps {
 }
 
 export function Logo({ className, onClick, isLink = true }: LogoProps) {
+  const logoClasses =
+    "inline-flex items-center gap-1.5 text-base leading-none font-bold";
+
   return isLink ? (
     <Link
       href="/"
       onClick={onClick}
-      className={cn(
-        "flex h-8 items-center gap-1.5 text-lg font-semibold",
-        className,
-      )}
+      className={cn(logoClasses, "h-8", className)}
     >
       <MapPin className="size-4" />
       mapcn
     </Link>
   ) : (
-    <div
-      className={cn(
-        "flex items-center gap-1.5 text-lg font-semibold",
-        className,
-      )}
-    >
+    <div className={cn(logoClasses, className)}>
       <MapPin className="size-4" />
       mapcn
     </div>

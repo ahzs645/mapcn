@@ -117,11 +117,7 @@ const statusConfig: Record<
 
 export function EVChargingExample() {
   return (
-    <ExampleCard
-      label="EV Charging"
-      className="aspect-square"
-      delay="delay-700"
-    >
+    <ExampleCard label="EV Charging" className="aspect-square" stagger={7}>
       <Map center={[-122.434, 37.776]} zoom={11}>
         {stations.map((station) => {
           const config = statusConfig[station.status];
@@ -144,7 +140,7 @@ export function EVChargingExample() {
                     <span className={config.textClass}>{config.label}</span>
                   </div>
                   {station.detail && (
-                    <div className="text-muted-foreground">
+                    <div className="text-background/60 text-[11px]">
                       {station.detail}
                     </div>
                   )}

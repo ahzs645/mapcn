@@ -8,7 +8,7 @@ export function StandalonePopupExample() {
   const [showPopup, setShowPopup] = useState(true);
 
   return (
-    <div className="h-[400px] w-full relative">
+    <div className="relative h-[420px] w-full">
       <Map center={[-74.006, 40.7128]} zoom={13}>
         {showPopup && (
           <MapPopup
@@ -21,8 +21,8 @@ export function StandalonePopupExample() {
             className="w-62"
           >
             <div className="space-y-2">
-              <h3 className="font-semibold text-foreground">New York City</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="text-foreground font-semibold">New York City</h3>
+              <p className="text-muted-foreground text-sm">
                 The city that never sleeps. Population: 8.3 million
               </p>
               <Button

@@ -10,6 +10,7 @@ import { Footer } from "@/components/footer";
 import { Metadata } from "next";
 import { getAllBlocks } from "@/lib/blocks";
 import { BlockDisplay } from "./_components/block-display";
+import { type CSSProperties } from "react";
 
 export const metadata: Metadata = {
   title: "Map blocks for your application",
@@ -22,15 +23,15 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader align="left">
-        <PageHeaderHeading className="md:text-5xl">
+      <PageHeader align="left" showBackground={false}>
+        <PageHeaderHeading className="font-semibold md:text-5xl">
           Map blocks for your application
         </PageHeaderHeading>
         <PageHeaderDescription className="md:text-lg">
           Pre-built, ready-to-use map blocks. Browse, preview, and copy them
           into your app with one command.
         </PageHeaderDescription>
-        <PageActions className="delay-300">
+        <PageActions>
           <Button asChild>
             <a href="#blocks">Browse Blocks</a>
           </Button>
@@ -41,8 +42,13 @@ export default async function Page() {
       </PageHeader>
 
       <section
-        className="animate-fade-up container scroll-mt-20 space-y-20 delay-400"
+        className="animate-fade-up animate-stagger container scroll-mt-20 space-y-20"
         id="blocks"
+        style={
+          {
+            "--stagger": 4,
+          } as CSSProperties
+        }
       >
         {blocks.map((block) => (
           <BlockDisplay key={block.name} name={block.name} />

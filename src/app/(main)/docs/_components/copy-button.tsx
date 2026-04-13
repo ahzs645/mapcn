@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface CopyButtonProps {
   text: string;
-  className?: string;
 }
 
-export function CopyButton({ text, className }: CopyButtonProps) {
+export function CopyButton({ text }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -19,19 +18,14 @@ export function CopyButton({ text, className }: CopyButtonProps) {
   };
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon-sm"
       onClick={copy}
-      className={cn(
-        "p-1.5 rounded hover:bg-muted transition-colors",
-        className
-      )}
       aria-label="Copy code"
+      className="text-muted-foreground"
     >
-      {copied ? (
-        <Check className="size-3.5 text-emerald-500" />
-      ) : (
-        <Copy className="size-3.5 text-muted-foreground" />
-      )}
-    </button>
+      {copied ? <Check /> : <Copy />}
+    </Button>
   );
 }

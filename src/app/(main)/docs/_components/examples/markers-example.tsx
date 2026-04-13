@@ -24,7 +24,7 @@ const locations = [
 
 export function MarkersExample() {
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-[420px] w-full">
       <Map center={[-73.98, 40.76]} zoom={12}>
         {locations.map((location) => (
           <MapMarker
@@ -33,13 +33,13 @@ export function MarkersExample() {
             latitude={location.lat}
           >
             <MarkerContent>
-              <div className="size-4 rounded-full bg-primary border-2 border-white shadow-lg" />
+              <div className="bg-primary size-4 rounded-full border-2 border-white shadow-lg" />
             </MarkerContent>
             <MarkerTooltip>{location.name}</MarkerTooltip>
             <MarkerPopup>
               <div className="space-y-1">
-                <p className="font-medium text-foreground">{location.name}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-foreground font-medium">{location.name}</p>
+                <p className="text-muted-foreground text-xs">
                   {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                 </p>
               </div>

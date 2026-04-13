@@ -145,16 +145,16 @@ function CustomLayer() {
           onClick={toggleLayer}
         >
           {isLayerVisible ? (
-            <X className="size-4 mr-1.5" />
+            <X className="mr-1.5 size-4" />
           ) : (
-            <Layers className="size-4 mr-1.5" />
+            <Layers className="mr-1.5 size-4" />
           )}
           {isLayerVisible ? "Hide Parks" : "Show Parks"}
         </Button>
       </div>
 
       {hoveredPark && (
-        <div className="absolute bottom-3 left-3 z-10 rounded-md bg-background/90 backdrop-blur px-3 py-2 text-sm font-medium border">
+        <div className="bg-background/90 absolute bottom-3 left-3 z-10 rounded-md border px-3 py-2 text-sm font-medium backdrop-blur">
           {hoveredPark}
         </div>
       )}
@@ -164,7 +164,7 @@ function CustomLayer() {
 
 export function CustomLayerExample() {
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-[420px] w-full">
       <Map center={[-73.97, 40.78]} zoom={11.8}>
         <MapControls />
         <CustomLayer />

@@ -22,14 +22,14 @@ const stops = [
 
 export function RouteExample() {
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-[420px] w-full">
       <Map center={[-73.98, 40.75]} zoom={11.2}>
         <MapRoute coordinates={route} color="#3b82f6" width={4} opacity={0.8} />
 
         {stops.map((stop, index) => (
           <MapMarker key={stop.name} longitude={stop.lng} latitude={stop.lat}>
             <MarkerContent>
-              <div className="size-4.5 rounded-full bg-blue-500 border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-semibold">
+              <div className="flex size-4.5 items-center justify-center rounded-full border-2 border-white bg-blue-500 text-xs font-semibold text-white shadow-lg">
                 {index + 1}
               </div>
             </MarkerContent>

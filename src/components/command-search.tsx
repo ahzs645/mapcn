@@ -18,7 +18,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { Kbd } from "@/components/ui/kbd";
 import { siteNavigation } from "@/lib/site-navigation";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -52,16 +52,13 @@ export function CommandSearch({ className }: { className?: string }) {
         onClick={() => setOpen(true)}
         aria-label="Jump to pages, components, and docs"
         className={cn(
-          "border-border/50 bg-muted/40 text-muted-foreground hover:bg-muted/70 hover:text-foreground hidden h-8 w-48 items-center gap-2 rounded-md border px-2.5 md:flex",
+          "bg-muted/40 text-muted-foreground hover:bg-muted/60 dark:hover:bg-muted/60 hover:text-foreground mr-2.5 hidden w-48 border md:flex",
           className,
         )}
       >
         <SearchIcon className="size-3.5" />
         <span>Search...</span>
-        <KbdGroup className="ml-auto">
-          <Kbd>⌘</Kbd>
-          <Kbd>K</Kbd>
-        </KbdGroup>
+        <Kbd className="ml-auto bg-transparent">⌘K</Kbd>
       </Button>
       <CommandDialog
         open={open}
@@ -78,7 +75,7 @@ export function CommandSearch({ className }: { className?: string }) {
           <CommandEmpty className="text-muted-foreground py-8 text-sm">
             <div className="flex flex-col items-center gap-1.5">
               <FileText className="size-5 opacity-40" />
-              <span>No results found.</span>
+              <span>No results found</span>
             </div>
           </CommandEmpty>
           {siteNavigation.map((group) => (
@@ -88,7 +85,6 @@ export function CommandSearch({ className }: { className?: string }) {
                   key={item.href}
                   value={item.title}
                   onSelect={() => handleSelect(item.href)}
-                  className="p-0"
                 >
                   <item.icon />
                   <span>{item.title}</span>

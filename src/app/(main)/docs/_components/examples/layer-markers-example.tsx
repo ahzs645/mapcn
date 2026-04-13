@@ -49,7 +49,7 @@ function MarkersLayer() {
   const sourceId = `markers-source-${id}`;
   const layerId = `markers-layer-${id}`;
   const [selectedPoint, setSelectedPoint] = useState<SelectedPoint | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -76,14 +76,14 @@ function MarkersLayer() {
     const handleClick = (
       e: maplibregl.MapMouseEvent & {
         features?: maplibregl.MapGeoJSONFeature[];
-      }
+      },
     ) => {
       if (!e.features?.length) return;
 
       const feature = e.features[0];
       const coords = (feature.geometry as GeoJSON.Point).coordinates as [
         number,
-        number
+        number,
       ];
 
       setSelectedPoint({
@@ -134,7 +134,7 @@ function MarkersLayer() {
         >
           <div className="min-w-[140px]">
             <p className="font-medium">{selectedPoint.name}</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {selectedPoint.category}
             </p>
           </div>
@@ -146,7 +146,7 @@ function MarkersLayer() {
 
 export function LayerMarkersExample() {
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-[420px] w-full">
       <Map center={[-73.98, 40.75]} zoom={11}>
         <MarkersLayer />
       </Map>

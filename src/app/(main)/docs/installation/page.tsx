@@ -68,7 +68,7 @@ export default function InstallationPage() {
       <DocsSection title="Usage">
         <p>Import and use the map component:</p>
         <CodeBlock code={usageCode} />
-        <Card className="h-[320px] p-0 overflow-hidden rounded-lg">
+        <Card className="h-[320px] overflow-hidden rounded-lg p-0">
           <Map center={[-74.006, 40.7128]} zoom={11}>
             <MapControls />
           </Map>
@@ -77,8 +77,7 @@ export default function InstallationPage() {
 
       <DocsNote>
         <strong>Note:</strong> The map uses free CARTO basemap tiles by default.
-        No API key required. Tiles automatically switch between light and dark
-        themes.
+        Tiles automatically switch between light and dark themes.
       </DocsNote>
     </DocsLayout>
   );

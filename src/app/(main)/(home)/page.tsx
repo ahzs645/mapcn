@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { CSSProperties } from "react";
+
 import { ExamplesGrid } from "./_components/examples-grid";
 import { Footer } from "@/components/footer";
 import {
@@ -7,7 +10,6 @@ import {
   PageActions,
 } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 export default function Page() {
   return (
@@ -19,7 +21,6 @@ export default function Page() {
           <br className="hidden sm:block" />
           Built on MapLibre. Styled with Tailwind.
         </PageHeaderDescription>
-
         <PageActions>
           <Button size="lg" asChild>
             <Link href="/docs">Get Started</Link>
@@ -30,7 +31,14 @@ export default function Page() {
         </PageActions>
       </PageHeader>
 
-      <section className="container-wide">
+      <section
+        className="animate-fade-in animate-stagger container-wide pt-4"
+        style={
+          {
+            "--stagger": 4,
+          } as CSSProperties
+        }
+      >
         <ExamplesGrid />
       </section>
 

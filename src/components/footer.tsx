@@ -37,7 +37,7 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
             <Logo className="w-fit" />
-            <p className="text-muted-foreground mt-3 max-w-xs text-sm leading-relaxed">
+            <p className="text-muted-foreground mt-2 max-w-xs text-sm leading-relaxed">
               Free & open-source, ready-to-use, customizable map components for
               React.
             </p>

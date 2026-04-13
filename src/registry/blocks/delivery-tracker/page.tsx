@@ -71,7 +71,7 @@ export default function Page() {
       setLoading(true);
       try {
         const response = await fetch(
-          `https://router.project-osrm.org/route/v1/driving/${pickup.lng},${pickup.lat};${dropoff.lng},${dropoff.lat}?overview=full&geometries=geojson`
+          `https://router.project-osrm.org/route/v1/driving/${pickup.lng},${pickup.lat};${dropoff.lng},${dropoff.lat}?overview=full&geometries=geojson`,
         );
         const data = await response.json();
         const route = data?.routes?.[0];
@@ -96,8 +96,8 @@ export default function Page() {
     const progressCount = Math.max(
       2,
       Math.floor(
-        (routeData?.coordinates?.length ?? 0) * (routeData ? 0.62 : 0.66)
-      )
+        (routeData?.coordinates?.length ?? 0) * (routeData ? 0.62 : 0.66),
+      ),
     );
     return routeData?.coordinates?.slice(0, progressCount) ?? [];
   }, [routeData]);
@@ -106,13 +106,13 @@ export default function Page() {
 
   return (
     <div className="p-8">
-      <div className="grid md:grid-cols-[1.05fr_1fr] bg-sidebar rounded-lg border md:h-[600px] max-w-7xl mx-auto">
-        <div className="p-5 md:p-6 flex flex-col">
+      <div className="bg-sidebar mx-auto grid max-w-7xl rounded-lg border md:h-[600px] md:grid-cols-[1.05fr_1fr]">
+        <div className="flex flex-col p-5 md:p-6">
           <div className="space-y-1">
             <h3 className="text-2xl font-semibold tracking-tight">
               Track Delivery
             </h3>
-            <p className="text-sm text-muted-foreground">Mon Feb 10 - 2-3 PM</p>
+            <p className="text-muted-foreground text-sm">Mon Feb 10 - 2-3 PM</p>
           </div>
 
           <Card className="mt-5">
@@ -124,14 +124,14 @@ export default function Page() {
             <CardContent className="space-y-5">
               {deliveryMeals.map((meal) => (
                 <div key={meal.name} className="flex items-center gap-3">
-                  <div className="grid size-8 place-items-center rounded-full bg-muted text-xs font-medium">
-                    <Utensils className="size-4 text-muted-foreground" />
+                  <div className="bg-muted grid size-8 place-items-center rounded-full text-xs font-medium">
+                    <Utensils className="text-muted-foreground size-4" />
                   </div>
                   <div className="min-w-4 flex-1">
-                    <p className="truncate text-sm font-medium pb-1">
+                    <p className="truncate pb-1 text-sm font-medium">
                       {meal.name}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {meal.price}
                     </p>
                   </div>
@@ -143,7 +143,7 @@ export default function Page() {
                   </Badge>
                 </div>
               ))}
-              <div className="flex items-center justify-between border-t border-border/60 pt-3 text-sm">
+              <div className="border-border/60 flex items-center justify-between border-t pt-3 text-sm">
                 <span className="text-muted-foreground">Bundle total</span>
                 <span className="font-medium">$189.00</span>
               </div>
@@ -153,7 +153,7 @@ export default function Page() {
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <Card>
               <CardContent className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-muted-foreground text-sm font-medium">
                   Pickup confirmed
                 </p>
                 <p className="text-sm font-medium">Mon, Feb 10 at 1:48 PM</p>
@@ -161,7 +161,7 @@ export default function Page() {
             </Card>
             <Card>
               <CardContent className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-muted-foreground text-sm font-medium">
                   Remaining travel
                 </p>
                 <p className="text-sm font-medium">
@@ -183,7 +183,7 @@ export default function Page() {
           </div>
         </div>
 
-        <div className="relative h-[400px] overflow-hidden rounded-xl md:h-full shadow-sm">
+        <div className="relative h-[400px] overflow-hidden rounded-xl shadow-sm md:h-full">
           <Map
             loading={loading}
             center={[-122.435, 37.696]}
@@ -228,7 +228,7 @@ export default function Page() {
                     <p className="font-medium">
                       Order {formatDuration(routeData?.duration)} away
                     </p>
-                    <p className="text-muted-foreground">
+                    <p className="text-background/70">
                       Route {formatDistance(routeData?.distance)}
                     </p>
                   </div>
@@ -240,18 +240,14 @@ export default function Page() {
               <MarkerContent>
                 <div className="size-4 rounded-full border-2 border-white bg-emerald-500 shadow-sm" />
               </MarkerContent>
-              <MarkerTooltip>
-                <p className="text-xs font-medium">Origin</p>
-              </MarkerTooltip>
+              <MarkerTooltip>Origin</MarkerTooltip>
             </MapMarker>
 
             <MapMarker longitude={dropoff.lng} latitude={dropoff.lat}>
               <MarkerContent>
                 <div className="size-4 rounded-full border-2 border-white bg-rose-500 shadow-sm" />
               </MarkerContent>
-              <MarkerTooltip>
-                <p className="text-xs font-medium">Destination</p>
-              </MarkerTooltip>
+              <MarkerTooltip>Destination</MarkerTooltip>
             </MapMarker>
           </Map>
         </div>

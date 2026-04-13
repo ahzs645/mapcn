@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Code, Eye, Fullscreen, Terminal } from "lucide-react";
+import { Check, Fullscreen, Terminal } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { RegistryBlockItem, type FileTree } from "@/lib/blocks";
@@ -51,11 +51,9 @@ export function BlockPreview({
         <div className="flex items-center justify-between">
           <TabsList className="h-8!">
             <TabsTrigger value="preview" className="text-xs">
-              <Eye className="size-3.5" />
               Preview
             </TabsTrigger>
             <TabsTrigger value="code" className="text-xs">
-              <Code className="size-3.5" />
               Code
             </TabsTrigger>
           </TabsList>
@@ -84,11 +82,11 @@ export function BlockPreview({
           </div>
         </div>
 
-        <TabsContent value="preview" className="mt-2">
+        <TabsContent value="preview" className="mt-3">
           {children}
         </TabsContent>
 
-        <TabsContent value="code" className="mt-2">
+        <TabsContent value="code" className="mt-3">
           <BlockViewerCode tree={tree} highlightedFiles={highlightedFiles} />
         </TabsContent>
       </Tabs>

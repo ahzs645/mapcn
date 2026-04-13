@@ -12,13 +12,16 @@ export function MainNav({ className, ...props }: React.ComponentProps<"nav">) {
   if (!navItems?.length) return null;
 
   return (
-    <nav className={cn("flex items-center", className)} {...props}>
+    <nav className={cn("flex items-center gap-0.5", className)} {...props}>
       {navItems.map((item) => (
-        <Button key={item.href} variant="ghost" asChild size="sm">
-          <Link
-            href={item.href}
-            className="relative inline-flex items-center gap-1.5"
-          >
+        <Button
+          key={item.href}
+          variant="ghost"
+          asChild
+          size="sm"
+          className="text-primary"
+        >
+          <Link href={item.href}>
             <span>{item.title}</span>
           </Link>
         </Button>

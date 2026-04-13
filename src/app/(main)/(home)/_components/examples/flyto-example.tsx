@@ -23,7 +23,7 @@ export function FlyToExample() {
   const mapRef = useRef<MapRef>(null);
 
   return (
-    <ExampleCard label="Fly To" className="aspect-square" delay="delay-600">
+    <ExampleCard label="Fly To" className="aspect-square" stagger={6}>
       <Map
         center={destination.startCenter}
         zoom={0.5}
@@ -36,14 +36,14 @@ export function FlyToExample() {
         >
           <MarkerContent>
             <div className="relative flex items-center justify-center">
-              <div className="absolute size-6 rounded-full bg-cyan-500/20 animate-ping" />
-              <div className="size-4 rounded-full bg-cyan-500 border-2 border-white shadow-lg" />
+              <div className="absolute size-6 animate-ping rounded-full bg-cyan-500/20" />
+              <div className="size-4 rounded-full border-2 border-white bg-cyan-500 shadow-lg" />
             </div>
           </MarkerContent>
           <MarkerTooltip>
             <div className="text-center">
               <div className="font-medium">{destination.name}</div>
-              <div className="text-[10px] text-muted-foreground">
+              <div className="text-background/70 text-[10px]">
                 {destination.description}
               </div>
             </div>

@@ -16,7 +16,7 @@ export default function ClusterExample() {
   } | null>(null);
 
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-[420px] w-full">
       <Map center={[-103.59, 40.66]} zoom={3.4} fadeDuration={0}>
         <MapClusterLayer<EarthquakeProperties>
           data="https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson"

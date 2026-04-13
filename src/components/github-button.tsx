@@ -21,7 +21,7 @@ export function GitHubButton({ withCount = true }: { withCount?: boolean }) {
           />
         </svg>
         {withCount && (
-          <Suspense fallback={<Skeleton className="w-6 h-4 rounded" />}>
+          <Suspense fallback={<Skeleton className="h-4 w-6 rounded" />}>
             <StarCount />
           </Suspense>
         )}
@@ -33,7 +33,7 @@ export function GitHubButton({ withCount = true }: { withCount?: boolean }) {
 export async function StarCount() {
   const response = await fetch(
     "https://api.github.com/repos/AnmolSaini16/mapcn",
-    { next: { revalidate: 60 } }
+    { next: { revalidate: 60 } },
   );
 
   const data = await response.json();
@@ -46,7 +46,7 @@ export async function StarCount() {
   return (
     <>
       {formattedCount && (
-        <span className="text-xs text-muted-foreground tabular-nums pt-0.5">
+        <span className="text-muted-foreground pt-0.5 text-xs tabular-nums">
           {formattedCount}
         </span>
       )}

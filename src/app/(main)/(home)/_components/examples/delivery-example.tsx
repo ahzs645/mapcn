@@ -18,14 +18,14 @@ const home = { lng: -0.07, lat: 51.51 };
 export function DeliveryExample() {
   const [route, setRoute] = useState<[number, number][]>([]);
   const [truckPosition, setTruckPosition] = useState<[number, number] | null>(
-    null
+    null,
   );
 
   useEffect(() => {
     async function fetchRoute() {
       try {
         const response = await fetch(
-          `https://router.project-osrm.org/route/v1/driving/${store.lng},${store.lat};${home.lng},${home.lat}?overview=full&geometries=geojson`
+          `https://router.project-osrm.org/route/v1/driving/${store.lng},${store.lat};${home.lng},${home.lat}?overview=full&geometries=geojson`,
         );
         const data = await response.json();
 
@@ -48,7 +48,7 @@ export function DeliveryExample() {
     <ExampleCard
       label="Delivery"
       className="aspect-square sm:col-span-2 sm:aspect-video lg:aspect-auto"
-      delay="delay-900"
+      stagger={9}
     >
       <Map center={[-0.105, 51.511]} zoom={12.4}>
         {route.length > 0 && (
@@ -56,14 +56,14 @@ export function DeliveryExample() {
         )}
         <MapMarker longitude={store.lng} latitude={store.lat}>
           <MarkerContent>
-            <div className="size-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-lg" />
+            <div className="size-3.5 rounded-full border-2 border-white bg-emerald-500 shadow-lg" />
             <MarkerLabel>Store</MarkerLabel>
           </MarkerContent>
         </MapMarker>
         {truckPosition && (
           <MapMarker longitude={truckPosition[0]} latitude={truckPosition[1]}>
             <MarkerContent>
-              <div className="bg-blue-500 rounded-full p-1.5 shadow-lg">
+              <div className="rounded-full bg-blue-500 p-1.5 shadow-lg">
                 <Truck className="size-3 text-white" />
               </div>
             </MarkerContent>
@@ -72,7 +72,7 @@ export function DeliveryExample() {
         )}
         <MapMarker longitude={home.lng} latitude={home.lat}>
           <MarkerContent>
-            <div className="size-3.5 rounded-full bg-blue-500 border-2 border-white shadow-lg" />
+            <div className="size-3.5 rounded-full border-2 border-white bg-blue-500 shadow-lg" />
             <MarkerLabel>Home</MarkerLabel>
           </MarkerContent>
         </MapMarker>

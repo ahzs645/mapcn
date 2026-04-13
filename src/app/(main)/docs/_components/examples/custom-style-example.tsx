@@ -22,7 +22,7 @@ export function CustomStyleExample() {
   }, [is3D]);
 
   return (
-    <div className="h-[400px] relative w-full">
+    <div className="relative h-[420px] w-full">
       <Map
         ref={mapRef}
         center={[-0.1276, 51.5074]}
@@ -37,7 +37,7 @@ export function CustomStyleExample() {
         <select
           value={style}
           onChange={(e) => setStyle(e.target.value as StyleKey)}
-          className="bg-background text-foreground border rounded-md px-2 py-1 text-sm shadow"
+          className="bg-background text-foreground rounded-md border px-2 py-1 text-sm shadow"
         >
           <option value="default">Default (Carto)</option>
           <option value="openstreetmap">OpenStreetMap</option>

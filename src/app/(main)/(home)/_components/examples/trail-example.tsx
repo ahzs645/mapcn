@@ -25,37 +25,37 @@ const end = trailCoordinates[trailCoordinates.length - 1];
 
 export function TrailExample() {
   return (
-    <ExampleCard label="" className="aspect-square" delay="delay-500">
-      <div className="absolute top-3 left-3 z-10 bg-background/95 backdrop-blur-md rounded-lg p-3 border border-border/50 shadow-lg">
-        <div className="flex items-center gap-1.5 mb-2">
+    <ExampleCard className="aspect-square" stagger={5}>
+      <div className="bg-background/95 border-border/50 absolute top-3 left-3 z-10 rounded-lg border p-3 shadow-lg backdrop-blur-md">
+        <div className="mb-2 flex items-center gap-1.5">
           <Bike className="size-3.5 text-emerald-500" />
           <span className="text-xs font-medium">Central Park Loop</span>
         </div>
         <div className="grid grid-cols-3 gap-3 text-center">
           <div>
-            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-0.5">
+            <div className="text-muted-foreground mb-0.5 flex items-center justify-center gap-1">
               <Route className="size-3" />
             </div>
             <div className="text-sm font-semibold">6.2</div>
-            <div className="text-[9px] text-muted-foreground uppercase">
+            <div className="text-muted-foreground text-[9px] uppercase">
               Miles
             </div>
           </div>
           <div>
-            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-0.5">
+            <div className="text-muted-foreground mb-0.5 flex items-center justify-center gap-1">
               <Clock className="size-3" />
             </div>
             <div className="text-sm font-semibold">32</div>
-            <div className="text-[9px] text-muted-foreground uppercase">
+            <div className="text-muted-foreground text-[9px] uppercase">
               Mins
             </div>
           </div>
           <div>
-            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-0.5">
+            <div className="text-muted-foreground mb-0.5 flex items-center justify-center gap-1">
               <Flame className="size-3" />
             </div>
             <div className="text-sm font-semibold">285</div>
-            <div className="text-[9px] text-muted-foreground uppercase">
+            <div className="text-muted-foreground text-[9px] uppercase">
               Cal
             </div>
           </div>
@@ -72,13 +72,13 @@ export function TrailExample() {
 
         <MapMarker longitude={start[0]} latitude={start[1]}>
           <MarkerContent>
-            <div className="size-3 rounded-full bg-emerald-500 border-2 border-white shadow-lg" />
+            <div className="size-3 rounded-full border-2 border-white bg-emerald-500 shadow-lg" />
           </MarkerContent>
         </MapMarker>
 
         <MapMarker longitude={end[0]} latitude={end[1]}>
           <MarkerContent>
-            <div className="size-3 rounded-full bg-red-500 border-2 border-white shadow-lg" />
+            <div className="size-3 rounded-full border-2 border-white bg-red-500 shadow-lg" />
           </MarkerContent>
         </MapMarker>
       </Map>

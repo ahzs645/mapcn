@@ -11,7 +11,7 @@ export function DraggableMarkerExample() {
   });
 
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-[420px] w-full">
       <Map center={[-73.98, 40.75]} zoom={12}>
         <MapMarker
           draggable
@@ -31,8 +31,8 @@ export function DraggableMarkerExample() {
           </MarkerContent>
           <MarkerPopup>
             <div className="space-y-1">
-              <p className="font-medium text-foreground">Coordinates</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-foreground font-medium">Coordinates</p>
+              <p className="text-muted-foreground text-xs">
                 {draggableMarker.lat.toFixed(4)},{" "}
                 {draggableMarker.lng.toFixed(4)}
               </p>

@@ -33,10 +33,10 @@ interface DocsTitleProps {
 function DocsTitle({ title, description }: DocsTitleProps) {
   return (
     <div className="space-y-3">
-      <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+      <h1 className="text-foreground text-3xl font-semibold tracking-tight">
         {title}
       </h1>
-      <p className="text-base text-muted-foreground leading-relaxed">
+      <p className="text-muted-foreground text-base leading-relaxed">
         {description}
       </p>
     </div>
@@ -62,18 +62,18 @@ export function DocsLayout({
   toc = [],
 }: DocsLayoutProps) {
   return (
-    <div className="flex">
-      <div className="flex-1 min-w-0 max-w-[800px] lg:px-4 mx-auto pb-20 pt-12">
+    <div className="flex size-full">
+      <div className="mx-auto flex max-w-[52rem] min-w-0 flex-1 flex-col pt-10 pb-20 lg:px-4">
         <DocsTitle title={title} description={description} />
-        <div className="mt-12 space-y-12">{children}</div>
+        <div className="mt-12 mb-12 space-y-12">{children}</div>
         {(prev || next) && (
-          <div className="flex items-center justify-between gap-4 mt-16">
+          <div className="mt-auto flex items-center justify-between gap-4">
             {prev ? (
               <Button
                 variant="ghost"
                 size="sm"
                 asChild
-                className="h-auto py-2 -ml-2"
+                className="-ml-2 h-auto py-2"
               >
                 <Link href={prev.href}>
                   <ChevronLeft /> {prev.title}
@@ -87,7 +87,7 @@ export function DocsLayout({
                 variant="ghost"
                 size="sm"
                 asChild
-                className="h-auto py-2 -mr-2"
+                className="-mr-2 h-auto py-2"
               >
                 <Link href={next.href}>
                   {next.title} <ChevronRight />
@@ -98,8 +98,8 @@ export function DocsLayout({
         )}
       </div>
 
-      <aside className="hidden xl:block w-44 shrink-0">
-        <nav className="sticky top-24">
+      <aside className="hidden w-42 shrink-0 xl:block">
+        <nav className="sticky top-24 max-h-[calc(100svh-7rem)] overflow-y-auto pr-1">
           {toc.length > 0 && <DocsToc items={toc} />}
         </nav>
       </aside>
@@ -116,13 +116,13 @@ interface DocsSectionProps {
 export function DocsSection({ title, children }: DocsSectionProps) {
   const id = title ? slugify(title) : undefined;
   return (
-    <section className="space-y-5 scroll-m-24" id={id}>
+    <section className="scroll-m-24 space-y-5" id={id}>
       {title && (
-        <h2 className="text-xl font-semibold tracking-tight text-foreground">
+        <h2 className="text-foreground text-xl font-semibold tracking-tight">
           {title}
         </h2>
       )}
-      <div className="text-base text-foreground/80 leading-7 space-y-4 [&_p]:leading-7 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-2 [&_li]:leading-7 [&_strong]:text-foreground [&_strong]:font-medium [&_em]:text-muted-foreground">
+      <div className="text-primary [&_strong]:text-foreground [&_em]:text-muted-foreground space-y-4 text-base leading-7 [&_li]:leading-7 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5 [&_p]:leading-7 [&_strong]:font-medium [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5">
         {children}
       </div>
     </section>
@@ -136,7 +136,7 @@ interface DocsNoteProps {
 
 export function DocsNote({ children }: DocsNoteProps) {
   return (
-    <div className="rounded-lg border bg-muted/30 px-5 py-4 text-[14px] leading-relaxed text-foreground/70 [&_strong]:text-foreground [&_strong]:font-medium">
+    <div className="bg-muted/40 text-foreground/80 [&_strong]:text-foreground rounded-lg border px-5 py-4 text-[15px] leading-relaxed [&_strong]:font-medium">
       {children}
     </div>
   );
@@ -155,7 +155,7 @@ export function DocsLink({ href, children, external }: DocsLinkProps) {
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className="font-medium text-foreground underline underline-offset-4 transition-colors"
+      className="text-foreground font-medium underline underline-offset-4"
     >
       {children}
     </Link>
@@ -173,8 +173,8 @@ export function DocsCode({
   return (
     <code
       className={cn(
-        "relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm",
-        className
+        "bg-muted relative rounded-md px-2 py-1 font-mono text-sm",
+        className,
       )}
     >
       {children}
@@ -194,10 +194,10 @@ interface DocsPropTableProps {
 
 export function DocsPropTable({ props }: DocsPropTableProps) {
   return (
-    <div className="rounded-lg border overflow-hidden my-6">
+    <div className="my-6 overflow-hidden rounded-lg border">
       <Table>
         <TableHeader>
-          <TableRow className="hover:bg-transparent bg-muted/30">
+          <TableRow className="bg-muted/30 hover:bg-transparent">
             <TableHead className="h-10 px-4 text-xs font-medium">
               Prop
             </TableHead>
@@ -219,16 +219,16 @@ export function DocsPropTable({ props }: DocsPropTableProps) {
                 <DocsCode className="text-[13px]">{prop.name}</DocsCode>
               </TableCell>
               <TableCell className="px-4 py-3 align-top whitespace-normal">
-                <DocsCode className="text-xs text-muted-foreground">
+                <DocsCode className="text-muted-foreground text-xs">
                   {prop.type}
                 </DocsCode>
               </TableCell>
               <TableCell className="px-4 py-3 align-top">
-                <DocsCode className="text-xs text-muted-foreground whitespace-normal">
+                <DocsCode className="text-muted-foreground text-xs whitespace-normal">
                   {prop.default ?? "—"}
                 </DocsCode>
               </TableCell>
-              <TableCell className="px-4 py-3 text-sm text-foreground/70 whitespace-normal min-w-[180px] leading-relaxed">
+              <TableCell className="text-foreground/70 min-w-[180px] px-4 py-3 text-sm leading-relaxed whitespace-normal">
                 {prop.description}
               </TableCell>
             </TableRow>

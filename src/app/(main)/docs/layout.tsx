@@ -7,8 +7,8 @@ export default function DocsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="container flex flex-col flex-1">
-      <SidebarProvider>
+    <div className="flex flex-1">
+      <SidebarProvider className="container min-h-min px-0">
         <DocsSidebar />
         <main className="size-full">{children}</main>
       </SidebarProvider>

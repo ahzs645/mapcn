@@ -6,6 +6,10 @@ interface BlockViewPageProps {
   params: Promise<{ name: string }>;
 }
 
+export function generateStaticParams() {
+  return Object.keys(blockComponents).map((name) => ({ name }));
+}
+
 export const generateMetadata = async ({ params }: BlockViewPageProps) => {
   const { name } = await params;
   const Component = blockComponents[name];

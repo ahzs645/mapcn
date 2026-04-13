@@ -22,15 +22,13 @@ export function DocsSidebar() {
 
   return (
     <Sidebar
-      className="sticky top-16 z-30 hidden h-[calc(100svh-4rem)] overscroll-none bg-transparent lg:flex"
+      className="sticky top-14 z-30 hidden h-[calc(100svh-3.5rem)] overscroll-none bg-transparent lg:flex"
       collapsible="none"
     >
       <SidebarContent className="pt-6">
         {docsNavigation.map((group) => (
           <SidebarGroup key={group.title}>
-            <SidebarGroupLabel className="text-foreground">
-              {group.title}
-            </SidebarGroupLabel>
+            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map((item) => (
@@ -38,7 +36,7 @@ export function DocsSidebar() {
                     <SidebarMenuButton
                       asChild
                       isActive={pathname === item.href}
-                      className="text-muted-foreground font-medium"
+                      className="font-medium"
                     >
                       <Link
                         href={item.href}
