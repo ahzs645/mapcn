@@ -3,10 +3,10 @@ import {
   DocsSection,
   DocsCode,
   DocsPropTable,
-} from "../_components/docs";
-import { ComponentPreview } from "../_components/component-preview";
-import { FillExtrusionExample } from "../_components/examples/fill-extrusion-example";
-import { getExampleSource } from "@/lib/get-example-source";
+} from "../../(main)/docs/_components/docs";
+import { ComponentPreview } from "../../(main)/docs/_components/component-preview";
+import { FillExtrusionExample } from "../../(main)/docs/_components/examples/fill-extrusion-example";
+import { getExampleSource } from "../../(main)/docs/_components/get-example-source";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
