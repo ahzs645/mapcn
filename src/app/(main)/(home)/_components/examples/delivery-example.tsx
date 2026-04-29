@@ -46,7 +46,6 @@ export function DeliveryExample() {
 
   return (
     <ExampleCard
-      label="Delivery"
       className="aspect-square sm:col-span-2 sm:aspect-video lg:aspect-auto"
       stagger={9}
     >

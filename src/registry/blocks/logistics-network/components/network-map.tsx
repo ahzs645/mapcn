@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   Map,
+  MapArc,
   MapControls,
   MapMarker,
   MarkerContent,
@@ -15,7 +17,6 @@ import {
   type Hub,
   type Route,
 } from "../data";
-import { MapArcs } from "./map-arcs";
 import { Separator } from "@/components/ui/separator";
 
 interface NetworkMapProps {
@@ -61,13 +62,44 @@ function MapControlsCard() {
 }
 
 export function NetworkMap({ hubs, routes }: NetworkMapProps) {
+  const arcs = useMemo(() => {
+    const hubById: Record<string, Hub> = Object.fromEntries(
+      hubs.map((hub) => [hub.id, hub]),
+    );
+    return routes.flatMap((route) => {
+      const fromHub = hubById[route.from];
+      const toHub = hubById[route.to];
+      if (!fromHub || !toHub) return [];
+      return [
+        {
+          id: `${route.from}-${route.to}`,
+          from: [fromHub.lng, fromHub.lat] as [number, number],
+          to: [toHub.lng, toHub.lat] as [number, number],
+          color:
+            route.status === "delayed"
+              ? statusConfig.delayed.color
+              : modeConfig[route.mode].color,
+        },
+      ];
+    });
+  }, [hubs, routes]);
+
   return (
     <div className="relative h-full">
       <MapControlsCard />
 
       <Map center={[-98, 39]} zoom={4} projection={{ type: "globe" }}>
         <MapControls />
-        <MapArcs routes={routes} />
+        <MapArc
+          data={arcs}
+          curvature={0.3}
+          paint={{
+            "line-color": ["get", "color"],
+            "line-width": 2,
+            "line-opacity": 0.65,
+          }}
+          interactive={false}
+        />
 
         {hubs.map((hub) => (
           <MapMarker key={hub.id} longitude={hub.lng} latitude={hub.lat}>

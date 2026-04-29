@@ -19,7 +19,7 @@ export function Header({ className }: { className?: string }) {
         <MobileNav />
         <Logo className="hidden shrink-0 lg:flex" />
         <Separator
-          className="ml-2.5 hidden h-4! w-px lg:block"
+          className="ml-2.5 hidden h-4! lg:block"
           orientation="vertical"
         />
         <MainNav className="hidden lg:flex" />

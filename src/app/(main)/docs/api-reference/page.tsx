@@ -25,6 +25,7 @@ const anatomyCode = `<Map>
   <MapPopup longitude={...} latitude={...} />
   <MapControls />
   <MapRoute coordinates={...} />
+  <MapArc data={...} />
   <MapClusterLayer data={...} />
 </Map>`;
 
@@ -49,6 +50,7 @@ export default function ApiReferencePage() {
         { title: "MarkerLabel", slug: "markerlabel" },
         { title: "MapPopup", slug: "mappopup" },
         { title: "MapRoute", slug: "maproute" },
+        { title: "MapArc", slug: "maparc" },
         { title: "MapClusterLayer", slug: "mapclusterlayer" },
       ]}
     >
@@ -554,6 +556,114 @@ export default function ApiReferencePage() {
               default: "true",
               description:
                 "Whether the route is interactive (shows pointer cursor on hover).",
+            },
+          ]}
+        />
+      </DocsSection>
+
+      {/* MapArc */}
+      <DocsSection title="MapArc">
+        <p>
+          Renders curved lines between coordinate pairs using a quadratic Bézier
+          in longitude/latitude space. Must be used inside{" "}
+          <DocsCode>Map</DocsCode>. Supports click and hover interactions for
+          building arc selection UIs.
+        </p>
+        <p>
+          Built on a MapLibre{" "}
+          <DocsLink
+            href="https://maplibre.org/maplibre-style-spec/layers/#line"
+            external
+          >
+            line layer
+          </DocsLink>{" "}
+          — the <DocsCode>paint</DocsCode> and <DocsCode>layout</DocsCode> props
+          accept any field from <DocsCode>LineLayerSpecification</DocsCode>{" "}
+          (e.g. <DocsCode>line-color</DocsCode>, <DocsCode>line-width</DocsCode>
+          , <DocsCode>line-opacity</DocsCode>,{" "}
+          <DocsCode>line-dasharray</DocsCode>, <DocsCode>line-blur</DocsCode>).
+        </p>
+        <p>
+          Style per arc by passing a{" "}
+          <DocsLink
+            href="https://maplibre.org/maplibre-style-spec/expressions/"
+            external
+          >
+            MapLibre expression
+          </DocsLink>{" "}
+          as any paint value. Reference fields on each datum with{" "}
+          <DocsCode>{`["get", "fieldName"]`}</DocsCode>.
+        </p>
+
+        <DocsPropTable
+          props={[
+            {
+              name: "data",
+              type: "MapArcDatum[]",
+              description:
+                "Arcs to render. Each needs a unique id and from / to as [lng, lat]. Extra fields are forwarded to feature properties.",
+            },
+            {
+              name: "id",
+              type: "string",
+              default: "auto",
+              description: "Id prefix for the underlying source/layers.",
+            },
+            {
+              name: "curvature",
+              type: "number",
+              default: "0.2",
+              description:
+                "How far the arc bows away from a straight line. 0 renders a straight line, higher values bend more, negative values bend to the opposite side.",
+            },
+            {
+              name: "samples",
+              type: "number",
+              default: "64",
+              description: "Points per arc. Higher = smoother.",
+            },
+            {
+              name: "paint",
+              type: "LineLayerSpecification['paint']",
+              default:
+                '{ "line-color": "#4285F4", "line-width": 2, "line-opacity": 0.85 }',
+              description:
+                "Paint props merged over defaults. Values may be MapLibre expressions for per-feature styling.",
+            },
+            {
+              name: "layout",
+              type: "LineLayerSpecification['layout']",
+              default: '{ "line-join": "round", "line-cap": "round" }',
+              description: "Layout props merged over defaults.",
+            },
+            {
+              name: "hoverPaint",
+              type: "LineLayerSpecification['paint']",
+              description:
+                "Paint overrides applied to the hovered arc via feature-state.",
+            },
+            {
+              name: "onClick",
+              type: "(e: MapArcEvent) => void",
+              description: "Fired when an arc is clicked.",
+            },
+            {
+              name: "onHover",
+              type: "(e: MapArcEvent | null) => void",
+              description:
+                "Fired when the hovered arc changes, with the cursor's lng/lat at entry. Receives null when the cursor leaves all arcs.",
+            },
+            {
+              name: "interactive",
+              type: "boolean",
+              default: "true",
+              description:
+                "Respond to mouse events (hover, cursor, callbacks).",
+            },
+            {
+              name: "beforeId",
+              type: "string",
+              description: "Insert the arc layers before this layer id.",
             },
           ]}
         />

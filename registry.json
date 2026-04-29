@@ -81,11 +81,6 @@
           "target": "app/logistics/data.ts"
         },
         {
-          "path": "src/registry/blocks/logistics-network/components/map-arcs.tsx",
-          "type": "registry:component",
-          "target": "app/logistics/components/map-arcs.tsx"
-        },
-        {
           "path": "src/registry/blocks/logistics-network/components/filter-sidebar.tsx",
           "type": "registry:component",
           "target": "app/logistics/components/filter-sidebar.tsx"

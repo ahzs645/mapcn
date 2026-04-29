@@ -98,8 +98,8 @@ export function DocsLayout({
         )}
       </div>
 
-      <aside className="hidden w-42 shrink-0 xl:block">
-        <nav className="sticky top-24 max-h-[calc(100svh-7rem)] overflow-y-auto pr-1">
+      <aside className="hidden w-44 shrink-0 xl:block">
+        <nav className="sticky top-14 max-h-[calc(100svh-3.5rem)] overflow-y-auto pt-10 pb-10 [scrollbar-gutter:stable]">
           {toc.length > 0 && <DocsToc items={toc} />}
         </nav>
       </aside>
@@ -122,7 +122,7 @@ export function DocsSection({ title, children }: DocsSectionProps) {
           {title}
         </h2>
       )}
-      <div className="text-primary [&_strong]:text-foreground [&_em]:text-muted-foreground space-y-4 text-base leading-7 [&_li]:leading-7 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5 [&_p]:leading-7 [&_strong]:font-medium [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5">
+      <div className="text-primary [&_strong]:text-foreground [&_em]:text-muted-foreground space-y-4 text-base leading-7 [&_strong]:font-medium [&>ol]:list-decimal [&>ol]:space-y-2 [&>ol]:pl-5 [&>ol>li]:leading-7 [&>p]:leading-7 [&>ul]:list-disc [&>ul]:space-y-2 [&>ul]:pl-5 [&>ul>li]:leading-7">
         {children}
       </div>
     </section>
@@ -173,7 +173,7 @@ export function DocsCode({
   return (
     <code
       className={cn(
-        "bg-muted relative rounded-md px-2 py-1 font-mono text-sm",
+        "bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm",
         className,
       )}
     >

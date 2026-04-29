@@ -58,10 +58,10 @@ export function PopupExample() {
         {places.map((place) => (
           <MapMarker key={place.id} longitude={place.lng} latitude={place.lat}>
             <MarkerContent>
-              <div className="size-5 rounded-full bg-rose-500 border-2 border-white shadow-lg cursor-pointer hover:scale-110 transition-transform" />
+              <div className="size-5 cursor-pointer rounded-full border-2 border-white bg-rose-500 shadow-lg transition-transform hover:scale-110" />
               <MarkerLabel position="bottom">{place.label}</MarkerLabel>
             </MarkerContent>
-            <MarkerPopup className="p-0 w-62">
+            <MarkerPopup className="w-62 p-0">
               <div className="relative h-32 overflow-hidden rounded-t-md">
                 <Image
                   fill
@@ -72,10 +72,10 @@ export function PopupExample() {
               </div>
               <div className="space-y-2 p-3">
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  <p className="text-muted-foreground pb-0.5 text-[11px] font-medium tracking-wide uppercase">
                     {place.category}
-                  </span>
-                  <h3 className="font-semibold text-foreground leading-tight">
+                  </p>
+                  <h3 className="text-foreground leading-tight font-semibold">
                     {place.name}
                   </h3>
                 </div>
@@ -88,16 +88,16 @@ export function PopupExample() {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
                   <Clock className="size-3.5" />
                   <span>{place.hours}</span>
                 </div>
                 <div className="flex gap-2 pt-1">
-                  <Button size="sm" className="flex-1 h-8">
-                    <Navigation className="size-3.5 mr-1.5" />
+                  <Button size="sm" className="flex-1">
+                    <Navigation className="size-3.5" />
                     Directions
                   </Button>
-                  <Button size="sm" variant="outline" className="h-8">
+                  <Button size="icon-sm" variant="outline">
                     <ExternalLink className="size-3.5" />
                   </Button>
                 </div>

@@ -23,7 +23,7 @@ export default function RoutesPage() {
       title="Routes"
       description="Draw lines and paths connecting coordinates on the map."
       prev={{ title: "Popups", href: "/docs/popups" }}
-      next={{ title: "Clusters", href: "/docs/clusters" }}
+      next={{ title: "Arcs", href: "/docs/arcs" }}
       toc={[
         { title: "Basic Route", slug: "basic-route" },
         { title: "Route Planning", slug: "route-planning" },

@@ -18,7 +18,6 @@ export function StandalonePopupExample() {
             closeButton
             focusAfterOpen={false}
             closeOnClick={false}
-            className="w-62"
           >
             <div className="space-y-2">
               <h3 className="text-foreground font-semibold">New York City</h3>

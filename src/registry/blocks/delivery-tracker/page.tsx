@@ -106,7 +106,7 @@ export default function Page() {
 
   return (
     <div className="p-8">
-      <div className="bg-sidebar mx-auto grid max-w-7xl rounded-lg border md:h-[600px] md:grid-cols-[1.05fr_1fr]">
+      <div className="bg-sidebar mx-auto grid max-w-7xl rounded-xl border md:h-[600px] md:grid-cols-[1.05fr_1fr]">
         <div className="flex flex-col p-5 md:p-6">
           <div className="space-y-1">
             <h3 className="text-2xl font-semibold tracking-tight">

@@ -132,7 +132,7 @@ function MarkersLayer() {
           offset={10}
           closeButton
         >
-          <div className="min-w-[140px]">
+          <div className="min-w-24">
             <p className="font-medium">{selectedPoint.name}</p>
             <p className="text-muted-foreground text-sm">
               {selectedPoint.category}

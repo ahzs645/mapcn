@@ -166,13 +166,15 @@ export default function IntroductionPage() {
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="bg-card space-y-2 rounded-lg border p-4"
+              className="bg-card space-y-3 rounded-lg border p-4"
             >
               <div className="flex items-center gap-2">
-                <div className="bg-primary/10 flex size-8 items-center justify-center rounded-md">
-                  <feature.icon className="text-primary size-4" />
+                <div className="bg-muted flex size-8 items-center justify-center rounded-md">
+                  <feature.icon className="text-foreground size-4" />
                 </div>
-                <h3 className="text-foreground font-medium">{feature.title}</h3>
+                <h3 className="text-foreground text-base font-medium">
+                  {feature.title}
+                </h3>
               </div>
               <p className="text-muted-foreground text-sm">
                 {feature.description}

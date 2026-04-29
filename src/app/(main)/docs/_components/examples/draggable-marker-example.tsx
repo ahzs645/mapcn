@@ -17,7 +17,7 @@ export function DraggableMarkerExample() {
           draggable
           longitude={draggableMarker.lng}
           latitude={draggableMarker.lat}
-          onDragEnd={(lngLat) => {
+          onDrag={(lngLat) => {
             setDraggableMarker({ lng: lngLat.lng, lat: lngLat.lat });
           }}
         >
@@ -32,7 +32,7 @@ export function DraggableMarkerExample() {
           <MarkerPopup>
             <div className="space-y-1">
               <p className="text-foreground font-medium">Coordinates</p>
-              <p className="text-muted-foreground text-xs">
+              <p className="text-muted-foreground text-xs tabular-nums">
                 {draggableMarker.lat.toFixed(4)},{" "}
                 {draggableMarker.lng.toFixed(4)}
               </p>

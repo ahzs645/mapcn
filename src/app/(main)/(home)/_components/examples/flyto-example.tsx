@@ -23,10 +23,10 @@ export function FlyToExample() {
   const mapRef = useRef<MapRef>(null);
 
   return (
-    <ExampleCard label="Fly To" className="aspect-square" stagger={6}>
+    <ExampleCard className="aspect-square" stagger={6}>
       <Map
         center={destination.startCenter}
-        zoom={0.5}
+        zoom={0.6}
         ref={mapRef}
         projection={{ type: "globe" }}
       >

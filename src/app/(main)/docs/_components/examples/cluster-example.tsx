@@ -41,14 +41,20 @@ export default function ClusterExample() {
             closeOnClick={false}
             focusAfterOpen={false}
             closeButton
+            className="w-34"
           >
-            <div className="space-y-1 p-1">
-              <p className="text-sm">
-                Magnitude: {selectedPoint.properties.mag}
+            <div className="text-[13px]">
+              <p className="text-muted-foreground">
+                Magnitude:{" "}
+                <span className="text-foreground font-medium">
+                  {selectedPoint.properties.mag}
+                </span>
               </p>
-              <p className="text-sm">
+              <p className="text-muted-foreground">
                 Tsunami:{" "}
-                {selectedPoint.properties?.tsunami === 1 ? "Yes" : "No"}
+                <span className="text-foreground font-medium">
+                  {selectedPoint.properties?.tsunami === 1 ? "Yes" : "No"}
+                </span>
               </p>
             </div>
           </MapPopup>

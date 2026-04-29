@@ -6,7 +6,7 @@ import { ExampleCard } from "./example-card";
 
 export function TrendingExample() {
   return (
-    <ExampleCard label="Trending" className="aspect-square" stagger={8}>
+    <ExampleCard className="aspect-square" stagger={8}>
       <Map center={[-73.99, 40.735]} zoom={10}>
         <MapMarker longitude={-73.9857} latitude={40.7484}>
           <MarkerContent>

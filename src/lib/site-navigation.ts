@@ -34,6 +34,7 @@ export const docsNavigation: SiteNavigationGroup[] = [
       { title: "Markers", href: "/docs/markers", icon: Layers2 },
       { title: "Popups", href: "/docs/popups", icon: Layers2 },
       { title: "Routes", href: "/docs/routes", icon: Layers2 },
+      { title: "Arcs", href: "/docs/arcs", icon: Layers2 },
       { title: "Clusters", href: "/docs/clusters", icon: Layers2 },
       { title: "Advanced", href: "/docs/advanced-usage", icon: Layers2 },
     ],

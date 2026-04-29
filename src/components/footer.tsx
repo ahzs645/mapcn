@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "./logo";
+import { cn } from "@/lib/utils";
 
 const footerLinks = {
   product: [
@@ -30,9 +31,9 @@ const footerLinks = {
   ],
 };
 
-export function Footer() {
+export function Footer({ className }: { className?: string }) {
   return (
-    <footer className="mt-24 border-t md:mt-32">
+    <footer className={cn("mt-30 border-t", className)}>
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
