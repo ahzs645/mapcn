@@ -9,6 +9,9 @@ import {
   MarkerTooltip,
 } from "@/registry/map";
 import { AqiOverviewCard } from "./components/aqi-overview-card";
+import { PollutantCard } from "./components/pollutant-card";
+import { SensorDetailCard } from "./components/sensor-detail-card";
+import { SensorListCard } from "./components/sensor-list-card";
 import { ThresholdLegend } from "./components/threshold-legend";
 import { sensors, getAqiColor, getAqiLabel } from "./data";
 
@@ -115,7 +118,14 @@ function SensorMarker({
 }
 
 export default function Page() {
-  const [selectedSensor, setSelectedSensor] = useState<string | null>(null);
+  const initialSensor = sensors.reduce((max, sensor) =>
+    sensor.aqi > max.aqi ? sensor : max,
+  );
+  const [selectedSensor, setSelectedSensor] = useState<string | null>(
+    initialSensor.id,
+  );
+  const selectedSensorData =
+    sensors.find((sensor) => sensor.id === selectedSensor) ?? null;
 
   const handleSelect = useCallback((id: string) => {
     setSelectedSensor((prev) => (prev === id ? null : id));
@@ -149,6 +159,19 @@ export default function Page() {
       </Map>
 
       <AqiOverviewCard />
+
+      <aside className="absolute inset-x-3 bottom-4 z-10 max-h-[48svh] overflow-y-auto md:inset-x-auto md:top-4 md:right-4 md:bottom-4 md:flex md:w-80 md:max-h-none md:flex-col md:gap-3 lg:w-88">
+        <div className="space-y-3">
+          <SensorDetailCard sensor={selectedSensorData} />
+          <SensorListCard
+            sensors={sensors}
+            selectedId={selectedSensor}
+            onSelect={handleSelect}
+          />
+          <PollutantCard />
+        </div>
+      </aside>
+
       <ThresholdLegend />
     </div>
   );

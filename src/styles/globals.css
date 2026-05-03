@@ -133,10 +133,12 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
-  .maplibregl-popup-content {
+  .mapcn-popup .maplibregl-popup-content,
+  .mapcn-tooltip .maplibregl-popup-content {
     @apply bg-transparent! shadow-none! p-0! rounded-none!;
   }
-  .maplibregl-popup-tip {
+  .mapcn-popup .maplibregl-popup-tip,
+  .mapcn-tooltip .maplibregl-popup-tip {
     @apply hidden!;
   }
 }
