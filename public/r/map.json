@@ -3,10 +3,7 @@
   "name": "map",
   "title": "Map",
   "description": "A MapLibre-powered map component with markers, popups, tooltips, routes, and controls.",
-  "dependencies": [
-    "maplibre-gl",
-    "lucide-react"
-  ],
+  "dependencies": ["maplibre-gl", "lucide-react"],
   "registryDependencies": [],
   "files": [
     {

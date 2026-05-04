@@ -3,14 +3,8 @@
   "name": "air-quality",
   "title": "Air Quality Monitor",
   "description": "Full-screen air quality map with AQI sensor markers, overview metrics, selected sensor details, and threshold legend.",
-  "dependencies": [
-    "recharts"
-  ],
-  "registryDependencies": [
-    "@mapcn/map",
-    "card",
-    "chart"
-  ],
+  "dependencies": ["recharts"],
+  "registryDependencies": ["@mapcn/map", "@mapcn/map-ui", "card", "chart"],
   "files": [
     {
       "path": "src/registry/blocks/air-quality/page.tsx",
@@ -50,14 +44,11 @@
     },
     {
       "path": "src/registry/blocks/air-quality/components/threshold-legend.tsx",
-      "content": "\"use client\";\n\nimport { AQI_COLORS } from \"../data\";\n\nconst levels = [\n  { label: \"Good\", sublabel: \"0–50\", key: \"good\" as const },\n  { label: \"Moderate\", sublabel: \"51–100\", key: \"moderate\" as const },\n  { label: \"USG\", sublabel: \"101–150\", key: \"unhealthy-sensitive\" as const },\n  { label: \"Unhealthy\", sublabel: \"151–200\", key: \"unhealthy\" as const },\n  { label: \"Hazardous\", sublabel: \"201+\", key: \"hazardous\" as const },\n];\n\nexport function ThresholdLegend() {\n  return (\n    <div className=\"bg-card/80 absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-px overflow-hidden rounded-lg border backdrop-blur-sm\">\n      {levels.map((level) => (\n        <div key={level.key} className=\"flex items-center gap-1.5 px-3 py-2\">\n          <span\n            className=\"size-2.5 rounded-full\"\n            style={{ backgroundColor: AQI_COLORS[level.key] }}\n          />\n          <div>\n            <p className=\"text-foreground text-[10px] leading-none font-medium\">\n              {level.label}\n            </p>\n            <p className=\"text-muted-foreground text-[9px] leading-none\">\n              {level.sublabel}\n            </p>\n          </div>\n        </div>\n      ))}\n    </div>\n  );\n}\n",
+      "content": "\"use client\";\n\nimport { AQI_COLORS } from \"../data\";\nimport { MapOverlay, MapSwatch } from \"@/components/ui/map-ui\";\n\nconst levels = [\n  { label: \"Good\", sublabel: \"0–50\", key: \"good\" as const },\n  { label: \"Moderate\", sublabel: \"51–100\", key: \"moderate\" as const },\n  { label: \"USG\", sublabel: \"101–150\", key: \"unhealthy-sensitive\" as const },\n  { label: \"Unhealthy\", sublabel: \"151–200\", key: \"unhealthy\" as const },\n  { label: \"Hazardous\", sublabel: \"201+\", key: \"hazardous\" as const },\n];\n\nexport function ThresholdLegend() {\n  return (\n    <MapOverlay\n      position=\"bottom-center\"\n      className=\"bg-card/80 bottom-4 flex items-center gap-px overflow-hidden rounded-lg p-0\"\n    >\n      {levels.map((level) => (\n        <div key={level.key} className=\"flex items-center gap-1.5 px-3 py-2\">\n          <MapSwatch color={AQI_COLORS[level.key]} shape=\"dot\" />\n          <div>\n            <p className=\"text-foreground text-[10px] leading-none font-medium\">\n              {level.label}\n            </p>\n            <p className=\"text-muted-foreground text-[9px] leading-none\">\n              {level.sublabel}\n            </p>\n          </div>\n        </div>\n      ))}\n    </MapOverlay>\n  );\n}\n",
       "type": "registry:component",
       "target": "app/air-quality/components/threshold-legend.tsx"
     }
   ],
-  "categories": [
-    "monitoring",
-    "environmental"
-  ],
+  "categories": ["monitoring", "environmental"],
   "type": "registry:block"
 }

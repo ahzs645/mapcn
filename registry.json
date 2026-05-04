@@ -20,13 +20,28 @@
       "css": {
         "@layer base": {
           ".maplibregl-popup-content": {
-             "@apply bg-transparent! shadow-none! p-0! rounded-none!": {}
+            "@apply bg-transparent! shadow-none! p-0! rounded-none!": {}
           },
           ".maplibregl-popup-tip": {
             "@apply hidden!": {}
           }
         }
       }
+    },
+    {
+      "name": "map-ui",
+      "type": "registry:ui",
+      "title": "Map UI",
+      "description": "Composable overlay, legend, and marker UI primitives for map interfaces.",
+      "dependencies": [],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/registry/map-ui.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/map-ui.tsx"
+        }
+      ]
     },
     {
       "name": "analytics-map",
@@ -68,7 +83,12 @@
       "title": "Logistics Network",
       "description": "Domestic logistics map with a sidebar of stats.",
       "dependencies": ["lucide-react"],
-      "registryDependencies": ["@mapcn/map", "sidebar", "separator"],
+      "registryDependencies": [
+        "@mapcn/map",
+        "@mapcn/map-ui",
+        "sidebar",
+        "separator"
+      ],
       "files": [
         {
           "path": "src/registry/blocks/logistics-network/page.tsx",
@@ -137,7 +157,7 @@
       "title": "Air Quality Monitor",
       "description": "Full-screen air quality map with AQI sensor markers, overview metrics, selected sensor details, and threshold legend.",
       "dependencies": ["recharts"],
-      "registryDependencies": ["@mapcn/map", "card", "chart"],
+      "registryDependencies": ["@mapcn/map", "@mapcn/map-ui", "card", "chart"],
       "files": [
         {
           "path": "src/registry/blocks/air-quality/page.tsx",

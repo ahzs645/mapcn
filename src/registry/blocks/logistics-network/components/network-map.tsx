@@ -9,6 +9,7 @@ import {
   MarkerContent,
   MarkerTooltip,
 } from "@/registry/map";
+import { MapMarkerDot, MapOverlay, MapSwatch } from "@/registry/map-ui";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   modeConfig,
@@ -26,38 +27,29 @@ interface NetworkMapProps {
 
 function MapControlsCard() {
   return (
-    <div className="border-border/40 bg-background/70 absolute top-4 left-4 z-20 flex items-center gap-3 rounded-lg border px-2.5 py-1.5 backdrop-blur-sm">
+    <MapOverlay className="border-border/40 bg-background/70 top-4 left-4 z-20 flex items-center gap-3 rounded-lg px-2.5 py-1.5">
       <SidebarTrigger />
       <Separator orientation="vertical" className="h-4!" />
       <div className="flex items-center gap-3 text-xs">
         <div className="flex items-center gap-1.5">
-          <span
-            className="h-0.5 w-4 shrink-0 rounded-full"
-            style={{ backgroundColor: modeConfig.air.color }}
-          />
+          <MapSwatch color={modeConfig.air.color} shape="line" />
           <span>{modeConfig.air.label}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span
-            className="h-0.5 w-4 shrink-0 rounded-full"
-            style={{ backgroundColor: modeConfig.ground.color }}
-          />
+          <MapSwatch color={modeConfig.ground.color} shape="line" />
           <span>{modeConfig.ground.label}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span
-            className="h-0.5 w-4 shrink-0 rounded-full"
-            style={{ backgroundColor: statusConfig.delayed.color }}
-          />
+          <MapSwatch color={statusConfig.delayed.color} shape="line" />
           <span>{statusConfig.delayed.label}</span>
         </div>
         <div className="bg-border h-4 w-px" />
         <div className="flex items-center gap-1.5">
-          <div className="size-2.5 shrink-0 rounded-full border border-white bg-blue-500 shadow-sm" />
+          <MapMarkerDot color="#3b82f6" className="size-2.5 border shadow-sm" />
           <span>Hub</span>
         </div>
       </div>
-    </div>
+    </MapOverlay>
   );
 }
 
@@ -104,7 +96,7 @@ export function NetworkMap({ hubs, routes }: NetworkMapProps) {
         {hubs.map((hub) => (
           <MapMarker key={hub.id} longitude={hub.lng} latitude={hub.lat}>
             <MarkerContent>
-              <div className="size-3 rounded-full border-2 border-white bg-blue-500 shadow-md" />
+              <MapMarkerDot color="#3b82f6" className="size-3 shadow-md" />
             </MarkerContent>
             <MarkerTooltip
               offset={16}

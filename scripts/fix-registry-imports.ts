@@ -2,8 +2,11 @@ import fs from "fs";
 import path from "path";
 
 const REGISTRY_DIR = path.join(process.cwd(), "public", "r");
-const FROM_IMPORT = "@/registry/map";
-const TO_IMPORT = "@/components/ui/map";
+const IMPORT_REWRITES = [
+  ["@/registry/map-ui", "@/components/ui/map-ui"],
+  ["@/registry/map-layers", "@/components/ui/map-layers"],
+  ["@/registry/map", "@/components/ui/map"],
+] as const;
 
 interface RegistryFile {
   path: string;
@@ -22,8 +25,10 @@ interface RegistryData {
 }
 
 function fixContent(content: string): string {
-  const escaped = FROM_IMPORT.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return content.replace(new RegExp(escaped, "g"), TO_IMPORT);
+  return IMPORT_REWRITES.reduce((nextContent, [fromImport, toImport]) => {
+    const escaped = fromImport.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return nextContent.replace(new RegExp(escaped, "g"), toImport);
+  }, content);
 }
 
 function processFile(filePath: string): void {
@@ -33,7 +38,7 @@ function processFile(filePath: string): void {
 
   if (Array.isArray(data.files)) {
     for (const file of data.files) {
-      if (file.content?.includes(FROM_IMPORT)) {
+      if (file.content?.includes("@/registry/")) {
         file.content = fixContent(file.content);
         changed = true;
       }
@@ -44,7 +49,7 @@ function processFile(filePath: string): void {
     for (const item of data.items) {
       if (Array.isArray(item.files)) {
         for (const file of item.files) {
-          if (file.content?.includes(FROM_IMPORT)) {
+          if (file.content?.includes("@/registry/")) {
             file.content = fixContent(file.content);
             changed = true;
           }

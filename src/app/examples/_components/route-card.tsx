@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  Map,
-  MapMarker,
-  MarkerContent,
-  MapRoute,
-} from "@/registry/map";
+import { Map, MapMarker, MarkerContent, MapRoute } from "@/registry/map";
+import { MapNumberedMarker } from "@/registry/map-ui";
 
 const route: [number, number][] = [
   [-74.006, 40.7128],
@@ -22,9 +18,7 @@ export function RouteCard() {
         {route.map((coord, i) => (
           <MapMarker key={i} longitude={coord[0]} latitude={coord[1]}>
             <MarkerContent>
-              <div className="size-4 rounded-full bg-blue-500 border-2 border-white shadow-lg flex items-center justify-center text-white text-[9px] font-bold">
-                {i + 1}
-              </div>
+              <MapNumberedMarker color="#3b82f6" label={i + 1} />
             </MarkerContent>
           </MapMarker>
         ))}

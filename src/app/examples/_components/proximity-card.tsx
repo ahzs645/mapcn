@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Map, MapMarker, MarkerContent, MarkerTooltip, MapRoute } from "@/registry/map";
+import {
+  Map,
+  MapMarker,
+  MarkerContent,
+  MarkerTooltip,
+  MapRoute,
+} from "@/registry/map";
+import { MapLegend, MapLegendItem, MapMarkerDot } from "@/registry/map-ui";
 
 const locations = [
   { name: "Warehouse", lng: -73.95, lat: 40.78, type: "warehouse" },
@@ -48,7 +55,7 @@ export function ProximityCard() {
           dest,
           km: haversine(origin.lat, origin.lng, dest.lat, dest.lng),
         })),
-    [selected, origin]
+    [selected, origin],
   );
 
   return (
@@ -74,23 +81,30 @@ export function ProximityCard() {
             onClick={() => setSelected(i)}
           >
             <MarkerContent>
-              <div
-                className="size-3.5 rounded-full border-2 border-white shadow-lg cursor-pointer"
-                style={{ backgroundColor: typeColor[loc.type] }}
+              <MapMarkerDot
+                color={typeColor[loc.type]}
+                className="cursor-pointer"
               />
             </MarkerContent>
             <MarkerTooltip>{loc.name}</MarkerTooltip>
           </MapMarker>
         ))}
       </Map>
-      <div className="absolute bottom-2 left-2 z-10 rounded border bg-background/90 backdrop-blur-sm px-1.5 py-1 text-[9px] shadow-sm space-y-0.5">
-        {[["< 5 km", "#22c55e"], ["5-10 km", "#eab308"], ["> 10 km", "#ef4444"]].map(([l, c]) => (
-          <div key={l} className="flex items-center gap-1">
-            <span className="size-2 rounded-sm" style={{ backgroundColor: c }} />
-            {l}
-          </div>
+      <MapLegend position="bottom-left" className="px-1.5 py-1">
+        {[
+          ["< 5 km", "#22c55e"],
+          ["5-10 km", "#eab308"],
+          ["> 10 km", "#ef4444"],
+        ].map(([l, c]) => (
+          <MapLegendItem
+            key={l}
+            color={c}
+            label={l}
+            tabIndex={-1}
+            className="pointer-events-none text-[9px]"
+          />
         ))}
-      </div>
+      </MapLegend>
     </div>
   );
 }
