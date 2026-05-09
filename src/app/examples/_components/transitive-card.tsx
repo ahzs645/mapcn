@@ -285,12 +285,12 @@ const patternGeometry: Record<
       [-77.027777, 38.898327],
     ],
     schematic: [
-      [-77.074, 38.8977],
-      [-77.064, 38.8977],
-      [-77.052, 38.8977],
-      [-77.041, 38.8977],
-      [-77.032, 38.8977],
-      [-77.024, 38.8977],
+      [-77.074, 38.8972],
+      [-77.064, 38.8972],
+      [-77.052, 38.8972],
+      [-77.041, 38.8972],
+      [-77.032, 38.8972],
+      [-77.024, 38.8972],
     ],
     anchors: [0, 5],
   },
@@ -304,12 +304,12 @@ const patternGeometry: Record<
       [-77.027777, 38.898327],
     ],
     schematic: [
-      [-77.074, 38.8996],
-      [-77.064, 38.8996],
-      [-77.052, 38.8996],
-      [-77.041, 38.8996],
-      [-77.032, 38.8996],
-      [-77.024, 38.8996],
+      [-77.074, 38.9004],
+      [-77.064, 38.9004],
+      [-77.052, 38.9004],
+      [-77.041, 38.9004],
+      [-77.032, 38.9004],
+      [-77.024, 38.9004],
     ],
     anchors: [0, 5],
   },
@@ -370,8 +370,8 @@ function coordinatesForLine(line: RenderedLine, progress: number): LngLat[] {
 
 function buildRenderedLines(): RenderedLine[] {
   const laneOffsets: Record<string, number> = {
-    BLUE: -7,
-    ORANGE: 7,
+    BLUE: -12,
+    ORANGE: 12,
     RED: 0,
     "3Y": -2,
   };
@@ -423,11 +423,11 @@ function buildRenderedLines(): RenderedLine[] {
 const renderedLines = buildRenderedLines();
 
 function zoomToProgress(zoom: number) {
-  return Math.max(0, Math.min(1, (zoom - 11) / 0.75));
+  return Math.max(0, Math.min(1, (zoom - 13.2) / 2.2));
 }
 
 function zoomToScale(zoom: number) {
-  return Math.max(0, Math.min(1, (zoom - 11) / 4));
+  return Math.max(0, Math.min(1, (zoom - 11.8) / 3.8));
 }
 
 function clamp01(value: number) {
@@ -472,6 +472,52 @@ function markerDimensionsAt(
   return last;
 }
 
+function pointForLineBadge(line: RenderedLine, progress: number): LngLat {
+  const coordinates = coordinatesForLine(line, progress);
+  const routeFractions: Record<string, number> = {
+    "3Y": 0.52,
+    BLUE: 0.48,
+    ORANGE: 0.42,
+    RED: 0.43,
+  };
+  const targetFraction = routeFractions[line.routeId] ?? 0.5;
+  const targetIndex = Math.min(
+    coordinates.length - 1,
+    Math.max(0, Math.round((coordinates.length - 1) * targetFraction)),
+  );
+
+  return coordinates[targetIndex];
+}
+
+function RouteLineBadge({
+  line,
+  progress,
+}: {
+  line: RenderedLine;
+  progress: number;
+}) {
+  const point = pointForLineBadge(line, progress);
+  const opacity = 1 - clamp01((progress - 0.62) / 0.28);
+
+  if (line.mode !== "transit" || opacity <= 0.02) return null;
+
+  return (
+    <MapMarker longitude={point[0]} latitude={point[1]} anchor="center">
+      <MarkerContent className="size-0 cursor-default">
+        <span
+          className="pointer-events-none absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 rounded px-1.5 py-0.5 text-[13px] font-bold leading-none text-white shadow-sm"
+          style={{
+            backgroundColor: line.color,
+            opacity,
+          }}
+        >
+          {line.label}
+        </span>
+      </MarkerContent>
+    </MapMarker>
+  );
+}
+
 function metroMergedDimensions(scale: number): MarkerDimensions {
   return markerDimensionsAt(scale, [
     { at: 0, width: 10, height: 22, radius: 5 },
@@ -505,7 +551,6 @@ function TransitiveNetworkLayer({
       for (const line of lines) {
         const sourceId = `transitive-${line.id}-source`;
         const layerId = `transitive-${line.id}-layer`;
-        const labelLayerId = `transitive-${line.id}-labels`;
         const data: GeoJSON.Feature<GeoJSON.LineString> = {
           type: "Feature",
           properties: { label: line.label },
@@ -534,27 +579,6 @@ function TransitiveNetworkLayer({
             ...(line.dashArray && { "line-dasharray": line.dashArray }),
           },
         });
-        if (line.mode !== "walk") {
-          map.addLayer({
-            id: labelLayerId,
-            type: "symbol",
-            source: sourceId,
-            layout: {
-              "symbol-placement": "line",
-              "symbol-spacing": line.routeId === "3Y" ? 80 : 180,
-              "text-field": ["get", "label"],
-              "text-size": 13,
-              "text-allow-overlap": true,
-              "text-ignore-placement": true,
-              "text-keep-upright": true,
-            },
-            paint: {
-              "text-color": "#ffffff",
-              "text-halo-color": line.color,
-              "text-halo-width": 5,
-            },
-          });
-        }
       }
     };
 
@@ -565,10 +589,8 @@ function TransitiveNetworkLayer({
       for (const line of [...lines].reverse()) {
         const sourceId = `transitive-${line.id}-source`;
         const layerId = `transitive-${line.id}-layer`;
-        const labelLayerId = `transitive-${line.id}-labels`;
 
         try {
-          if (map.getLayer(labelLayerId)) map.removeLayer(labelLayerId);
           if (map.getLayer(layerId)) map.removeLayer(layerId);
           if (map.getSource(sourceId)) map.removeSource(sourceId);
         } catch {}
@@ -677,6 +699,10 @@ export function TransitiveCard() {
         onViewportChange={setViewport}
       >
         <TransitiveNetworkLayer progress={progress} lines={renderedLines} />
+
+        {renderedLines.map((line) => (
+          <RouteLineBadge key={`${line.id}-badge`} line={line} progress={progress} />
+        ))}
 
         {farragutClusterVisible && (
           <TransitiveStopMarker
