@@ -9,9 +9,17 @@ import type {
 import { useMap } from "@/registry/map";
 
 import type { FocusState } from "./focus";
-import { interpolateEdge, renderedEdges } from "./graph";
+import { LANE_GAP_PX, interpolateEdge, renderedEdges } from "./graph";
 import { NOT_FOCUSED_COLOR } from "./styler";
 import type { RenderedEdge } from "./types";
+
+const WIDTH_STOPS: Array<[number, number]> = [
+  [9, 2],
+  [11, 4],
+  [13, 7],
+  [15, 11],
+  [17, 14],
+];
 
 const SOURCE = (id: string) => `transitive-${id}-source`;
 const LAYER = (id: string) => `transitive-${id}-layer`;
@@ -28,44 +36,48 @@ function lineSortKey(edge: RenderedEdge, focused: boolean): number {
   return 3;
 }
 
+function widthMultiplier(edge: RenderedEdge): number {
+  return edge.mode === "walk" ? 0.6 : edge.width;
+}
+
 /** Zoom-interpolated line width in pixels. `edge.width` is a 0..1 multiplier. */
 function lineWidthExpression(
   edge: RenderedEdge,
 ): DataDrivenPropertyValueSpecification<number> {
-  const base = edge.mode === "walk" ? 0.6 : edge.width;
+  const base = widthMultiplier(edge);
+  const stops: (number | string | unknown[])[] = [];
+  for (const [zoom, px] of WIDTH_STOPS) {
+    stops.push(zoom, px * base);
+  }
   return [
     "interpolate",
     ["linear"],
     ["zoom"],
-    9,
-    2 * base,
-    11,
-    4 * base,
-    13,
-    7 * base,
-    15,
-    11 * base,
-    17,
-    14 * base,
-  ];
+    ...stops,
+  ] as DataDrivenPropertyValueSpecification<number>;
 }
 
-/** Zoom-interpolated lane offset so bundles don't fly apart at low zoom. */
+/**
+ * Lane offset scales with the line width at each zoom stop so adjacent
+ * bundle members keep a constant `LANE_GAP_PX` gap regardless of zoom.
+ * `edge.offset` is a lane index (±0.5 for two lanes, etc.), not a pixel.
+ */
 function lineOffsetExpression(
   edge: RenderedEdge,
 ): DataDrivenPropertyValueSpecification<number> {
   if (edge.offset === 0) return 0;
+  const lane = edge.offset;
+  const base = widthMultiplier(edge);
+  const stops: (number | string | unknown[])[] = [];
+  for (const [zoom, px] of WIDTH_STOPS) {
+    stops.push(zoom, lane * (px * base + LANE_GAP_PX));
+  }
   return [
     "interpolate",
     ["linear"],
     ["zoom"],
-    10,
-    edge.offset * 0.35,
-    13,
-    edge.offset * 0.7,
-    15,
-    edge.offset,
-  ];
+    ...stops,
+  ] as DataDrivenPropertyValueSpecification<number>;
 }
 
 export function TransitiveNetworkLayer({

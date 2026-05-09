@@ -1,7 +1,8 @@
 import { patternGeometry, transitiveData, walkSegments } from "./data";
 import type { EdgeGroup, LngLat, RenderedEdge, Stop } from "./types";
 
-export const LANE_SPACING = 8;
+/** Gap (px) between sibling lines on top of their stroke width. */
+export const LANE_GAP_PX = 4;
 
 const routeById = new Map(
   transitiveData.routes.map((route) => [route.route_id, route]),
@@ -135,12 +136,14 @@ function applyLaneOffsets(groups: EdgeGroup[]): void {
         perpendicularProjection(a, group) - perpendicularProjection(b, group),
     );
     const n = sorted.length;
-    const bundleWidth = (n - 1) * LANE_SPACING;
 
+    // edge.offset stores a LANE INDEX (e.g. -0.5, +0.5 for n=2; -1, 0, +1 for
+    // n=3) — actual pixel offset is computed in the line-offset expression
+    // as `laneIndex * (lineWidth + LANE_GAP_PX)` so spacing scales with zoom.
     sorted.forEach((edge, i) => {
-      const baseOffset = -bundleWidth / 2 + i * LANE_SPACING;
+      const laneIndex = i - (n - 1) / 2;
       const sameDirection = edge.from_stop_id === group.from_stop_id;
-      edge.offset = baseOffset * (sameDirection ? 1 : -1);
+      edge.offset = laneIndex * (sameDirection ? 1 : -1);
     });
   }
 }

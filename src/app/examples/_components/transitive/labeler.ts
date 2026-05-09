@@ -1,5 +1,5 @@
 import { transitiveData } from "./data";
-import { interpolateEdge, renderedEdges } from "./graph";
+import { LANE_GAP_PX, interpolateEdge, renderedEdges } from "./graph";
 import {
   MAJOR_STOP_RADIUS,
   PLACE_FONT,
@@ -299,6 +299,7 @@ export function placeLabels(
   const segments = placeSegmentLabels(
     progress,
     scale,
+    zoom,
     origin,
     mpp,
     occupied,
@@ -344,6 +345,7 @@ const ANCHOR_OFFSETS = [0, 0.18, -0.18, 0.32, -0.32, 0.45, -0.45];
 function placeSegmentLabels(
   progress: number,
   scale: number,
+  zoom: number,
   origin: LngLat,
   mpp: number,
   occupied: Bbox[],
@@ -367,6 +369,7 @@ function placeSegmentLabels(
     const placement = placeBadgeAlongEdge(
       edge,
       progress,
+      zoom,
       origin,
       mpp,
       occupied,
@@ -384,6 +387,7 @@ function placeSegmentLabels(
 function placeBadgeAlongEdge(
   edge: RenderedEdge,
   progress: number,
+  zoom: number,
   origin: LngLat,
   mpp: number,
   occupied: Bbox[],
@@ -394,7 +398,8 @@ function placeBadgeAlongEdge(
   if (!route) return null;
 
   const baseCoords = interpolateEdge(edge, progress);
-  const coords = applyEdgeOffset(baseCoords, edge.offset, mpp);
+  const offsetPx = edge.offset * (estimateLineWidth(edge, zoom) + LANE_GAP_PX);
+  const coords = applyEdgeOffset(baseCoords, offsetPx, mpp);
   const samples = polylineSamples(coords, origin, mpp);
   const text = route.route_short_name;
   const size = estimateLabelSize(text, fontSize);
@@ -446,6 +451,33 @@ function placeBadgeAlongEdge(
 }
 
 /**
+ * Mirrors the zoom-stop interpolation that `network-layer.lineWidthExpression`
+ * uses, so the labeler can predict where a bundled edge actually sits.
+ */
+function estimateLineWidth(edge: RenderedEdge, zoom: number): number {
+  const base = edge.mode === "walk" ? 0.6 : edge.width;
+  const stops: Array<[number, number]> = [
+    [9, 2],
+    [11, 4],
+    [13, 7],
+    [15, 11],
+    [17, 14],
+  ];
+  if (zoom <= stops[0][0]) return stops[0][1] * base;
+  if (zoom >= stops[stops.length - 1][0])
+    return stops[stops.length - 1][1] * base;
+  for (let i = 1; i < stops.length; i++) {
+    const [z0, w0] = stops[i - 1];
+    const [z1, w1] = stops[i];
+    if (zoom <= z1) {
+      const t = (zoom - z0) / (z1 - z0);
+      return (w0 + (w1 - w0) * t) * base;
+    }
+  }
+  return stops[stops.length - 1][1] * base;
+}
+
+/**
  * Approximates the perpendicular pixel offset that maplibre's
  * `line-offset` paint property applies, so badges land on the visible
  * line rather than the centerline.
@@ -464,8 +496,12 @@ function applyEdgeOffset(
     const dy = next[1] - prev[1];
     const len = Math.hypot(dx, dy);
     if (len === 0) return point;
-    const nx = -dy / len;
-    const ny = dx / len;
+    // MapLibre `line-offset` positive = right of direction of travel.
+    // In geo coords (lat-up), right of an east-bound vector is south, so
+    // the perpendicular is (Δlat, -Δlon) — note the sign flip vs the
+    // mathematical CCW perpendicular.
+    const nx = dy / len;
+    const ny = -dx / len;
     const dyDeg = (ny * offsetMeters) / 111320;
     const dxDeg =
       (nx * offsetMeters) /
