@@ -100,6 +100,7 @@ import { NycSnowPlowingCard } from "./nyc-snow-plowing-card";
 import { WindCard } from "./wind-card";
 import { ActransitCard } from "./actransit-card";
 import { TimelineCard } from "./timeline-card";
+import { TransitiveCard } from "./transitive-card";
 
 const componentMap: Record<string, ComponentType> = {
   "basic-map": BasicMapCard,
@@ -178,6 +179,7 @@ const componentMap: Record<string, ComponentType> = {
   "nyc-snow": NycSnowPlowingCard,
   "wind": WindCard,
   "actransit": ActransitCard,
+  "transitive": TransitiveCard,
   "timeline": TimelineCard,
 };
 

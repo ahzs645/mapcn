@@ -3,8 +3,15 @@
   "name": "air-quality",
   "title": "Air Quality Monitor",
   "description": "Full-screen air quality map with AQI sensor markers, overview metrics, selected sensor details, and threshold legend.",
-  "dependencies": ["recharts"],
-  "registryDependencies": ["@mapcn/map", "@mapcn/map-ui", "card", "chart"],
+  "dependencies": [
+    "recharts"
+  ],
+  "registryDependencies": [
+    "@mapcn/map",
+    "@mapcn/map-ui",
+    "card",
+    "chart"
+  ],
   "files": [
     {
       "path": "src/registry/blocks/air-quality/page.tsx",
@@ -49,6 +56,9 @@
       "target": "app/air-quality/components/threshold-legend.tsx"
     }
   ],
-  "categories": ["monitoring", "environmental"],
+  "categories": [
+    "monitoring",
+    "environmental"
+  ],
   "type": "registry:block"
 }

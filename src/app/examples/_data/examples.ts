@@ -39,6 +39,7 @@ export const examples: ExampleMeta[] = [
   { slug: "hhi-map", title: "HHI Map", description: "US market concentration visualization with interactive choropleth filtering.", category: "Featured" },
   { slug: "nyc-snow", title: "NYC Snow Plowing", description: "3D visualization of snow accumulation on NYC streets with borough selection.", category: "Featured" },
   { slug: "actransit", title: "AC Transit", description: "Simulated real-time bus tracking with route visualization.", category: "Featured" },
+  { slug: "transitive", title: "Transitive Journey", description: "Fake Transitive-style transit data rendered as routes, stops, transfers, and walk connectors.", category: "Featured" },
   { slug: "wind", title: "Wind Animation", description: "Global wind speed and direction visualization with color-coded particles.", category: "Featured" },
   // ── Animation & Globe ──────────────────────────────────────────
   { slug: "flyto", title: "FlyTo Cities", description: "Smooth camera animations to cities around the world.", category: "Animation & Globe" },

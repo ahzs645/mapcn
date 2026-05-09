@@ -3,7 +3,9 @@
   "name": "logistics-network",
   "title": "Logistics Network",
   "description": "Domestic logistics map with a sidebar of stats.",
-  "dependencies": ["lucide-react"],
+  "dependencies": [
+    "lucide-react"
+  ],
   "registryDependencies": [
     "@mapcn/map",
     "@mapcn/map-ui",
@@ -39,6 +41,9 @@
   "meta": {
     "iframeHeight": "800px"
   },
-  "categories": ["logistics", "network"],
+  "categories": [
+    "logistics",
+    "network"
+  ],
   "type": "registry:block"
 }

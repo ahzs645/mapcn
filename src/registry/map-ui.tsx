@@ -65,6 +65,155 @@ function MapOverlayContent({
   return <div className={cn("space-y-1", className)} {...props} />;
 }
 
+function MapPanel({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      className={cn(
+        "bg-background/95 max-h-[calc(100%-5rem)] overflow-auto rounded-xl shadow-lg backdrop-blur-sm",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function MapPanelHeader({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div className={cn("border-border border-b p-3", className)} {...props} />
+  );
+}
+
+function MapPanelTitle({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"h2">) {
+  return <h2 className={cn("text-sm font-semibold", className)} {...props} />;
+}
+
+function MapPanelDescription({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"p">) {
+  return (
+    <p
+      className={cn("text-muted-foreground mt-1 text-xs", className)}
+      {...props}
+    />
+  );
+}
+
+function MapPanelContent({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return <div className={cn("p-3", className)} {...props} />;
+}
+
+function MapPanelFooter({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return <div className={cn("px-3 pb-3", className)} {...props} />;
+}
+
+type MapFloatingButtonProps = ComponentPropsWithoutRef<"button"> & {
+  active?: boolean;
+  position?: MapOverlayPosition;
+};
+
+function MapFloatingButton({
+  active = false,
+  position = "top-left",
+  className,
+  type = "button",
+  ...props
+}: MapFloatingButtonProps) {
+  return (
+    <button
+      type={type}
+      className={cn(
+        "absolute z-10 flex size-9 cursor-pointer items-center justify-center rounded-lg shadow-lg backdrop-blur-sm transition-colors",
+        overlayPositions[position],
+        active
+          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+          : "bg-background/95 hover:bg-accent",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+type MapToolbarButtonProps = ComponentPropsWithoutRef<"button"> & {
+  active?: boolean;
+  shape?: "circle" | "square";
+};
+
+function MapToolbarButton({
+  active = false,
+  shape = "square",
+  className,
+  type = "button",
+  ...props
+}: MapToolbarButtonProps) {
+  return (
+    <button
+      type={type}
+      className={cn(
+        "border-border flex size-9 cursor-pointer items-center justify-center border transition-colors",
+        shape === "circle" ? "rounded-full" : "rounded-md",
+        active
+          ? "border-primary bg-primary text-primary-foreground"
+          : "hover:bg-muted",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+type MapStatProps = ComponentPropsWithoutRef<"div"> & {
+  icon?: ReactNode;
+  label?: ReactNode;
+  value: ReactNode;
+  inline?: boolean;
+};
+
+function MapStat({
+  icon,
+  label,
+  value,
+  inline = false,
+  className,
+  ...props
+}: MapStatProps) {
+  return (
+    <div
+      className={cn(
+        "text-muted-foreground flex items-center gap-1.5 text-xs",
+        className,
+      )}
+      {...props}
+    >
+      {icon}
+      <div className={cn(inline && "contents")}>
+        <div
+          className={cn(
+            "font-medium",
+            inline ? "text-muted-foreground" : "text-foreground",
+          )}
+        >
+          {value}
+        </div>
+        {label ? <div className="text-[10px]">{label}</div> : null}
+      </div>
+    </div>
+  );
+}
+
 type MapSwatchProps = ComponentPropsWithoutRef<"span"> & {
   color?: string;
   active?: boolean;
@@ -237,6 +386,15 @@ export {
   MapOverlayHeader,
   MapOverlayTitle,
   MapOverlayContent,
+  MapPanel,
+  MapPanelHeader,
+  MapPanelTitle,
+  MapPanelDescription,
+  MapPanelContent,
+  MapPanelFooter,
+  MapFloatingButton,
+  MapToolbarButton,
+  MapStat,
   MapSwatch,
   MapLegend,
   MapLegendItem,

@@ -4,80 +4,30 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import MapLibreGL from "maplibre-gl";
 import { Map, MapMarker, MarkerContent, useMap } from "@/registry/map";
 import { Loader2, Play, Pause, Square, Clock, Ruler } from "lucide-react";
+import {
+  MapMarkerDot,
+  MapPanel,
+  MapStat,
+  MapToolbarButton,
+} from "@/registry/map-ui";
 import { cn } from "@/lib/utils";
-
-// ── Polyline decoder ─────────────────────────────────────────────
-function decodePolyline(encoded: string, precision = 6): [number, number][] {
-  const coords: [number, number][] = [];
-  let index = 0, lat = 0, lng = 0;
-  const factor = Math.pow(10, precision);
-  while (index < encoded.length) {
-    let shift = 0, result = 0, byte: number;
-    do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20);
-    lat += result & 1 ? ~(result >> 1) : result >> 1;
-    shift = 0; result = 0;
-    do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20);
-    lng += result & 1 ? ~(result >> 1) : result >> 1;
-    coords.push([lng / factor, lat / factor]);
-  }
-  return coords;
-}
-
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.round((seconds % 3600) / 60);
-  return h > 0 ? `${h}h ${m}m` : `${m} min`;
-}
-
-function formatDistance(km: number): string {
-  return `${km.toFixed(1)} km`;
-}
-
-// ── Geometry helpers ─────────────────────────────────────────────
-function segDist(a: [number, number], b: [number, number]): number {
-  const dx = b[0] - a[0], dy = b[1] - a[1];
-  return Math.sqrt(dx * dx + dy * dy);
-}
-
-function computeSegmentDistances(coords: [number, number][]): number[] {
-  const d: number[] = [];
-  for (let i = 0; i < coords.length - 1; i++) d.push(segDist(coords[i], coords[i + 1]));
-  return d;
-}
-
-/** Returns [subPath, interpolatedPosition] for a given 0–100 progress */
-function getProgressData(
-  coords: [number, number][],
-  segDists: number[],
-  totalDist: number,
-  pct: number,
-): { path: [number, number][]; position: [number, number] } {
-  if (coords.length === 0) return { path: [], position: [0, 0] };
-  if (pct <= 0) return { path: [coords[0]], position: coords[0] };
-  if (pct >= 100) return { path: coords, position: coords[coords.length - 1] };
-
-  const target = (pct / 100) * totalDist;
-  let acc = 0;
-  for (let i = 0; i < segDists.length; i++) {
-    if (acc + segDists[i] >= target) {
-      const t = (target - acc) / segDists[i];
-      const p1 = coords[i], p2 = coords[i + 1];
-      const pos: [number, number] = [p1[0] + (p2[0] - p1[0]) * t, p1[1] + (p2[1] - p1[1]) * t];
-      return { path: [...coords.slice(0, i + 1), pos], position: pos };
-    }
-    acc += segDists[i];
-  }
-  return { path: coords, position: coords[coords.length - 1] };
-}
+import {
+  computeSegmentDistances,
+  decodePolyline,
+  formatDistance,
+  formatDuration,
+  getProgressData,
+  type LngLat,
+} from "../_lib/valhalla";
 
 // ── Constants ────────────────────────────────────────────────────
-const ORIGIN: [number, number] = [-74.006, 40.7128];
-const DESTINATION: [number, number] = [-73.8648, 40.7614];
+const ORIGIN: LngLat = [-74.006, 40.7128];
+const DESTINATION: LngLat = [-73.8648, 40.7614];
 const BASE_DURATION = 15; // seconds at 1x speed
 
 // ── Hook: manages map layers + animation ─────────────────────────
 function usePlaybackAnimation(
-  routeCoords: [number, number][],
+  routeCoords: LngLat[],
   segDists: number[],
   totalDist: number,
 ) {
@@ -89,7 +39,11 @@ function usePlaybackAnimation(
   const playingRef = useRef(false);
   const speedRef = useRef(1);
   const layersReady = useRef(false);
-  const [uiState, setUiState] = useState({ progress: 0, playing: false, speed: 1 });
+  const [uiState, setUiState] = useState({
+    progress: 0,
+    playing: false,
+    speed: 1,
+  });
 
   // Add layers + native marker once
   useEffect(() => {
@@ -100,22 +54,45 @@ function usePlaybackAnimation(
         if (!map.getSource("pb-full-src")) {
           map.addSource("pb-full-src", {
             type: "geojson",
-            data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: routeCoords } },
+            data: {
+              type: "Feature",
+              properties: {},
+              geometry: { type: "LineString", coordinates: routeCoords },
+            },
           });
           map.addLayer({
-            id: "pb-full-line", type: "line", source: "pb-full-src",
-            paint: { "line-color": "#94a3b8", "line-width": 6, "line-opacity": 0.5 },
+            id: "pb-full-line",
+            type: "line",
+            source: "pb-full-src",
+            paint: {
+              "line-color": "#94a3b8",
+              "line-width": 6,
+              "line-opacity": 0.5,
+            },
             layout: { "line-cap": "round", "line-join": "round" },
           });
         }
         if (!map.getSource("pb-prog-src")) {
           map.addSource("pb-prog-src", {
             type: "geojson",
-            data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [routeCoords[0], routeCoords[0]] } },
+            data: {
+              type: "Feature",
+              properties: {},
+              geometry: {
+                type: "LineString",
+                coordinates: [routeCoords[0], routeCoords[0]],
+              },
+            },
           });
           map.addLayer({
-            id: "pb-prog-line", type: "line", source: "pb-prog-src",
-            paint: { "line-color": "#3b82f6", "line-width": 6, "line-opacity": 1 },
+            id: "pb-prog-line",
+            type: "line",
+            source: "pb-prog-src",
+            paint: {
+              "line-color": "#3b82f6",
+              "line-width": 6,
+              "line-opacity": 1,
+            },
             layout: { "line-cap": "round", "line-join": "round" },
           });
         }
@@ -126,8 +103,11 @@ function usePlaybackAnimation(
       if (!markerRef.current) {
         const el = document.createElement("div");
         Object.assign(el.style, {
-          width: "20px", height: "20px", borderRadius: "50%",
-          background: "#3b82f6", border: "3px solid white",
+          width: "20px",
+          height: "20px",
+          borderRadius: "50%",
+          background: "#3b82f6",
+          border: "3px solid white",
           boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
         });
         markerRef.current = new MapLibreGL.Marker({ element: el })
@@ -143,7 +123,10 @@ function usePlaybackAnimation(
     const lngs = routeCoords.map((c) => c[0]);
     const lats = routeCoords.map((c) => c[1]);
     map.fitBounds(
-      [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
+      [
+        [Math.min(...lngs), Math.min(...lats)],
+        [Math.max(...lngs), Math.max(...lats)],
+      ],
       { padding: { top: 80, bottom: 140, left: 60, right: 60 }, maxZoom: 13 },
     );
 
@@ -158,18 +141,28 @@ function usePlaybackAnimation(
         if (map.getSource("pb-full-src")) map.removeSource("pb-full-src");
       } catch {}
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, isLoaded, routeCoords]);
 
   // Direct update (bypasses React)
   const updateMap = useCallback(
     (pct: number) => {
       if (!map || !layersReady.current) return;
-      const { path, position } = getProgressData(routeCoords, segDists, totalDist, pct);
+      const { path, position } = getProgressData(
+        routeCoords,
+        segDists,
+        totalDist,
+        pct,
+      );
       try {
-        const src = map.getSource("pb-prog-src") as maplibregl.GeoJSONSource | undefined;
+        const src = map.getSource("pb-prog-src") as
+          | maplibregl.GeoJSONSource
+          | undefined;
         if (src && path.length >= 2) {
-          src.setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: path } });
+          src.setData({
+            type: "Feature",
+            properties: {},
+            geometry: { type: "LineString", coordinates: path },
+          });
         }
       } catch {}
       markerRef.current?.setLngLat(position);
@@ -185,11 +178,18 @@ function usePlaybackAnimation(
       lastTsRef.current = ts;
 
       if (playingRef.current) {
-        progressRef.current = Math.min(100, progressRef.current + (dt * speedRef.current * 100) / BASE_DURATION);
+        progressRef.current = Math.min(
+          100,
+          progressRef.current + (dt * speedRef.current * 100) / BASE_DURATION,
+        );
         updateMap(progressRef.current);
         if (progressRef.current >= 100) {
           playingRef.current = false;
-          setUiState({ progress: 100, playing: false, speed: speedRef.current });
+          setUiState({
+            progress: 100,
+            playing: false,
+            speed: speedRef.current,
+          });
         }
       }
       animRef.current = requestAnimationFrame(tick);
@@ -199,7 +199,11 @@ function usePlaybackAnimation(
     // Throttled UI sync (10 fps, not 60)
     const uiTimer = setInterval(() => {
       if (playingRef.current) {
-        setUiState({ progress: progressRef.current, playing: true, speed: speedRef.current });
+        setUiState({
+          progress: progressRef.current,
+          playing: true,
+          speed: speedRef.current,
+        });
       }
     }, 100);
 
@@ -210,7 +214,10 @@ function usePlaybackAnimation(
   }, [updateMap]);
 
   const play = useCallback(() => {
-    if (progressRef.current >= 100) { progressRef.current = 0; updateMap(0); }
+    if (progressRef.current >= 100) {
+      progressRef.current = 0;
+      updateMap(0);
+    }
     lastTsRef.current = 0;
     playingRef.current = true;
     setUiState((s) => ({ ...s, playing: true }));
@@ -229,11 +236,14 @@ function usePlaybackAnimation(
     setUiState({ progress: 0, playing: false, speed: speedRef.current });
   }, [updateMap]);
 
-  const seek = useCallback((p: number) => {
-    progressRef.current = p;
-    updateMap(p);
-    setUiState((s) => ({ ...s, progress: p }));
-  }, [updateMap]);
+  const seek = useCallback(
+    (p: number) => {
+      progressRef.current = p;
+      updateMap(p);
+      setUiState((s) => ({ ...s, progress: p }));
+    },
+    [updateMap],
+  );
 
   const setSpeed = useCallback((s: number) => {
     speedRef.current = s;
@@ -250,93 +260,104 @@ function PlaybackUI({
   totalDist,
   routeInfo,
 }: {
-  routeCoords: [number, number][];
+  routeCoords: LngLat[];
   segDists: number[];
   totalDist: number;
   routeInfo: { duration: number; distance: number };
 }) {
-  const { uiState, play, pause, stop, seek, setSpeed } = usePlaybackAnimation(routeCoords, segDists, totalDist);
+  const { uiState, play, pause, stop, seek, setSpeed } = usePlaybackAnimation(
+    routeCoords,
+    segDists,
+    totalDist,
+  );
 
   return (
     <>
       {/* Start marker */}
       <MapMarker longitude={routeCoords[0][0]} latitude={routeCoords[0][1]}>
         <MarkerContent>
-          <div className="flex size-5 items-center justify-center rounded-full border-2 border-white bg-green-500 shadow-lg">
-            <div className="size-1.5 rounded-full bg-white" />
-          </div>
+          <MapMarkerDot color="#22c55e" className="size-5" />
         </MarkerContent>
       </MapMarker>
 
       {/* End marker */}
-      <MapMarker longitude={routeCoords[routeCoords.length - 1][0]} latitude={routeCoords[routeCoords.length - 1][1]}>
+      <MapMarker
+        longitude={routeCoords[routeCoords.length - 1][0]}
+        latitude={routeCoords[routeCoords.length - 1][1]}
+      >
         <MarkerContent>
-          <div className="flex size-5 items-center justify-center rounded-full border-2 border-white bg-red-500 shadow-lg">
-            <div className="size-1.5 rounded-full bg-white" />
-          </div>
+          <MapMarkerDot color="#ef4444" className="size-5" />
         </MarkerContent>
       </MapMarker>
 
       {/* Control bar */}
-      <div className="absolute bottom-4 left-4 right-4 z-10">
-        <div className="rounded-xl bg-background/95 shadow-lg backdrop-blur-sm border border-border/50 p-4">
+      <div className="absolute right-4 bottom-4 left-4 z-10">
+        <MapPanel className="border-border/50 border p-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex gap-2">
-              <button
-                className={cn(
-                  "flex size-9 items-center justify-center rounded-full border transition-colors cursor-pointer",
-                  uiState.playing ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted",
-                )}
+              <MapToolbarButton
+                active={uiState.playing}
+                shape="circle"
                 onClick={uiState.playing ? pause : play}
               >
-                {uiState.playing ? <Pause className="size-4" /> : <Play className="size-4 ml-0.5" />}
-              </button>
-              <button
-                className="flex size-9 items-center justify-center rounded-full border border-border transition-colors hover:bg-muted cursor-pointer"
-                onClick={stop}
-              >
+                {uiState.playing ? (
+                  <Pause className="size-4" />
+                ) : (
+                  <Play className="ml-0.5 size-4" />
+                )}
+              </MapToolbarButton>
+              <MapToolbarButton shape="circle" onClick={stop}>
                 <Square className="size-3.5" />
-              </button>
+              </MapToolbarButton>
             </div>
-            <div className="text-right text-sm text-muted-foreground">
+            <div className="text-muted-foreground text-right text-sm">
               <div>{Math.round(uiState.progress)}% complete</div>
-              <div className="text-xs flex items-center gap-1 justify-end">
-                <Clock className="size-3" />
-                <span>{formatDuration(routeInfo.duration)}</span>
+              <div className="flex items-center justify-end gap-1 text-xs">
+                <MapStat
+                  icon={<Clock className="size-3" />}
+                  value={formatDuration(routeInfo.duration)}
+                  inline
+                />
                 <span className="mx-0.5">·</span>
-                <Ruler className="size-3" />
-                <span>{formatDistance(routeInfo.distance)}</span>
+                <MapStat
+                  icon={<Ruler className="size-3" />}
+                  value={formatDistance(routeInfo.distance)}
+                  inline
+                />
               </div>
             </div>
           </div>
 
           <div className="mb-3">
             <input
-              type="range" min={0} max={100} step={0.1}
+              type="range"
+              min={0}
+              max={100}
+              step={0.1}
               value={uiState.progress}
               onChange={(e) => seek(Number(e.target.value))}
-              className="w-full h-1.5 accent-primary cursor-pointer"
+              className="accent-primary h-1.5 w-full cursor-pointer"
             />
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">Speed:</span>
+            <span className="text-muted-foreground text-xs">Speed:</span>
             <div className="flex gap-1">
               {[0.5, 1, 2, 4].map((s) => (
-                <button
+                <MapToolbarButton
                   key={s}
+                  active={uiState.speed === s}
                   className={cn(
-                    "rounded-md border px-2 py-0.5 text-xs font-medium transition-colors cursor-pointer",
-                    uiState.speed === s ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted",
+                    "h-auto w-auto px-2 py-0.5 text-xs font-medium",
                   )}
                   onClick={() => setSpeed(s)}
                 >
                   {s}x
-                </button>
+                </MapToolbarButton>
               ))}
             </div>
           </div>
-        </div>
+        </MapPanel>
       </div>
     </>
   );
@@ -344,7 +365,7 @@ function PlaybackUI({
 
 // ── Main content (fetches route, then renders UI) ────────────────
 function PlaybackContent() {
-  const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
+  const [routeCoords, setRouteCoords] = useState<LngLat[]>([]);
   const [segDists, setSegDists] = useState<number[]>([]);
   const [totalDist, setTotalDist] = useState(0);
   const [routeInfo, setRouteInfo] = useState({ duration: 0, distance: 0 });
@@ -370,17 +391,22 @@ function PlaybackContent() {
         const data = await res.json();
         if (controller.signal.aborted) return;
 
-        const allCoords: [number, number][] = [];
+        const allCoords: LngLat[] = [];
         if (data.trip?.legs) {
-          for (const leg of data.trip.legs) allCoords.push(...decodePolyline(leg.shape));
+          for (const leg of data.trip.legs)
+            allCoords.push(...decodePolyline(leg.shape));
         }
         const sd = computeSegmentDistances(allCoords);
         setRouteCoords(allCoords);
         setSegDists(sd);
         setTotalDist(sd.reduce((a, b) => a + b, 0));
-        setRouteInfo({ duration: data.trip?.summary?.time ?? 0, distance: data.trip?.summary?.length ?? 0 });
+        setRouteInfo({
+          duration: data.trip?.summary?.time ?? 0,
+          distance: data.trip?.summary?.length ?? 0,
+        });
       } catch (e) {
-        if (e instanceof Error && e.name !== "AbortError") console.error("Route fetch error:", e);
+        if (e instanceof Error && e.name !== "AbortError")
+          console.error("Route fetch error:", e);
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -390,7 +416,7 @@ function PlaybackContent() {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-muted-foreground">
+      <div className="text-muted-foreground absolute top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2">
         <Loader2 className="size-5 animate-spin" />
         <span className="text-sm">Loading route...</span>
       </div>
@@ -399,7 +425,14 @@ function PlaybackContent() {
 
   if (routeCoords.length < 2) return null;
 
-  return <PlaybackUI routeCoords={routeCoords} segDists={segDists} totalDist={totalDist} routeInfo={routeInfo} />;
+  return (
+    <PlaybackUI
+      routeCoords={routeCoords}
+      segDists={segDists}
+      totalDist={totalDist}
+      routeInfo={routeInfo}
+    />
+  );
 }
 
 // ── Exported card ────────────────────────────────────────────────

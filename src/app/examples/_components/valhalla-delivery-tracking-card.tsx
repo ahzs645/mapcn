@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Map, MapMarker, MarkerContent, useMap } from "@/registry/map";
+import { Map, MapMarker, MarkerContent } from "@/registry/map";
 import {
   Loader2,
   Store,
@@ -15,138 +15,25 @@ import {
   PanelLeftOpen,
   Package,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-// ── Polyline decoder ─────────────────────────────────────────────
-function decodePolyline(encoded: string, precision = 6): [number, number][] {
-  const coords: [number, number][] = [];
-  let index = 0;
-  let lat = 0;
-  let lng = 0;
-  const factor = Math.pow(10, precision);
-
-  while (index < encoded.length) {
-    let shift = 0;
-    let result = 0;
-    let byte: number;
-    do {
-      byte = encoded.charCodeAt(index++) - 63;
-      result |= (byte & 0x1f) << shift;
-      shift += 5;
-    } while (byte >= 0x20);
-    lat += result & 1 ? ~(result >> 1) : result >> 1;
-
-    shift = 0;
-    result = 0;
-    do {
-      byte = encoded.charCodeAt(index++) - 63;
-      result |= (byte & 0x1f) << shift;
-      shift += 5;
-    } while (byte >= 0x20);
-    lng += result & 1 ? ~(result >> 1) : result >> 1;
-
-    coords.push([lng / factor, lat / factor]);
-  }
-  return coords;
-}
-
-// ── Format helpers ───────────────────────────────────────────────
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.round((seconds % 3600) / 60);
-  return h > 0 ? `${h}h ${m}m` : `${m} min`;
-}
-
-function formatDistance(km: number): string {
-  return `${km.toFixed(1)} km`;
-}
-
-// ── Route layer ──────────────────────────────────────────────────
-function RouteLayer({
-  coordinates,
-  color,
-  width,
-  opacity,
-  id,
-}: {
-  coordinates: [number, number][];
-  color: string;
-  width: number;
-  opacity: number;
-  id: string;
-}) {
-  const { map, isLoaded } = useMap();
-
-  useEffect(() => {
-    if (!map || !isLoaded || coordinates.length < 2) return;
-
-    const sourceId = `${id}-src`;
-    const layerId = `${id}-line`;
-    const geojson: GeoJSON.Feature = {
-      type: "Feature",
-      properties: {},
-      geometry: { type: "LineString", coordinates },
-    };
-
-    const add = () => {
-      try {
-        if (map.getSource(sourceId)) {
-          (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(geojson);
-          return;
-        }
-        map.addSource(sourceId, { type: "geojson", data: geojson });
-        map.addLayer({
-          id: layerId,
-          type: "line",
-          source: sourceId,
-          paint: {
-            "line-color": color,
-            "line-width": width,
-            "line-opacity": opacity,
-          },
-          layout: { "line-cap": "round", "line-join": "round" },
-        });
-      } catch {}
-    };
-
-    if (map.isStyleLoaded()) add();
-    else map.once("load", add);
-
-    return () => {
-      try {
-        if (map.getLayer(layerId)) map.removeLayer(layerId);
-        if (map.getSource(sourceId)) map.removeSource(sourceId);
-      } catch {}
-    };
-  }, [map, isLoaded, coordinates, color, width, opacity, id]);
-
-  return null;
-}
-
-// ── FitBounds helper ─────────────────────────────────────────────
-function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
-  const { map, isLoaded } = useMap();
-
-  useEffect(() => {
-    if (!map || !isLoaded || coordinates.length < 2) return;
-    const lngs = coordinates.map((c) => c[0]);
-    const lats = coordinates.map((c) => c[1]);
-    const bounds: [[number, number], [number, number]] = [
-      [Math.min(...lngs), Math.min(...lats)],
-      [Math.max(...lngs), Math.max(...lats)],
-    ];
-    map.fitBounds(bounds, {
-      padding: { top: 60, bottom: 60, left: 60, right: 60 },
-      maxZoom: 14,
-    });
-  }, [map, isLoaded, coordinates]);
-
-  return null;
-}
+import {
+  MapFloatingButton,
+  MapPanel,
+  MapPanelContent,
+  MapPanelHeader,
+  MapPanelTitle,
+  MapStat,
+} from "@/registry/map-ui";
+import {
+  decodePolyline,
+  formatDistance,
+  formatDuration,
+  type LngLat,
+} from "../_lib/valhalla";
+import { ValhallaFitBounds, ValhallaRouteLayer } from "./valhalla-route-layer";
 
 // ── Constants ────────────────────────────────────────────────────
-const STORE_LOCATION: [number, number] = [-0.14, 51.5154];
-const HOME_LOCATION: [number, number] = [-0.05, 51.5134];
+const STORE_LOCATION: LngLat = [-0.14, 51.5154];
+const HOME_LOCATION: LngLat = [-0.05, 51.5134];
 
 // ── Delivery panel ───────────────────────────────────────────────
 function DeliveryPanel({
@@ -159,24 +46,24 @@ function DeliveryPanel({
   loading: boolean;
 }) {
   return (
-    <div className="w-72 max-h-[calc(100%-5rem)] overflow-auto rounded-xl bg-background/95 shadow-lg backdrop-blur-sm">
-      <div className="p-3 border-b border-border">
+    <MapPanel className="w-72">
+      <MapPanelHeader>
         <div className="flex items-center gap-2">
           <Package className="size-4 text-blue-500" />
-          <h2 className="text-sm font-semibold">Order #12847</h2>
+          <MapPanelTitle>Order #12847</MapPanelTitle>
         </div>
-      </div>
+      </MapPanelHeader>
 
-      <div className="p-3">
+      <MapPanelContent>
         {loading ? (
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="text-muted-foreground flex items-center gap-2">
             <Loader2 className="size-4 animate-spin" />
             <span className="text-xs">Tracking delivery...</span>
           </div>
         ) : (
           <>
             {/* Status */}
-            <div className="flex items-center gap-2 mb-3">
+            <div className="mb-3 flex items-center gap-2">
               <span className="relative flex size-2.5">
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-400 opacity-75" />
                 <span className="relative inline-flex size-2.5 rounded-full bg-green-500" />
@@ -187,43 +74,37 @@ function DeliveryPanel({
             </div>
 
             {/* ETA + Distance */}
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Clock className="size-3.5" />
-                <div>
-                  <div className="text-foreground font-medium">
-                    {formatDuration(duration)}
-                  </div>
-                  <div className="text-[10px]">ETA</div>
-                </div>
-              </div>
-              <div className="h-6 w-px bg-border" />
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Ruler className="size-3.5" />
-                <div>
-                  <div className="text-foreground font-medium">
-                    {formatDistance(distance)}
-                  </div>
-                  <div className="text-[10px]">Distance</div>
-                </div>
-              </div>
+            <div className="mb-4 flex items-center gap-4">
+              <MapStat
+                icon={<Clock className="size-3.5" />}
+                value={formatDuration(duration)}
+                label="ETA"
+              />
+              <div className="bg-border h-6 w-px" />
+              <MapStat
+                icon={<Ruler className="size-3.5" />}
+                value={formatDistance(distance)}
+                label="Distance"
+              />
             </div>
 
             {/* Timeline */}
-            <div className="border-t border-border pt-3">
-              <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="border-border border-t pt-3">
+              <h3 className="text-muted-foreground mb-2 text-[10px] font-semibold tracking-wider uppercase">
                 Delivery Timeline
               </h3>
               <div className="space-y-0">
                 {/* Store - completed */}
                 <div className="flex items-start gap-3">
                   <div className="flex flex-col items-center">
-                    <CheckCircle2 className="size-4 text-green-500 shrink-0" />
-                    <div className="w-px h-6 bg-green-500/50" />
+                    <CheckCircle2 className="size-4 shrink-0 text-green-500" />
+                    <div className="h-6 w-px bg-green-500/50" />
                   </div>
                   <div className="pb-3">
-                    <div className="text-xs font-medium">Picked up from store</div>
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-xs font-medium">
+                      Picked up from store
+                    </div>
+                    <div className="text-muted-foreground text-[10px]">
                       London Store
                     </div>
                   </div>
@@ -232,16 +113,16 @@ function DeliveryPanel({
                 {/* In transit */}
                 <div className="flex items-start gap-3">
                   <div className="flex flex-col items-center">
-                    <div className="flex size-4 items-center justify-center rounded-full bg-blue-500 shrink-0">
+                    <div className="flex size-4 shrink-0 items-center justify-center rounded-full bg-blue-500">
                       <Truck className="size-2.5 text-white" />
                     </div>
-                    <div className="w-px h-6 bg-border" />
+                    <div className="bg-border h-6 w-px" />
                   </div>
                   <div className="pb-3">
                     <div className="text-xs font-medium text-blue-600 dark:text-blue-400">
                       In transit
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-muted-foreground text-[10px]">
                       Driver is on the way
                     </div>
                   </div>
@@ -250,13 +131,13 @@ function DeliveryPanel({
                 {/* Home - pending */}
                 <div className="flex items-start gap-3">
                   <div className="flex flex-col items-center">
-                    <Circle className="size-4 text-muted-foreground/40 shrink-0" />
+                    <Circle className="text-muted-foreground/40 size-4 shrink-0" />
                   </div>
                   <div>
-                    <div className="text-xs font-medium text-muted-foreground">
+                    <div className="text-muted-foreground text-xs font-medium">
                       Delivery to home
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-muted-foreground text-[10px]">
                       Your address
                     </div>
                   </div>
@@ -265,15 +146,15 @@ function DeliveryPanel({
             </div>
           </>
         )}
-      </div>
-    </div>
+      </MapPanelContent>
+    </MapPanel>
   );
 }
 
 // ── Main map content ─────────────────────────────────────────────
 function DeliveryMapContent() {
-  const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
-  const [truckPos, setTruckPos] = useState<[number, number] | null>(null);
+  const [routeCoords, setRouteCoords] = useState<LngLat[]>([]);
+  const [truckPos, setTruckPos] = useState<LngLat | null>(null);
   const [duration, setDuration] = useState(0);
   const [distance, setDistance] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -298,14 +179,14 @@ function DeliveryMapContent() {
     try {
       const res = await fetch(
         `/api/valhalla?endpoint=route&json=${encodeURIComponent(JSON.stringify(params))}`,
-        { signal: controller.signal }
+        { signal: controller.signal },
       );
       if (!res.ok) throw new Error("API error");
       const data = await res.json();
 
       if (controller.signal.aborted) return;
 
-      const allCoords: [number, number][] = [];
+      const allCoords: LngLat[] = [];
       if (data.trip?.legs) {
         for (const leg of data.trip.legs) {
           allCoords.push(...decodePolyline(leg.shape));
@@ -337,11 +218,11 @@ function DeliveryMapContent() {
 
   return (
     <>
-      <FitBounds coordinates={[STORE_LOCATION, HOME_LOCATION]} />
+      <ValhallaFitBounds coordinates={[STORE_LOCATION, HOME_LOCATION]} />
 
       {/* Route line */}
       {routeCoords.length > 1 && (
-        <RouteLayer
+        <ValhallaRouteLayer
           id="delivery-route"
           coordinates={routeCoords}
           color="#3b82f6"
@@ -372,7 +253,7 @@ function DeliveryMapContent() {
       {truckPos && (
         <MapMarker longitude={truckPos[0]} latitude={truckPos[1]}>
           <MarkerContent>
-            <div className="flex size-8 items-center justify-center rounded-full border-2 border-white bg-blue-600 shadow-lg animate-pulse">
+            <div className="flex size-8 animate-pulse items-center justify-center rounded-full border-2 border-white bg-blue-600 shadow-lg">
               <Truck className="size-4 text-white" />
             </div>
           </MarkerContent>
@@ -380,13 +261,8 @@ function DeliveryMapContent() {
       )}
 
       {/* Panel toggle */}
-      <button
-        className={cn(
-          "absolute top-4 left-4 z-10 flex size-9 items-center justify-center rounded-lg shadow-lg backdrop-blur-sm transition-colors cursor-pointer",
-          panelOpen
-            ? "bg-background/95 hover:bg-accent"
-            : "bg-primary text-primary-foreground hover:bg-primary/90"
-        )}
+      <MapFloatingButton
+        active={!panelOpen}
         onClick={() => setPanelOpen((o) => !o)}
       >
         {panelOpen ? (
@@ -394,7 +270,7 @@ function DeliveryMapContent() {
         ) : (
           <PanelLeftOpen className="size-4" />
         )}
-      </button>
+      </MapFloatingButton>
 
       {panelOpen && (
         <div className="absolute top-16 left-4 z-10">
