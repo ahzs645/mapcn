@@ -292,6 +292,18 @@ export function placeLabels(
     });
   }
 
+  // Segment (route) badges are placed FIRST against just the marker bodies,
+  // so they always survive the collision pass. Stop/place labels then route
+  // around them. This matches the source's render order where route boxes
+  // sit above stop labels.
+  const segments = placeSegmentLabels(
+    progress,
+    scale,
+    origin,
+    mpp,
+    occupied,
+  );
+
   const places = new Map<string, StopLabelPlacement>();
   const stops = new Map<string, StopLabelPlacement>();
 
@@ -324,14 +336,6 @@ export function placeLabels(
     }
   }
 
-  const segments = placeSegmentLabels(
-    progress,
-    scale,
-    origin,
-    mpp,
-    occupied,
-  );
-
   return { stops, places, segments };
 }
 
@@ -348,6 +352,11 @@ function placeSegmentLabels(
   const seenPerGroup = new Set<string>();
   const fontSize = ROUTE_BADGE_FONT(scale);
 
+  // At low zoom every edge midpoint collapses to nearly one pixel; if we
+  // enforced collision we would silently drop most badges. Below scale 1
+  // we always emit the badge at the edge midpoint, accepting some overlap.
+  const lowZoom = scale < 1;
+
   const transitEdges = renderedEdges.filter((e) => e.mode === "transit");
 
   for (const edge of transitEdges) {
@@ -362,6 +371,7 @@ function placeSegmentLabels(
       mpp,
       occupied,
       fontSize,
+      lowZoom,
     );
     if (!placement) continue;
     placements.push(placement);
@@ -378,6 +388,7 @@ function placeBadgeAlongEdge(
   mpp: number,
   occupied: Bbox[],
   fontSize: number,
+  alwaysPlaceAtMidpoint: boolean,
 ): SegmentLabelPlacement | null {
   const route = transitiveData.routes.find((r) => r.route_id === edge.route_id);
   if (!route) return null;
@@ -387,6 +398,18 @@ function placeBadgeAlongEdge(
   const samples = polylineSamples(coords, origin, mpp);
   const text = route.route_short_name;
   const size = estimateLabelSize(text, fontSize);
+
+  if (alwaysPlaceAtMidpoint) {
+    const pt = pointAtFraction(samples.px, samples.cumulative, 0.5);
+    return {
+      edge_id: edge.edge_id,
+      route_id: edge.route_id,
+      text,
+      color: edge.color,
+      position: unprojectPixels(pt, origin, mpp),
+      fontSize,
+    };
+  }
 
   for (const offsetFraction of ANCHOR_OFFSETS) {
     const t = 0.5 + offsetFraction;

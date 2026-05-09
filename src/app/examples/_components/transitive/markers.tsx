@@ -15,6 +15,7 @@ import {
   STOP_RADIUS,
   STOP_STROKE,
   clamp01,
+  pixels,
 } from "./styler";
 import type { Place, Stop } from "./types";
 
@@ -85,6 +86,54 @@ export function StopMarker({
               borderColor,
               borderStyle: "solid",
               borderWidth: stroke,
+            }}
+          />
+          <LabelSpan placement={placement} text={stop.stop_name} />
+        </div>
+      </MarkerContent>
+    </MapMarker>
+  );
+}
+
+/**
+ * Mirror of transitive's MultiPoint rect for transfer hubs — morphs from a
+ * narrow tall pill at low zoom into a rounded square at high zoom, the way
+ * the source renders Metro Center / Rosslyn.
+ */
+export function HubMarker({
+  stop,
+  scale,
+  focused,
+  placement,
+}: {
+  stop: Stop;
+  scale: number;
+  focused: boolean;
+  placement: StopLabelPlacement | undefined;
+}) {
+  const width = pixels(scale, 7, 22, 32);
+  const height = pixels(scale, 16, 26, 32);
+  const radius = pixels(scale, 4, 7, 10);
+  const borderColor = focused ? "#0b1f4d" : NOT_FOCUSED_STROKE;
+  const borderWidth = pixels(scale, 1.4, 2.2, 3);
+
+  return (
+    <MapMarker
+      longitude={stop.stop_lon}
+      latitude={stop.stop_lat}
+      anchor="center"
+    >
+      <MarkerContent className="size-0 cursor-default">
+        <div className="pointer-events-none absolute left-0 top-0 size-0">
+          <div
+            className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 bg-background shadow-sm"
+            style={{
+              width,
+              height,
+              borderColor,
+              borderStyle: "solid",
+              borderWidth,
+              borderRadius: radius,
             }}
           />
           <LabelSpan placement={placement} text={stop.stop_name} />

@@ -7,9 +7,11 @@ import { Map as MapView } from "@/registry/map";
 import { computeClusters } from "./transitive/clustering";
 import { transitiveData } from "./transitive/data";
 import { focusFromJourney } from "./transitive/focus";
+import { hubStopIds } from "./transitive/graph";
 import { placeLabels } from "./transitive/labeler";
 import {
   ClusterMarker,
+  HubMarker,
   PlaceMarker,
   RouteBadge,
   StopMarker,
@@ -103,12 +105,23 @@ export function TransitiveCard() {
         {transitiveData.stops.map((stop) => {
           const vis = stopVisibility.get(stop.stop_id);
           if (!vis || vis.individualOpacity <= 0.01) return null;
+          if (hubStopIds.has(stop.stop_id)) {
+            return (
+              <HubMarker
+                key={stop.stop_id}
+                stop={stop}
+                scale={scale}
+                focused={focus.stopIds.has(stop.stop_id)}
+                placement={labels.stops.get(stop.stop_id)}
+              />
+            );
+          }
           return (
             <StopMarker
               key={stop.stop_id}
               stop={stop}
               scale={scale}
-              major={stop.stop_id === "rosslyn" || stop.stop_id === "metro"}
+              major={false}
               focused={focus.stopIds.has(stop.stop_id)}
               opacity={vis.individualOpacity}
               placement={labels.stops.get(stop.stop_id)}

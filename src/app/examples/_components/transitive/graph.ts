@@ -152,6 +152,29 @@ applyLaneOffsets(edgeGroups);
 
 export const renderedEdges: RenderedEdge[] = [...transitEdges, ...walkEdges];
 
+/**
+ * A "hub" stop is one served by 2+ patterns from different route bundles —
+ * the source treats these as MultiPoints and renders them as morphing
+ * rectangles instead of plain circles. We surface the same set so markers
+ * can swap their shape based on this membership.
+ */
+function computeHubStops(): Set<string> {
+  const stopRoutes = new Map<string, Set<string>>();
+  for (const pattern of transitiveData.patterns) {
+    for (const { stop_id } of pattern.stops) {
+      if (!stopRoutes.has(stop_id)) stopRoutes.set(stop_id, new Set());
+      stopRoutes.get(stop_id)!.add(pattern.route_id);
+    }
+  }
+  const hubs = new Set<string>();
+  for (const [stopId, routes] of stopRoutes) {
+    if (routes.size >= 2) hubs.add(stopId);
+  }
+  return hubs;
+}
+
+export const hubStopIds = computeHubStops();
+
 /** Linear morph between schematic[i] and geo[i]. Anchor indices are pinned. */
 export function interpolateEdge(
   edge: RenderedEdge,

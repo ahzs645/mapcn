@@ -32,19 +32,21 @@ function lineSortKey(edge: RenderedEdge, focused: boolean): number {
 function lineWidthExpression(
   edge: RenderedEdge,
 ): DataDrivenPropertyValueSpecification<number> {
-  const base = edge.mode === "walk" ? 1 : edge.width;
+  const base = edge.mode === "walk" ? 0.6 : edge.width;
   return [
     "interpolate",
     ["linear"],
     ["zoom"],
-    10,
-    1.5 * base,
-    12,
-    3 * base,
-    14,
-    6 * base,
-    16,
-    10 * base,
+    9,
+    2 * base,
+    11,
+    4 * base,
+    13,
+    7 * base,
+    15,
+    11 * base,
+    17,
+    14 * base,
   ];
 }
 
