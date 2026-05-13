@@ -1,0 +1,45 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - region "Map" [ref=e10]
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - button "Zoom in" [ref=e13] [cursor=pointer]:
+          - img [ref=e14]
+        - button "Zoom out" [ref=e15] [cursor=pointer]:
+          - img [ref=e16]
+      - button "Toggle fullscreen" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - img [ref=e27]
+        - generic [ref=e31]:
+          - heading "Global Wind Field" [level=1] [ref=e32]
+          - paragraph [ref=e33]: Animated 10 m surface winds sampled from the IQAir Earth GFS feed.
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - img [ref=e36]
+          - generic [ref=e39]:
+            - generic [ref=e40]: 25.6 m/s
+            - generic [ref=e41]: Peak
+        - generic [ref=e42]:
+          - img [ref=e43]
+          - generic [ref=e45]:
+            - generic [ref=e46]: 6.4 m/s
+            - generic [ref=e47]: Mean
+        - generic [ref=e48]:
+          - img [ref=e49]
+          - generic [ref=e52]:
+            - generic [ref=e53]: May 13, 5:00 AM PDT
+            - generic [ref=e54]: Run
+    - generic [ref=e55]:
+      - button "Wind speed" [expanded] [ref=e57] [cursor=pointer]:
+        - paragraph [ref=e58]: Wind speed
+        - img [ref=e59]
+      - generic [ref=e64]:
+        - generic [ref=e65]: "0"
+        - generic [ref=e66]: "8"
+        - generic [ref=e67]: "16"
+        - generic [ref=e68]: 24+ m/s
+  - button "Open Next.js Dev Tools" [ref=e74] [cursor=pointer]:
+    - img [ref=e75]
+  - alert [ref=e78]

@@ -1,0 +1,55 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - region "Map" [ref=e10]
+    - group [ref=e11]:
+      - generic "Toggle attribution" [ref=e12] [cursor=pointer]
+      - generic [ref=e13]:
+        - text: ©
+        - link "CARTO" [ref=e14] [cursor=pointer]:
+          - /url: https://carto.com/about-carto/
+        - text: ", ©"
+        - link "OpenStreetMap" [ref=e15] [cursor=pointer]:
+          - /url: http://www.openstreetmap.org/about/
+        - text: contributors
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - button "Zoom in" [ref=e18] [cursor=pointer]:
+          - img [ref=e19]
+        - button "Zoom out" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+      - button "Toggle fullscreen" [ref=e23] [cursor=pointer]:
+        - img [ref=e24]
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - img [ref=e32]
+        - generic [ref=e36]:
+          - heading "Global Wind Field" [level=1] [ref=e37]
+          - paragraph [ref=e38]: Animated 10 m surface winds sampled from the IQAir Earth GFS feed.
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - img [ref=e41]
+          - generic [ref=e44]:
+            - generic [ref=e45]: 25.6 m/s
+            - generic [ref=e46]: Peak
+        - generic [ref=e47]:
+          - img [ref=e48]
+          - generic [ref=e50]:
+            - generic [ref=e51]: 6.4 m/s
+            - generic [ref=e52]: Mean
+        - generic [ref=e53]:
+          - img [ref=e54]
+          - generic [ref=e57]:
+            - generic [ref=e58]: May 13, 5:00 AM PDT
+            - generic [ref=e59]: Run
+    - generic [ref=e60]:
+      - button "Wind speed" [expanded] [ref=e62] [cursor=pointer]:
+        - paragraph [ref=e63]: Wind speed
+        - img [ref=e64]
+      - generic [ref=e69]:
+        - generic [ref=e70]: "0"
+        - generic [ref=e71]: "8"
+        - generic [ref=e72]: "16"
+        - generic [ref=e73]: 24+ m/s
+  - button "Open Next.js Dev Tools" [ref=e79] [cursor=pointer]:
+    - img [ref=e80]
+  - alert [ref=e83]

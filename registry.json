@@ -196,6 +196,35 @@
         }
       ],
       "categories": ["monitoring", "environmental"]
+    },
+    {
+      "name": "wind-map",
+      "type": "registry:block",
+      "title": "Wind Map",
+      "description": "Full-screen global wind map with animated particles driven by sampled GFS vector data.",
+      "dependencies": ["lucide-react"],
+      "registryDependencies": ["@mapcn/map", "@mapcn/map-ui"],
+      "files": [
+        {
+          "path": "src/registry/blocks/wind-map/page.tsx",
+          "type": "registry:page",
+          "target": "app/wind/page.tsx"
+        },
+        {
+          "path": "src/registry/blocks/wind-map/data.ts",
+          "type": "registry:component",
+          "target": "app/wind/data.ts"
+        },
+        {
+          "path": "src/registry/blocks/wind-map/components/wind-canvas-layer.tsx",
+          "type": "registry:component",
+          "target": "app/wind/components/wind-canvas-layer.tsx"
+        }
+      ],
+      "categories": ["weather", "visualization"],
+      "meta": {
+        "iframeHeight": "760px"
+      }
     }
   ]
 }
