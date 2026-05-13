@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { GridCellLayer } from "@deck.gl/layers";
 
@@ -78,6 +79,13 @@ export function DeckglGridCellCard() {
     <div className="h-full w-full">
       <Map center={[-122.4, 37.8]} zoom={11} pitch={45} theme="dark">
         <GridCellOverlay />
+        <MapLegend title="Cell Value" position="bottom-left" collapsible>
+          <MapGradientLegendItem
+            colors={["rgb(50 50 255)", "rgb(153 200 153)", "rgb(255 50 50)"]}
+            minLabel="500"
+            maxLabel="5.5k"
+          />
+        </MapLegend>
       </Map>
     </div>
   );

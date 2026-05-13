@@ -17,7 +17,7 @@ const overlayPositions = {
 type MapOverlayPosition = keyof typeof overlayPositions;
 
 type MapOverlayProps = ComponentPropsWithoutRef<"div"> & {
-  position?: MapOverlayPosition;
+  position?: MapOverlayPosition | "none";
 };
 
 function MapOverlay({
@@ -29,8 +29,10 @@ function MapOverlay({
   return (
     <div
       className={cn(
-        "bg-background/90 absolute z-10 rounded-md border shadow-sm backdrop-blur-sm",
-        overlayPositions[position],
+        "bg-background/90 z-10 rounded-md border shadow-sm backdrop-blur-sm",
+        position !== "none" && "absolute",
+        position === "none" && "static",
+        position !== "none" && overlayPositions[position],
         className,
       )}
       {...props}
@@ -297,6 +299,7 @@ type MapLegendItemProps = ComponentPropsWithoutRef<"button"> & {
   color?: string;
   label: ReactNode;
   active?: boolean;
+  count?: ReactNode;
   swatchShape?: MapSwatchProps["shape"];
 };
 
@@ -304,6 +307,7 @@ function MapLegendItem({
   color,
   label,
   active = true,
+  count,
   swatchShape = "square",
   className,
   disabled,
@@ -320,9 +324,19 @@ function MapLegendItem({
       {...props}
     >
       <MapSwatch color={color} active={active} shape={swatchShape} />
-      <span className={cn(!active && "text-muted-foreground line-through")}>
+      <span
+        className={cn(
+          "min-w-0 flex-1 truncate",
+          !active && "text-muted-foreground line-through",
+        )}
+      >
         {label}
       </span>
+      {count ? (
+        <span className="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[9px] leading-none">
+          {count}
+        </span>
+      ) : null}
     </button>
   );
 }
@@ -331,16 +345,20 @@ type MapGradientLegendItemProps = ComponentPropsWithoutRef<"div"> & {
   colors: string[];
   minLabel: ReactNode;
   maxLabel: ReactNode;
+  labels?: ReactNode[];
 };
 
 function MapGradientLegendItem({
   colors,
   minLabel,
   maxLabel,
+  labels,
   className,
   style,
   ...props
 }: MapGradientLegendItemProps) {
+  const legendLabels = labels ?? [minLabel, maxLabel];
+
   return (
     <div className={cn("min-w-24 space-y-1", className)} {...props}>
       <div
@@ -351,9 +369,79 @@ function MapGradientLegendItem({
         }}
       />
       <div className="text-muted-foreground flex items-center justify-between gap-3 text-[9px]">
-        <span>{minLabel}</span>
-        <span>{maxLabel}</span>
+        {legendLabels.map((label, index) => (
+          <span key={index}>{label}</span>
+        ))}
       </div>
+    </div>
+  );
+}
+
+type MapSizeLegendItemProps = ComponentPropsWithoutRef<"div"> & {
+  label: ReactNode;
+  size: number;
+  color?: string;
+};
+
+function MapSizeLegendItem({
+  label,
+  size,
+  color = "var(--primary)",
+  className,
+  style,
+  ...props
+}: MapSizeLegendItemProps) {
+  const circleSize = Math.min(size, 20);
+
+  return (
+    <div
+      className={cn("flex items-center gap-2 px-1 py-0.5 text-[10px]", className)}
+      {...props}
+    >
+      <span className="flex size-6 shrink-0 items-center justify-center">
+        <span
+          className="rounded-full border"
+          style={{
+            width: circleSize,
+            height: circleSize,
+            backgroundColor: color,
+            ...style,
+          }}
+        />
+      </span>
+      <span className="text-muted-foreground min-w-0 flex-1 truncate">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+type MapTableLegendItemProps = ComponentPropsWithoutRef<"div"> & {
+  color?: string;
+  label: ReactNode;
+  value: ReactNode;
+};
+
+function MapTableLegendItem({
+  color,
+  label,
+  value,
+  className,
+  ...props
+}: MapTableLegendItemProps) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-1.5 rounded px-1 py-0.5 text-[10px]",
+        className,
+      )}
+      {...props}
+    >
+      <MapSwatch color={color} />
+      <span className="text-muted-foreground min-w-0 flex-1 truncate">
+        {label}
+      </span>
+      <span className="text-foreground font-medium tabular-nums">{value}</span>
     </div>
   );
 }
@@ -459,6 +547,8 @@ export {
   MapLegend,
   MapLegendItem,
   MapGradientLegendItem,
+  MapSizeLegendItem,
+  MapTableLegendItem,
   MapLayerToggle,
   MapMarkerDot,
   MapNumberedMarker,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { Loader2, AlertCircle } from "lucide-react";
 
 interface WeatherPoint {
@@ -21,19 +22,13 @@ const GRADIENT_COLORS = [
 
 function TemperatureLegend() {
   return (
-    <div className="absolute bottom-6 left-2 z-10 rounded-lg bg-background/90 backdrop-blur-sm border border-border/50 p-3 shadow-md">
-      <div className="text-xs font-medium text-foreground mb-2">Temperature</div>
-      <div className="flex items-center gap-0.5">
-        <span className="text-[10px] text-muted-foreground mr-1">-30&deg;C</span>
-        <div
-          className="h-3 w-32 rounded-sm"
-          style={{
-            background: `linear-gradient(to right, ${GRADIENT_COLORS.map((g) => g.color).join(", ")})`,
-          }}
-        />
-        <span className="text-[10px] text-muted-foreground ml-1">40&deg;C</span>
-      </div>
-    </div>
+    <MapLegend title="Temperature" position="bottom-left">
+      <MapGradientLegendItem
+        colors={GRADIENT_COLORS.map((item) => item.color)}
+        minLabel={"-30\u00b0C"}
+        maxLabel={"40\u00b0C"}
+      />
+    </MapLegend>
   );
 }
 

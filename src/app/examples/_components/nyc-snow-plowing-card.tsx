@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ColumnLayer } from "@deck.gl/layers";
-import { cn } from "@/lib/utils";
 
 interface SnowPoint {
   position: [number, number];
@@ -182,19 +182,18 @@ export function NycSnowPlowingCard() {
           />
         </div>
 
-        <div className="space-y-0.5 pt-1 border-t">
-          <p className="text-[9px] text-muted-foreground font-medium">Depth Legend</p>
-          <div className="flex items-center gap-1">
-            <div className="h-2 flex-1 rounded-sm" style={{
-              background: "linear-gradient(to right, #add8e6, #e0f0ff, #ffffff)",
-            }} />
-          </div>
-          <div className="flex justify-between text-[8px] text-muted-foreground">
-            <span>0 in</span>
-            <span>6 in</span>
-            <span>12 in</span>
-          </div>
-        </div>
+        <MapLegend
+          title="Depth"
+          position="none"
+          className="border-0 bg-transparent p-0 shadow-none backdrop-blur-none"
+        >
+          <MapGradientLegendItem
+            colors={["#add8e6", "#e0f0ff", "#ffffff"]}
+            minLabel="0 in"
+            maxLabel="12 in"
+            labels={["0 in", "6 in", "12 in"]}
+          />
+        </MapLegend>
       </div>
     </div>
   );

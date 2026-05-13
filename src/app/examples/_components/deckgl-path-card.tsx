@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { PathLayer } from "@deck.gl/layers";
 
@@ -74,6 +75,17 @@ export function DeckglPathCard() {
     <div className="h-full w-full">
       <Map center={[-122.42, 37.78]} zoom={12}>
         <PathOverlay />
+        <MapLegend title="Routes" position="bottom-left" collapsible>
+          {DATA.map((item) => (
+            <MapLegendItem
+              key={item.name}
+              color={`rgb(${item.color.join(" ")})`}
+              label={item.name}
+              swatchShape="line"
+              disabled
+            />
+          ))}
+        </MapLegend>
       </Map>
     </div>
   );

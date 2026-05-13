@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createElement, useCallback, useEffect, useRef, useState } from "react";
 import { Map, MapMarker, MarkerContent, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend, MapLegendItem } from "@/registry/map-ui";
 import {
   Sun,
   CloudSun,
@@ -25,7 +26,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType, CSSProperties } from "react";
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -124,7 +125,7 @@ const MAJOR_CITIES: CityInfo[] = [
   { name: "Auckland", lat: -36.85, lon: 174.76, country: "NZ" },
 ];
 
-const WMO_ICON_MAP: Record<number, ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+const WMO_ICON_MAP: Record<number, ComponentType<{ className?: string; style?: CSSProperties }>> = {
   0: Sun,
   1: CloudSun,
   2: CloudSun,
@@ -212,7 +213,7 @@ function getTemperatureColor(temp: number): string {
   return "#ef4444";
 }
 
-function getWeatherIcon(code: number): ComponentType<{ className?: string; style?: React.CSSProperties }> {
+function getWeatherIcon(code: number): ComponentType<{ className?: string; style?: CSSProperties }> {
   return WMO_ICON_MAP[code] ?? Cloud;
 }
 
@@ -424,19 +425,9 @@ function FlyToHandler({
 function TemperatureLegend() {
   const colors = ["#1e40af", "#3b82f6", "#06b6d4", "#22c55e", "#eab308", "#f97316", "#ef4444"];
   return (
-    <div className="rounded-lg border border-border/50 bg-background/90 px-3 py-2 backdrop-blur-sm">
-      <div className="text-[10px] font-semibold text-muted-foreground mb-1.5">Temperature</div>
-      <div
-        className="h-2 w-full rounded-full"
-        style={{
-          background: `linear-gradient(to right, ${colors.join(", ")})`,
-        }}
-      />
-      <div className="flex justify-between mt-1">
-        <span className="text-[9px] text-muted-foreground">-20°</span>
-        <span className="text-[9px] text-muted-foreground">35°+</span>
-      </div>
-    </div>
+    <MapLegend title="Temperature" position="none">
+      <MapGradientLegendItem colors={colors} minLabel="-20°" maxLabel="35°+" />
+    </MapLegend>
   );
 }
 
@@ -452,20 +443,17 @@ function AqiLegend() {
     { label: "Hazardous", color: "#881337" },
   ];
   return (
-    <div className="rounded-lg border border-border/50 bg-background/90 px-3 py-2 backdrop-blur-sm">
-      <div className="text-[10px] font-semibold text-muted-foreground mb-1.5">AQI (US EPA)</div>
-      <div className="flex flex-col gap-1">
-        {items.map((item) => (
-          <div key={item.label} className="flex items-center gap-1.5">
-            <span
-              className="size-2 rounded-full shrink-0"
-              style={{ backgroundColor: item.color }}
-            />
-            <span className="text-[9px] text-muted-foreground">{item.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
+    <MapLegend title="AQI (US EPA)" position="none">
+      {items.map((item) => (
+        <MapLegendItem
+          key={item.label}
+          color={item.color}
+          label={item.label}
+          swatchShape="dot"
+          disabled
+        />
+      ))}
+    </MapLegend>
   );
 }
 
@@ -582,7 +570,6 @@ function CityCard({
   isForecastLoading: boolean;
   onClose: () => void;
 }) {
-  const WeatherIcon = getWeatherIcon(city.current.weather_code);
   const tempColor = getTemperatureColor(city.current.temperature_2m);
 
   return (
@@ -604,7 +591,10 @@ function CityCard({
       {/* Current conditions */}
       <div className="rounded-lg border border-border bg-card p-4">
         <div className="flex items-center gap-3">
-          <WeatherIcon className="size-10" style={{ color: tempColor }} />
+          {createElement(getWeatherIcon(city.current.weather_code), {
+            className: "size-10",
+            style: { color: tempColor },
+          })}
           <div>
             <p className="text-3xl font-bold" style={{ color: tempColor }}>
               {Math.round(city.current.temperature_2m)}°C
@@ -692,14 +682,15 @@ function CityCard({
           <h4 className="text-xs font-semibold text-muted-foreground">7-Day Forecast</h4>
           <div className="space-y-1">
             {forecast.daily.time.map((day, idx) => {
-              const DayIcon = getWeatherIcon(forecast.daily.weather_code[idx] ?? 0);
               return (
                 <div
                   key={day}
                   className="flex items-center justify-between rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-accent/50"
                 >
                   <span className="w-8 font-medium">{getDayName(day)}</span>
-                  <DayIcon className="size-4" />
+                  {createElement(getWeatherIcon(forecast.daily.weather_code[idx] ?? 0), {
+                    className: "size-4",
+                  })}
                   <div className="flex items-center gap-1">
                     <span
                       className="font-semibold"
@@ -736,7 +727,6 @@ function WeatherMarker({
   isSelected: boolean;
   onClick: () => void;
 }) {
-  const Icon = getWeatherIcon(city.current.weather_code);
   const tempColor = getTemperatureColor(city.current.temperature_2m);
 
   return (
@@ -749,7 +739,9 @@ function WeatherMarker({
           onClick={onClick}
         >
           <div className="flex items-center gap-1">
-            <Icon className="size-3.5" />
+            {createElement(getWeatherIcon(city.current.weather_code), {
+              className: "size-3.5",
+            })}
             <span className="text-xs font-semibold" style={{ color: tempColor }}>
               {Math.round(city.current.temperature_2m)}°
             </span>

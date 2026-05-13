@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { H3HexagonLayer } from "@deck.gl/geo-layers";
 
@@ -90,6 +91,13 @@ export function DeckglH3Card() {
     <div className="h-full w-full">
       <Map center={[-122.4, 37.78]} zoom={11} pitch={45} theme="dark">
         <H3Overlay />
+        <MapLegend title="Hex Value" position="bottom-left" collapsible>
+          <MapGradientLegendItem
+            colors={["rgb(0 200 100)", "rgb(255 200 0)", "rgb(255 0 0)"]}
+            minLabel="250"
+            maxLabel="920"
+          />
+        </MapLegend>
       </Map>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { PointCloudLayer } from "@deck.gl/layers";
 
@@ -111,6 +112,13 @@ export function LidarEptCard() {
     <div className="h-full w-full">
       <Map center={[-6.26, 53.34]} zoom={14} pitch={60} theme="dark">
         <EptOverlay />
+        <MapLegend title="Elevation" position="bottom-left" collapsible>
+          <MapGradientLegendItem
+            colors={["rgb(140 120 90)", "rgb(120 120 160)", "rgb(200 160 120)"]}
+            minLabel="Low"
+            maxLabel="High"
+          />
+        </MapLegend>
       </Map>
     </div>
   );

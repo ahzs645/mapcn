@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Map, useMap } from "@/registry/map";
+import { Map } from "@/registry/map";
 import { MapGeoJsonLayer } from "@/registry/map-layers";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 
 const quakeUrl =
   "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson";
@@ -39,16 +40,12 @@ function EarthquakeLayer() {
           <p className="text-muted-foreground text-[10px] truncate">{info.place}</p>
         </div>
       )}
-      <div className="absolute bottom-2 right-2 z-10 rounded border bg-background/90 backdrop-blur-sm px-1.5 py-1 text-[9px] shadow-sm space-y-0.5">
-        {[["< 4", "#00c864"], ["4-5.5", "#ffc800"], ["5.5-7", "#ff7800"], ["7+", "#ff1e1e"]].map(
-          ([l, c]) => (
-            <div key={l} className="flex items-center gap-1">
-              <span className="size-2 rounded-full" style={{ backgroundColor: c }} />
-              {l}
-            </div>
-          )
-        )}
-      </div>
+      <MapLegend title="Magnitude" position="bottom-left" collapsible>
+        <MapLegendItem color="#00c864" label="Minor (< 4)" swatchShape="dot" disabled />
+        <MapLegendItem color="#ffc800" label="Moderate (4-5.5)" swatchShape="dot" disabled />
+        <MapLegendItem color="#ff7800" label="Strong (5.5-7)" swatchShape="dot" disabled />
+        <MapLegendItem color="#ff1e1e" label="Major (7+)" swatchShape="dot" disabled />
+      </MapLegend>
     </>
   );
 }

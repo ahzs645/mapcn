@@ -6,6 +6,8 @@ import { Map, MapMarker, MarkerContent, useMap } from "@/registry/map";
 import { Loader2, Play, Pause, Square, Clock, Ruler } from "lucide-react";
 import {
   MapMarkerDot,
+  MapLegend,
+  MapLegendItem,
   MapPanel,
   MapStat,
   MapToolbarButton,
@@ -441,6 +443,12 @@ export function ValhallaTripPlaybackCard() {
     <div className="relative h-full w-full">
       <Map center={[-73.935, 40.74]} zoom={11}>
         <PlaybackContent />
+        <MapLegend title="Trip Playback" position="bottom-left" collapsible>
+          <MapLegendItem color="#94a3b8" label="Full Route" swatchShape="line" disabled />
+          <MapLegendItem color="#3b82f6" label="Traveled Path" swatchShape="line" disabled />
+          <MapLegendItem color="#22c55e" label="Start" swatchShape="dot" disabled />
+          <MapLegendItem color="#ef4444" label="End" swatchShape="dot" disabled />
+        </MapLegend>
       </Map>
     </div>
   );

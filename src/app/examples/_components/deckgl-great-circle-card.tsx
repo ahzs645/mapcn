@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { GreatCircleLayer } from "@deck.gl/geo-layers";
 
@@ -68,6 +69,17 @@ export function DeckglGreatCircleCard() {
     <div className="h-full w-full">
       <Map center={[0, 30]} zoom={1.5} theme="dark">
         <GreatCircleOverlay />
+        <MapLegend title="Flight Destinations" position="bottom-left" collapsible>
+          {DATA.map((item) => (
+            <MapLegendItem
+              key={item.name}
+              color={`rgb(${item.color.join(" ")})`}
+              label={item.name}
+              swatchShape="line"
+              disabled
+            />
+          ))}
+        </MapLegend>
       </Map>
     </div>
   );

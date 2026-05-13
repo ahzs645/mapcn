@@ -1,7 +1,7 @@
 "use client";
 
 import { Map, MapMarker, MarkerContent, MapRoute } from "@/registry/map";
-import { MapNumberedMarker } from "@/registry/map-ui";
+import { MapLegend, MapLegendItem, MapNumberedMarker } from "@/registry/map-ui";
 
 const route: [number, number][] = [
   [-74.006, 40.7128],
@@ -22,6 +22,10 @@ export function RouteCard() {
             </MarkerContent>
           </MapMarker>
         ))}
+        <MapLegend title="Route" position="bottom-left" collapsible>
+          <MapLegendItem color="#3b82f6" label="Route Line" swatchShape="line" disabled />
+          <MapLegendItem color="#3b82f6" label="Waypoint" swatchShape="dot" disabled />
+        </MapLegend>
       </Map>
     </div>
   );

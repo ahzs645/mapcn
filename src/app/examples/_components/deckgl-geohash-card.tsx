@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { GeohashLayer } from "@deck.gl/geo-layers";
 
@@ -79,6 +80,13 @@ export function DeckglGeohashCard() {
     <div className="h-full w-full">
       <Map center={[-122.4, 37.78]} zoom={10} pitch={45} theme="dark">
         <GeohashOverlay />
+        <MapLegend title="Geohash Value" position="bottom-left" collapsible>
+          <MapGradientLegendItem
+            colors={["rgb(0 220 255)", "rgb(128 160 228)", "rgb(255 100 200)"]}
+            minLabel="600"
+            maxLabel="2.2k"
+          />
+        </MapLegend>
       </Map>
     </div>
   );

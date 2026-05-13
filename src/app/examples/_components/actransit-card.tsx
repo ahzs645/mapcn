@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ScatterplotLayer, PathLayer } from "@deck.gl/layers";
 
@@ -229,32 +230,19 @@ export function ActransitCard() {
     <div className="relative h-full w-full">
       <Map center={[-122.27, 37.8]} zoom={11} theme="dark">
         <BusOverlay />
-      </Map>
-
-      <div className="absolute top-3 left-3 z-10 rounded-md border bg-background/90 backdrop-blur-sm px-2.5 py-2 text-[10px] shadow-sm space-y-1.5">
-        <p className="font-medium text-[11px]">AC Transit — Live Buses</p>
-        <div className="space-y-1 pt-0.5">
+        <MapLegend title="AC Transit Routes" position="bottom-left" collapsible>
           {Object.entries(ROUTE_COLORS).map(([route, color]) => (
-            <div key={route} className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className="size-2.5 rounded-full"
-                  style={{
-                    backgroundColor: `rgb(${color[0]}, ${color[1]}, ${color[2]})`,
-                  }}
-                />
-                <span className="font-medium">Route {route}</span>
-              </div>
-              <span className="text-muted-foreground">
-                {routeCounts[route] || 0} buses
-              </span>
-            </div>
+            <MapLegendItem
+              key={route}
+              color={`rgb(${color.join(" ")})`}
+              label={`Route ${route}`}
+              count={`${routeCounts[route] || 0}`}
+              swatchShape="line"
+              disabled
+            />
           ))}
-        </div>
-        <p className="text-[9px] text-muted-foreground pt-1 border-t">
-          Simulated — positions update in real time
-        </p>
-      </div>
+        </MapLegend>
+      </Map>
     </div>
   );
 }

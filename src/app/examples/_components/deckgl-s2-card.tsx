@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { S2Layer } from "@deck.gl/geo-layers";
 
@@ -84,6 +85,13 @@ export function DeckglS2Card() {
     <div className="h-full w-full">
       <Map center={[-122.4, 37.78]} zoom={10} pitch={45} theme="dark">
         <S2Overlay />
+        <MapLegend title="Cell Value" position="bottom-left" collapsible>
+          <MapGradientLegendItem
+            colors={["rgb(50 100 200)", "rgb(255 200 50)", "rgb(225 100 150)"]}
+            minLabel="600"
+            maxLabel="2.8k"
+          />
+        </MapLegend>
       </Map>
     </div>
   );

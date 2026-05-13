@@ -74,10 +74,7 @@ export function StopMarker({
       anchor="center"
     >
       <MarkerContent className="size-0 cursor-default">
-        <div
-          className="pointer-events-none absolute left-0 top-0 size-0"
-          style={{ opacity }}
-        >
+        <div className="pointer-events-none absolute left-0 top-0 size-0">
           <div
             className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-background shadow-sm"
             style={{
@@ -86,6 +83,7 @@ export function StopMarker({
               borderColor,
               borderStyle: "solid",
               borderWidth: stroke,
+              opacity,
             }}
           />
           <LabelSpan placement={placement} text={stop.stop_name} />
@@ -183,9 +181,7 @@ export function ClusterMarker({
           />
           <LabelSpan
             placement={placement}
-            text={cluster.children
-              .map((c) => c.stop_name.split(/[ ,]/)[0])
-              .join(" / ")}
+            text={placement?.text ?? cluster.children[0]?.stop_name ?? ""}
           />
         </div>
       </MarkerContent>
@@ -266,4 +262,3 @@ export function RouteBadge({
     </MapMarker>
   );
 }
-

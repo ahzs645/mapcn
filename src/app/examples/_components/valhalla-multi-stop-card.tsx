@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import {
   MapFloatingButton,
+  MapLegend,
+  MapLegendItem,
   MapNumberedMarker,
   MapPanel,
   MapPanelContent,
@@ -335,6 +337,12 @@ export function ValhallaMultiStopCard() {
     <div className="relative h-full w-full">
       <Map center={[-122.43, 37.79]} zoom={12}>
         <MultiStopMapContent />
+        <MapLegend title="Multi-Stop Route" position="bottom-left" collapsible>
+          <MapLegendItem color="#3b82f6" label="Optimized Route" swatchShape="line" disabled />
+          <MapLegendItem color="#22c55e" label="Start" swatchShape="dot" disabled />
+          <MapLegendItem color="#3b82f6" label="Waypoint" swatchShape="dot" disabled />
+          <MapLegendItem color="#ef4444" label="End" swatchShape="dot" disabled />
+        </MapLegend>
       </Map>
     </div>
   );

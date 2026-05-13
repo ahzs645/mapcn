@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ColumnLayer } from "@deck.gl/layers";
 
@@ -104,6 +105,16 @@ export function DeckglLandcoverCard() {
     <div className="h-full w-full">
       <Map center={[-98.5, 39.8]} zoom={4} pitch={30} theme="dark">
         <LandcoverOverlay />
+        <MapLegend title="Land Cover Classes" position="bottom-left" collapsible>
+          {LAND_TYPES.map((item) => (
+            <MapLegendItem
+              key={item.type}
+              color={`rgb(${item.color.slice(0, 3).join(" ")})`}
+              label={item.type}
+              disabled
+            />
+          ))}
+        </MapLegend>
       </Map>
     </div>
   );

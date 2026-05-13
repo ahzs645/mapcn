@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Map } from "@/registry/map";
 import { MapGeoJsonLayer } from "@/registry/map-layers";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 
 // Seeded random for deterministic HHI values
 function seededRandom(seed: number) {
@@ -99,24 +100,14 @@ function HhiMapInner() {
         </div>
       )}
 
-      <div className="absolute top-3 right-3 z-10 rounded-md border bg-background/90 backdrop-blur-sm px-2.5 py-2 text-[10px] shadow-sm space-y-1.5">
-        <p className="font-medium text-[11px]">Market Concentration (HHI)</p>
-        <div className="space-y-1">
-          {([
-            ["< 2,500 — Competitive", "#22c55e"],
-            ["2,500 - 5,000 — Moderate", "#eab308"],
-            ["> 5,000 — Concentrated", "#ef4444"],
-          ] as const).map(([label, color]) => (
-            <div key={label} className="flex items-center gap-1.5">
-              <span className="size-2.5 rounded-sm" style={{ backgroundColor: color }} />
-              <span>{label}</span>
-            </div>
-          ))}
-        </div>
-        <p className="text-muted-foreground text-[9px] pt-0.5">
+      <MapLegend title="Market Concentration (HHI)" position="top-right" collapsible>
+        <MapLegendItem color="#22c55e" label="< 2,500 - Competitive" disabled />
+        <MapLegendItem color="#eab308" label="2,500 - 5,000 - Moderate" disabled />
+        <MapLegendItem color="#ef4444" label="> 5,000 - Concentrated" disabled />
+        <p className="text-muted-foreground px-1 pt-0.5 text-[9px]">
           HHI: Herfindahl-Hirschman Index
         </p>
-      </div>
+      </MapLegend>
     </>
   );
 }

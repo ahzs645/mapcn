@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { TripsLayer } from "@deck.gl/geo-layers";
 
@@ -90,6 +91,10 @@ export function DeckglTripsCard() {
     <div className="h-full w-full">
       <Map center={[-74.0, 40.72]} zoom={12} pitch={45} theme="dark">
         <TripsOverlay />
+        <MapLegend title="Taxi Vendor" position="bottom-left" collapsible>
+          <MapLegendItem color="#fd805d" label="Vendor 0" swatchShape="line" disabled />
+          <MapLegendItem color="#17b8be" label="Vendor 1" swatchShape="line" disabled />
+        </MapLegend>
       </Map>
     </div>
   );

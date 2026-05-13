@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { LineLayer } from "@deck.gl/layers";
 
@@ -63,6 +64,17 @@ export function DeckglLineCard() {
     <div className="h-full w-full">
       <Map center={[-122.42, 37.785]} zoom={12.5}>
         <LineOverlay />
+        <MapLegend title="Corridors" position="bottom-left" collapsible>
+          {DATA.map((item) => (
+            <MapLegendItem
+              key={item.name}
+              color={`rgb(${item.color.join(" ")})`}
+              label={item.name}
+              swatchShape="line"
+              disabled
+            />
+          ))}
+        </MapLegend>
       </Map>
     </div>
   );

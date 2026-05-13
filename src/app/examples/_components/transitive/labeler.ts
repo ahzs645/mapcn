@@ -15,10 +15,16 @@ import type { Cluster } from "./clustering";
 export type Orientation = "E" | "W" | "N" | "S" | "NE" | "NW" | "SE" | "SW";
 
 type Bbox = { x: number; y: number; w: number; h: number };
+type OccupiedBbox = Bbox & {
+  kind?: "cluster" | "stop" | "place" | "label" | "segment";
+  id?: string;
+};
 
 type StopLabelInput = {
   stop_id: string;
   center: LngLat;
+  renderCenter?: LngLat;
+  nudgeY?: number;
   radius: number;
   text: string;
   fontSize: number;
@@ -31,6 +37,7 @@ export type StopLabelPlacement = {
   offsetX: number;
   offsetY: number;
   fontSize: number;
+  text: string;
 };
 
 export type SegmentLabelPlacement = {
@@ -51,13 +58,45 @@ type LabelOutput = {
 const STOP_ORIENTATIONS: Orientation[] = [
   "E",
   "W",
-  "NE",
-  "SE",
-  "NW",
-  "SW",
-  "N",
-  "S",
 ];
+
+const segmentEndStopIds = new Set<string>();
+const adjacentStopIdsByPlace = new Map<string, Set<string>>();
+
+function addAdjacentPlaceStop(placeId: string, stopId: string) {
+  if (!adjacentStopIdsByPlace.has(placeId)) {
+    adjacentStopIdsByPlace.set(placeId, new Set());
+  }
+  adjacentStopIdsByPlace.get(placeId)!.add(stopId);
+}
+
+for (const journey of transitiveData.journeys) {
+  for (const segment of journey.segments) {
+    if (segment.type === "WALK") {
+      if (segment.from.type === "STOP") {
+        segmentEndStopIds.add(segment.from.stop_id);
+      }
+      if (segment.to.type === "STOP") {
+        segmentEndStopIds.add(segment.to.stop_id);
+      }
+      if (segment.from.type === "PLACE" && segment.to.type === "STOP") {
+        addAdjacentPlaceStop(segment.from.place_id, segment.to.stop_id);
+      }
+      if (segment.from.type === "STOP" && segment.to.type === "PLACE") {
+        addAdjacentPlaceStop(segment.to.place_id, segment.from.stop_id);
+      }
+      continue;
+    }
+
+    const pattern = transitiveData.patterns.find(
+      (p) => p.pattern_id === segment.pattern_id,
+    );
+    const fromStop = pattern?.stops[segment.from_stop_index];
+    const toStop = pattern?.stops[segment.to_stop_index];
+    if (fromStop) segmentEndStopIds.add(fromStop.stop_id);
+    if (toStop) segmentEndStopIds.add(toStop.stop_id);
+  }
+}
 
 function projectToPixels(
   point: LngLat,
@@ -92,10 +131,22 @@ function bboxesOverlap(a: Bbox, b: Bbox): boolean {
 }
 
 function estimateLabelSize(text: string, fontSize: number): { w: number; h: number } {
-  return { w: Math.max(8, text.length * fontSize * 0.56), h: fontSize + 2 };
+  return { w: Math.max(8, text.length * fontSize * 0.48), h: fontSize + 2 };
 }
 
-const GAP = 4;
+function getClusterLabelStop(cluster: Cluster) {
+  const fromAdjacentStops = adjacentStopIdsByPlace.get("from") ?? new Set();
+  const candidates = cluster.children.filter(
+    (stop) => !fromAdjacentStops.has(stop.stop_id),
+  );
+  const stops = candidates.length > 0 ? candidates : cluster.children;
+
+  return stops.reduce((shortest, stop) =>
+    stop.stop_name.length < shortest.stop_name.length ? stop : shortest,
+  );
+}
+
+const GAP = 5;
 
 function offsetForOrientation(
   radius: number,
@@ -128,9 +179,15 @@ function placeOriented(
   radius: number,
   text: string,
   fontSize: number,
-  occupied: Bbox[],
+  occupied: OccupiedBbox[],
   orientations: Orientation[],
-): { orientation: Orientation; offsetX: number; offsetY: number; bbox: Bbox } {
+  ignore?: (bbox: OccupiedBbox) => boolean,
+): {
+  orientation: Orientation;
+  offsetX: number;
+  offsetY: number;
+  bbox: Bbox;
+} | null {
   const size = estimateLabelSize(text, fontSize);
 
   for (const orient of orientations) {
@@ -141,23 +198,16 @@ function placeOriented(
       w: size.w,
       h: size.h,
     };
-    if (occupied.every((other) => !bboxesOverlap(bbox, other))) {
+    if (
+      occupied.every(
+        (other) => ignore?.(other) || !bboxesOverlap(bbox, other),
+      )
+    ) {
       return { orientation: orient, offsetX: off.x, offsetY: off.y, bbox };
     }
   }
 
-  const fallback = offsetForOrientation(radius, size, orientations[0]);
-  return {
-    orientation: orientations[0],
-    offsetX: fallback.x,
-    offsetY: fallback.y,
-    bbox: {
-      x: anchorPx.x + fallback.x - size.w / 2,
-      y: anchorPx.y + fallback.y - size.h / 2,
-      w: size.w,
-      h: size.h,
-    },
-  };
+  return null;
 }
 
 function polylineSamples(
@@ -211,12 +261,14 @@ export function placeLabels(
   const origin: LngLat = [-77.0395, 38.8993];
   const mpp = metersPerPixel(origin[1], zoom);
 
-  const occupied: Bbox[] = [];
+  const occupied: OccupiedBbox[] = [];
 
   for (const cluster of clusters) {
     if (cluster.mergeFactor <= 0.01) continue;
     const px = projectToPixels(cluster.centroid, origin, mpp);
     occupied.push({
+      kind: "cluster",
+      id: cluster.cluster_id,
       x: px.x + cluster.pixelBox.offsetX - cluster.pixelBox.width / 2,
       y: px.y + cluster.pixelBox.offsetY - cluster.pixelBox.height / 2,
       w: cluster.pixelBox.width,
@@ -232,6 +284,8 @@ export function placeLabels(
         ? MAJOR_STOP_RADIUS(scale)
         : STOP_RADIUS(scale);
     occupied.push({
+      kind: "stop",
+      id: stop.stop_id,
       x: px.x - radius,
       y: px.y - radius,
       w: radius * 2,
@@ -243,6 +297,8 @@ export function placeLabels(
     const px = projectToPixels([place.place_lon, place.place_lat], origin, mpp);
     const radius = PLACE_RADIUS(scale);
     occupied.push({
+      kind: "place",
+      id: place.place_id,
       x: px.x - radius,
       y: px.y - radius,
       w: radius * 2,
@@ -259,12 +315,11 @@ export function placeLabels(
     priority: 0,
   }));
 
-  const showMinorStopLabels = scale >= 1;
   const stopInputs: StopLabelInput[] = transitiveData.stops
     .filter((s) => !hiddenStopIds.has(s.stop_id))
     .filter((s) => {
-      if (showMinorStopLabels) return true;
-      return s.stop_id === "rosslyn" || s.stop_id === "metro";
+      if (segmentEndStopIds.has(s.stop_id)) return true;
+      return scale >= 1.5;
     })
     .map((s) => ({
       stop_id: s.stop_id,
@@ -280,13 +335,18 @@ export function placeLabels(
 
   for (const cluster of clusters) {
     if (cluster.mergeFactor <= 0.01) continue;
+    const labelStop = getClusterLabelStop(cluster);
     placeInputs.push({
       stop_id: `__cluster__${cluster.cluster_id}`,
-      center: cluster.centroid,
+      center: [labelStop.stop_lon, labelStop.stop_lat],
+      renderCenter: cluster.centroid,
+      nudgeY: cluster.children.some((stop) =>
+        adjacentStopIdsByPlace.get("from")?.has(stop.stop_id),
+      )
+        ? -(STOP_FONT(scale) + 3)
+        : 0,
       radius: Math.max(cluster.pixelBox.width, cluster.pixelBox.height) / 2,
-      text: cluster.children
-        .map((c) => c.stop_name.split(" ")[0])
-        .join(" / "),
+      text: labelStop.stop_name,
       fontSize: STOP_FONT(scale),
       priority: 1,
     });
@@ -314,6 +374,9 @@ export function placeLabels(
 
   for (const input of sortedAnchors) {
     const px = projectToPixels(input.center, origin, mpp);
+    const renderPx = input.renderCenter
+      ? projectToPixels(input.renderCenter, origin, mpp)
+      : px;
     const placement = placeOriented(
       px,
       input.radius,
@@ -321,14 +384,32 @@ export function placeLabels(
       input.fontSize,
       occupied,
       STOP_ORIENTATIONS,
+      input.priority === 0
+        ? (bbox) => {
+            const adjacentStops = adjacentStopIdsByPlace.get(input.stop_id);
+            if (!adjacentStops) return false;
+            if (bbox.kind === "stop") {
+              return adjacentStops.has(bbox.id ?? "");
+            }
+            if (bbox.kind === "cluster") {
+              return [...adjacentStops].some((stopId) =>
+                bbox.id?.includes(stopId),
+              );
+            }
+            return false;
+          }
+        : undefined,
     );
-    occupied.push(placement.bbox);
+    if (!placement) continue;
+
+    occupied.push({ ...placement.bbox, kind: "label", id: input.stop_id });
     const out: StopLabelPlacement = {
       stop_id: input.stop_id,
       orientation: placement.orientation,
-      offsetX: placement.offsetX,
-      offsetY: placement.offsetY,
+      offsetX: placement.offsetX + px.x - renderPx.x,
+      offsetY: placement.offsetY + px.y - renderPx.y + (input.nudgeY ?? 0),
       fontSize: input.fontSize,
+      text: input.text,
     };
     if (input.stop_id.startsWith("__cluster__") || transitiveData.places.some((p) => p.place_id === input.stop_id)) {
       places.set(input.stop_id, out);

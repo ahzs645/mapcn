@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { SolidPolygonLayer } from "@deck.gl/layers";
 
@@ -65,6 +66,16 @@ export function DeckglSolidPolygonCard() {
     <div className="h-full w-full">
       <Map center={[-74.01, 40.704]} zoom={15} pitch={45}>
         <SolidPolygonOverlay />
+        <MapLegend title="Buildings" position="bottom-left" collapsible>
+          {DATA.map((item) => (
+            <MapLegendItem
+              key={item.name}
+              color={`rgb(${item.color.slice(0, 3).join(" ")})`}
+              label={item.name}
+              disabled
+            />
+          ))}
+        </MapLegend>
       </Map>
     </div>
   );

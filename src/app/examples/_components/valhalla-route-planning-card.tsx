@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import {
   MapFloatingButton,
+  MapLegend,
+  MapLegendItem,
   MapPanel,
   MapPanelDescription,
   MapPanelHeader,
@@ -289,6 +291,12 @@ export function ValhallaRoutePlanningCard() {
     <div className="relative h-full w-full">
       <Map center={[4.69, 52.15]} zoom={9}>
         <RoutePlanningMapContent />
+        <MapLegend title="Route Planning" position="bottom-left" collapsible>
+          <MapLegendItem color="#6366f1" label="Selected Route" swatchShape="line" disabled />
+          <MapLegendItem color="#6b7280" label="Alternate Route" swatchShape="line" disabled />
+          <MapLegendItem color="#ef4444" label="Origin (Rotterdam)" swatchShape="dot" disabled />
+          <MapLegendItem color="#10b981" label="Destination (Amsterdam)" swatchShape="dot" disabled />
+        </MapLegend>
       </Map>
     </div>
   );

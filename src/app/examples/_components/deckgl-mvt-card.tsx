@@ -2,8 +2,22 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { MVTLayer } from "@deck.gl/geo-layers";
+
+const legendItems = [
+  { label: "Building", color: "#4a5057" },
+  { label: "Water", color: "#40a4df" },
+  { label: "Park", color: "#4caf50" },
+  { label: "Other", color: "#c8c8c8" },
+];
+
+type VectorTileFeature = {
+  properties?: {
+    layerName?: string;
+  };
+};
 
 function MvtOverlay() {
   const { map, isLoaded } = useMap();
@@ -19,7 +33,7 @@ function MvtOverlay() {
           new MVTLayer({
             id: "mvt-layer",
             data: "https://tiles.openfreemap.org/planet/{z}/{x}/{y}.pbf",
-            getFillColor: (f: any) => {
+            getFillColor: (f: VectorTileFeature) => {
               const layer = f.properties?.layerName;
               if (layer === "building") return [74, 80, 87, 200];
               if (layer === "water") return [64, 164, 223, 200];
@@ -56,6 +70,11 @@ export function DeckglMvtCard() {
     <div className="h-full w-full">
       <Map center={[-74.01, 40.707]} zoom={14} pitch={45} theme="dark">
         <MvtOverlay />
+        <MapLegend title="Feature Type" position="bottom-left" collapsible>
+          {legendItems.map((item) => (
+            <MapLegendItem key={item.label} color={item.color} label={item.label} disabled />
+          ))}
+        </MapLegend>
       </Map>
     </div>
   );

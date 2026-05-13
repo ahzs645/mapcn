@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { H3ClusterLayer } from "@deck.gl/geo-layers";
 
@@ -116,6 +117,13 @@ export function DeckglH3ClusterCard() {
     <div className="h-full w-full">
       <Map center={[-122.4, 37.78]} zoom={10} pitch={45} theme="dark">
         <H3ClusterOverlay />
+        <MapLegend title="Cluster Value" position="bottom-left" collapsible>
+          <MapGradientLegendItem
+            colors={["rgb(80 200 180)", "rgb(168 150 155)", "rgb(255 100 130)"]}
+            minLabel="1.2k"
+            maxLabel="3k"
+          />
+        </MapLegend>
       </Map>
     </div>
   );

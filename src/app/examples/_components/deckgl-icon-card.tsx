@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { IconLayer } from "@deck.gl/layers";
 
@@ -71,6 +72,17 @@ export function DeckglIconCard() {
     <div className="h-full w-full">
       <Map center={[-122.44, 37.79]} zoom={12}>
         <IconOverlay />
+        <MapLegend title="Points of Interest" position="bottom-left" collapsible>
+          {DATA.map((item) => (
+            <MapLegendItem
+              key={item.name}
+              color={`rgb(${item.color.join(" ")})`}
+              label={item.name}
+              swatchShape="dot"
+              disabled
+            />
+          ))}
+        </MapLegend>
       </Map>
     </div>
   );

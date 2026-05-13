@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ScatterplotLayer } from "@deck.gl/layers";
 
@@ -37,6 +38,14 @@ const DATA: PriceData[] = [
   { position: [-97.33, 32.75], price: 310000, city: "Fort Worth" },
   { position: [-85.76, 38.25], price: 230000, city: "Louisville" },
   { position: [-106.65, 35.08], price: 300000, city: "Albuquerque" },
+];
+
+const legendItems = [
+  { label: "< $280k", color: "rgb(40 100 220)" },
+  { label: "$280k - $400k", color: "rgb(80 180 80)" },
+  { label: "$400k - $600k", color: "rgb(240 220 50)" },
+  { label: "$600k - $900k", color: "rgb(240 120 30)" },
+  { label: "$900k+", color: "rgb(180 0 30)" },
 ];
 
 function priceToColor(d: PriceData): [number, number, number, number] {
@@ -96,6 +105,11 @@ export function PromapCard() {
     <div className="h-full w-full">
       <Map center={[-98.5, 39.8]} zoom={4} theme="dark">
         <PromapOverlay />
+        <MapLegend title="Median Price" position="bottom-left" collapsible>
+          {legendItems.map((item) => (
+            <MapLegendItem key={item.label} color={item.color} label={item.label} disabled />
+          ))}
+        </MapLegend>
       </Map>
     </div>
   );

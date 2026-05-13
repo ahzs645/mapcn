@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { PointCloudLayer } from "@deck.gl/layers";
 
@@ -19,6 +20,15 @@ const CLASS_COLORS: Record<string, [number, number, number, number]> = {
   building: [244, 67, 54, 255],
   water: [33, 150, 243, 255],
 };
+
+const legendItems = [
+  { key: "ground", label: "Ground" },
+  { key: "lowVeg", label: "Low Vegetation" },
+  { key: "medVeg", label: "Medium Vegetation" },
+  { key: "highVeg", label: "High Vegetation" },
+  { key: "building", label: "Building" },
+  { key: "water", label: "Water" },
+] as const;
 
 const DATA: PointData[] = (() => {
   const points: PointData[] = [];
@@ -129,6 +139,17 @@ export function LidarClassificationCard() {
     <div className="h-full w-full">
       <Map center={[-123.075, 44.05]} zoom={14} pitch={60} theme="dark">
         <ClassificationOverlay />
+        <MapLegend title="Classification" position="bottom-left" collapsible>
+          {legendItems.map((item) => (
+            <MapLegendItem
+              key={item.key}
+              color={`rgb(${CLASS_COLORS[item.key].slice(0, 3).join(" ")})`}
+              label={item.label}
+              swatchShape="dot"
+              disabled
+            />
+          ))}
+        </MapLegend>
       </Map>
     </div>
   );

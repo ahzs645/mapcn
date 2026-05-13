@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { PointCloudLayer } from "@deck.gl/layers";
 
@@ -100,6 +101,13 @@ export function DeckglPointCloudCard() {
         theme="dark"
       >
         <PointCloudOverlay />
+        <MapLegend title="Point Height" position="bottom-left" collapsible>
+          <MapGradientLegendItem
+            colors={["rgb(50 100 150)", "rgb(120 167 185)", "rgb(190 233 220)"]}
+            minLabel="Low"
+            maxLabel="High"
+          />
+        </MapLegend>
       </Map>
     </div>
   );

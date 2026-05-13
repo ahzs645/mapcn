@@ -2,6 +2,7 @@
 
 import { Map } from "@/registry/map";
 import { MapGeoJsonLayer } from "@/registry/map-layers";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 
 const parks: GeoJSON.FeatureCollection = {
   type: "FeatureCollection",
@@ -41,6 +42,15 @@ export function GeoJsonCard() {
           paint={{ "line-color": "#16a34a", "line-width": 2 }}
           interactive={false}
         />
+        <MapLegend title="GeoJSON Features" position="bottom-left" collapsible>
+          <MapLegendItem color="#22c55e" label="Park Area" disabled />
+          <MapLegendItem
+            color="#16a34a"
+            label="Park Boundary"
+            swatchShape="line"
+            disabled
+          />
+        </MapLegend>
       </Map>
     </div>
   );

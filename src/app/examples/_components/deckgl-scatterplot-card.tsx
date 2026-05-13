@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapSizeLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ScatterplotLayer } from "@deck.gl/layers";
 
@@ -62,6 +63,11 @@ export function DeckglScatterplotCard() {
     <div className="h-full w-full">
       <Map center={[-122.4, 37.8]} zoom={11}>
         <ScatterplotOverlay />
+        <MapLegend title="Point Size" position="bottom-left" collapsible>
+          <MapSizeLegendItem size={6} label="Small activity" />
+          <MapSizeLegendItem size={12} label="Medium activity" />
+          <MapSizeLegendItem size={20} label="High activity" />
+        </MapLegend>
       </Map>
     </div>
   );

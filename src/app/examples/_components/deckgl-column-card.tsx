@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ColumnLayer } from "@deck.gl/layers";
 
@@ -69,6 +70,13 @@ export function DeckglColumnCard() {
     <div className="h-full w-full">
       <Map center={[-96, 38]} zoom={3.5} pitch={45} bearing={-10}>
         <ColumnOverlay />
+        <MapLegend title="Population" position="bottom-left" collapsible>
+          <MapGradientLegendItem
+            colors={["rgb(50 100 255)", "rgb(150 50 128)", "rgb(250 0 0)"]}
+            minLabel="1M"
+            maxLabel="8M+"
+          />
+        </MapLegend>
       </Map>
     </div>
   );

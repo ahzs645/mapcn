@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Map, useMap } from "@/registry/map";
+import { Map } from "@/registry/map";
 import { MapGeoJsonLayer } from "@/registry/map-layers";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 
 const unemploymentData: Record<string, number> = {
   Alabama: 5.3, Alaska: 6.6, Arizona: 5.2, Arkansas: 5.1, California: 5.3,
@@ -79,17 +80,14 @@ function ChoroplethInner() {
           <p className="text-muted-foreground text-xs">{hovered.rate}% unemployment</p>
         </div>
       )}
-      <div className="absolute bottom-3 right-3 z-10 rounded-md border bg-background/90 backdrop-blur-sm px-2 py-1.5 text-[10px] shadow-sm space-y-0.5">
+      <MapLegend title="Unemployment" position="bottom-right" collapsible>
         {[
           ["< 4%", "#eff3ff"], ["4-4.5%", "#c6dbef"], ["4.5-5%", "#9ecae1"],
           ["5-5.5%", "#6baed6"], ["5.5-6%", "#3182bd"], ["> 6%", "#08519c"],
         ].map(([label, color]) => (
-          <div key={label} className="flex items-center gap-1.5">
-            <span className="size-2 rounded-sm" style={{ backgroundColor: color }} />
-            {label}
-          </div>
+          <MapLegendItem key={label} color={color} label={label} disabled />
         ))}
-      </div>
+      </MapLegend>
     </>
   );
 }

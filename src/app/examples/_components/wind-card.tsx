@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ScatterplotLayer } from "@deck.gl/layers";
 
@@ -133,24 +134,14 @@ export function WindCard() {
     <div className="relative h-full w-full">
       <Map center={[0, 30]} zoom={1.5} theme="dark">
         <WindOverlay />
+        <MapLegend title="Wind Speed" position="bottom-left" collapsible>
+          <MapGradientLegendItem
+            colors={["#3b82f6", "#22c55e", "#eab308", "#ef4444"]}
+            minLabel="0 m/s"
+            maxLabel="30 m/s"
+          />
+        </MapLegend>
       </Map>
-
-      <div className="absolute bottom-3 right-3 z-10 rounded-md border bg-background/90 backdrop-blur-sm px-2.5 py-2 text-[10px] shadow-sm space-y-1.5">
-        <p className="font-medium text-[11px]">Wind Speed (m/s)</p>
-        <div className="space-y-1">
-          {([
-            ["0-7.5 Calm", "#3b82f6"],
-            ["7.5-15 Moderate", "#22c55e"],
-            ["15-22.5 Strong", "#eab308"],
-            ["22.5-30 Severe", "#ef4444"],
-          ] as const).map(([label, color]) => (
-            <div key={label} className="flex items-center gap-1.5">
-              <span className="size-2 rounded-full" style={{ backgroundColor: color }} />
-              <span>{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

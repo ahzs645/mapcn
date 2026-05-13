@@ -84,3 +84,7 @@
 [  441750ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://tiles.basemaps.cartocdn.com/fonts/Open%20Sans/0-255.pbf:0
 [  453725ms] [WARNING] WARNING: Too many active WebGL contexts. Oldest context will be lost. @ http://localhost:3000/_next/static/chunks/node_modules_%40luma_gl_webgl_dist_4dee8f14._.js:1469
 [  455213ms] [LOG] %c[Vercel Web Analytics]%c [view] http://localhost:3000/examples/lidar-copc color: rgb(120, 120, 120) color: inherit {o: http://localhost:3000/examples/lidar-copc, sv: 0.1.3, sdkn: @vercel/analytics/next, sdkv: 1.6.1, ts: 1778685401327} /_vercel/insights/view @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297
+[ 2799864ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297
+[ 2799894ms] [LOG] [Fast Refresh] done in 97ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297
+[ 2811615ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297
+[ 2811647ms] [LOG] [Fast Refresh] done in 98ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297

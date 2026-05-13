@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useId } from "react";
-import { Map, MapMarker, MarkerContent, MapRoute, useMap } from "@/registry/map";
+import { Map, MapMarker, MarkerContent, useMap } from "@/registry/map";
 import {
   ChevronDown,
   Loader2,
@@ -15,6 +15,7 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 
 // ── Types ────────────────────────────────────────────────────────
 type ActivityType = "Attraction" | "Dining";
@@ -401,6 +402,10 @@ export function TripPlannerCard() {
     <div className="relative h-full w-full">
       <Map center={[-120.5, 35.5]} zoom={5}>
         {data && <TripMapContent data={data} routeCoordinates={routeCoords} />}
+        <MapLegend title="Trip Planner" position="bottom-left" collapsible>
+          <MapLegendItem color="#6366f1" label="Driving Route" swatchShape="line" disabled />
+          <MapLegendItem color="#6366f1" label="Waypoint / Highlight" swatchShape="dot" disabled />
+        </MapLegend>
       </Map>
 
       <button

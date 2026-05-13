@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import {
   MapFloatingButton,
+  MapLegend,
+  MapLegendItem,
   MapPanel,
   MapPanelContent,
   MapPanelHeader,
@@ -291,6 +293,12 @@ export function ValhallaDeliveryTrackingCard() {
     <div className="relative h-full w-full">
       <Map center={[-0.095, 51.515]} zoom={13}>
         <DeliveryMapContent />
+        <MapLegend title="Delivery Tracking" position="bottom-left" collapsible>
+          <MapLegendItem color="#3b82f6" label="Delivery Route" swatchShape="line" disabled />
+          <MapLegendItem color="#10b981" label="Store (Pickup)" swatchShape="dot" disabled />
+          <MapLegendItem color="#2563eb" label="Delivery Truck" swatchShape="dot" disabled />
+          <MapLegendItem color="#3b82f6" label="Home (Dropoff)" swatchShape="dot" disabled />
+        </MapLegend>
       </Map>
     </div>
   );
