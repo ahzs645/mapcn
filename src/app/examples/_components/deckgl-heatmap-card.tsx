@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { HeatmapLayer } from "@deck.gl/aggregation-layers";
 
@@ -28,6 +29,15 @@ function generateClusters() {
 
 const data = generateClusters();
 
+const intensityColors = [
+  "#0198bd",
+  "#49e3ce",
+  "#d8feb5",
+  "#feedb1",
+  "#fead54",
+  "#d1374e",
+];
+
 function HeatmapOverlay() {
   const { map, isLoaded } = useMap();
   const overlayRef = useRef<MapboxOverlay | null>(null);
@@ -47,8 +57,12 @@ function HeatmapOverlay() {
             intensity: 1,
             threshold: 0.03,
             colorRange: [
-              [1, 152, 189], [73, 227, 206], [216, 254, 181],
-              [254, 237, 177], [254, 173, 84], [209, 55, 78],
+              [1, 152, 189],
+              [73, 227, 206],
+              [216, 254, 181],
+              [254, 237, 177],
+              [254, 173, 84],
+              [209, 55, 78],
             ],
           }),
         ],
@@ -77,6 +91,9 @@ export function DeckglHeatmapCard() {
     <div className="h-full w-full">
       <Map center={[-122.41, 37.78]} zoom={11.5}>
         <HeatmapOverlay />
+        <MapLegend title="Intensity" position="bottom-left" collapsible>
+          <MapGradientLegendItem colors={intensityColors} minLabel="Low" maxLabel="High" />
+        </MapLegend>
       </Map>
     </div>
   );

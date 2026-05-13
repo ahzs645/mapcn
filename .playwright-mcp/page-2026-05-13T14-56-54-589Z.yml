@@ -1,0 +1,242 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - link "mapcn" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - img [ref=e6]
+          - text: mapcn
+        - button "Collapse sidebar" [ref=e9] [cursor=pointer]:
+          - img [ref=e10]
+      - navigation [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e15]: Core
+          - link "Basic Map" [ref=e16] [cursor=pointer]:
+            - /url: /examples/basic-map
+          - link "Markers & Tooltips" [ref=e17] [cursor=pointer]:
+            - /url: /examples/markers
+          - link "Route" [ref=e18] [cursor=pointer]:
+            - /url: /examples/route
+          - link "Clustered Points" [ref=e19] [cursor=pointer]:
+            - /url: /examples/cluster
+        - generic [ref=e20]:
+          - generic [ref=e21]: MapLibre Layers
+          - link "GeoJSON Polygons" [ref=e22] [cursor=pointer]:
+            - /url: /examples/geojson
+          - link "Choropleth" [ref=e23] [cursor=pointer]:
+            - /url: /examples/choropleth
+          - link "Heatmap" [ref=e24] [cursor=pointer]:
+            - /url: /examples/heatmap
+          - link "3D Buildings" [ref=e25] [cursor=pointer]:
+            - /url: /examples/3d-buildings
+          - link "Raster Tiles" [ref=e26] [cursor=pointer]:
+            - /url: /examples/raster-tiles
+          - link "Image Overlay" [ref=e27] [cursor=pointer]:
+            - /url: /examples/image-overlay
+          - link "Video Overlay" [ref=e28] [cursor=pointer]:
+            - /url: /examples/video-overlay
+          - link "Interpolate Heatmap" [ref=e29] [cursor=pointer]:
+            - /url: /examples/interpolate-heatmap
+        - generic [ref=e30]:
+          - generic [ref=e31]: Controls
+          - link "Interactive Legend" [ref=e32] [cursor=pointer]:
+            - /url: /examples/legend
+          - link "Layer Control" [ref=e33] [cursor=pointer]:
+            - /url: /examples/layer-control
+          - link "Proximity Map" [ref=e34] [cursor=pointer]:
+            - /url: /examples/proximity
+          - link "Map Compare" [ref=e35] [cursor=pointer]:
+            - /url: /examples/map-compare
+          - link "Style Switcher" [ref=e36] [cursor=pointer]:
+            - /url: /examples/style-switcher
+          - link "3D Perspective" [ref=e37] [cursor=pointer]:
+            - /url: /examples/3d-perspective
+          - link "Isochrone Map" [ref=e38] [cursor=pointer]:
+            - /url: /examples/isochrone
+        - generic [ref=e39]:
+          - generic [ref=e40]: Valhalla Routing
+          - link "Trip Planner" [ref=e41] [cursor=pointer]:
+            - /url: /examples/trip-planner
+          - link "Route Planning" [ref=e42] [cursor=pointer]:
+            - /url: /examples/route-planning
+          - link "Delivery Tracking" [ref=e43] [cursor=pointer]:
+            - /url: /examples/delivery-tracking
+          - link "Multi-Stop Routes" [ref=e44] [cursor=pointer]:
+            - /url: /examples/multi-stop
+          - link "Trip Playback" [ref=e45] [cursor=pointer]:
+            - /url: /examples/trip-playback
+        - generic [ref=e46]:
+          - generic [ref=e47]: Featured
+          - link "Drone Flight" [ref=e48] [cursor=pointer]:
+            - /url: /examples/drone-flight
+          - link "HHI Map" [ref=e49] [cursor=pointer]:
+            - /url: /examples/hhi-map
+          - link "NYC Snow Plowing" [ref=e50] [cursor=pointer]:
+            - /url: /examples/nyc-snow
+          - link "AC Transit" [ref=e51] [cursor=pointer]:
+            - /url: /examples/actransit
+          - link "Transitive Journey" [ref=e52] [cursor=pointer]:
+            - /url: /examples/transitive
+          - link "Wind Animation" [ref=e53] [cursor=pointer]:
+            - /url: /examples/wind
+          - link "Home Price Explorer" [ref=e54] [cursor=pointer]:
+            - /url: /examples/promap
+          - link "Timeline Map" [ref=e55] [cursor=pointer]:
+            - /url: /examples/timeline
+        - generic [ref=e56]:
+          - generic [ref=e57]: Animation & Globe
+          - link "FlyTo Cities" [ref=e58] [cursor=pointer]:
+            - /url: /examples/flyto
+          - link "Globe" [ref=e59] [cursor=pointer]:
+            - /url: /examples/globe
+          - link "Globe Atmosphere" [ref=e60] [cursor=pointer]:
+            - /url: /examples/globe-atmosphere
+          - link "Globe Day/Night" [ref=e61] [cursor=pointer]:
+            - /url: /examples/globe-day-night
+          - link "Animated Route" [ref=e62] [cursor=pointer]:
+            - /url: /examples/animated-route
+          - link "Earthquake Globe" [ref=e63] [cursor=pointer]:
+            - /url: /examples/earthquake-globe
+          - link "Weather Markers" [ref=e64] [cursor=pointer]:
+            - /url: /examples/weather
+          - link "Weather Dashboard" [ref=e65] [cursor=pointer]:
+            - /url: /examples/weather-dashboard
+        - generic [ref=e66]:
+          - generic [ref=e67]: deck.gl
+          - link "Scatterplot" [ref=e68] [cursor=pointer]:
+            - /url: /examples/deckgl-scatterplot
+          - link "Arc Layer" [ref=e69] [cursor=pointer]:
+            - /url: /examples/deckgl-arc
+          - link "Hexagon Layer" [ref=e70] [cursor=pointer]:
+            - /url: /examples/deckgl-hexagon
+          - link "Trips Animation" [ref=e71] [cursor=pointer]:
+            - /url: /examples/deckgl-trips
+          - link "Heatmap (deck.gl)" [ref=e72] [cursor=pointer]:
+            - /url: /examples/deckgl-heatmap
+          - link "GeoJSON 3D" [ref=e73] [cursor=pointer]:
+            - /url: /examples/deckgl-geojson
+          - link "Column Layer" [ref=e74] [cursor=pointer]:
+            - /url: /examples/deckgl-column
+          - link "Contour Layer" [ref=e75] [cursor=pointer]:
+            - /url: /examples/deckgl-contour
+          - link "Grid Layer" [ref=e76] [cursor=pointer]:
+            - /url: /examples/deckgl-grid
+          - link "Screen Grid" [ref=e77] [cursor=pointer]:
+            - /url: /examples/deckgl-screengrid
+          - link "Line Layer" [ref=e78] [cursor=pointer]:
+            - /url: /examples/deckgl-line
+          - link "Path Layer" [ref=e79] [cursor=pointer]:
+            - /url: /examples/deckgl-path
+          - link "Polygon Layer" [ref=e80] [cursor=pointer]:
+            - /url: /examples/deckgl-polygon
+          - link "Solid Polygon" [ref=e81] [cursor=pointer]:
+            - /url: /examples/deckgl-solid-polygon
+          - link "Text Layer" [ref=e82] [cursor=pointer]:
+            - /url: /examples/deckgl-text
+          - link "Icon Layer" [ref=e83] [cursor=pointer]:
+            - /url: /examples/deckgl-icon
+          - link "Bitmap Layer" [ref=e84] [cursor=pointer]:
+            - /url: /examples/deckgl-bitmap
+          - link "Great Circle" [ref=e85] [cursor=pointer]:
+            - /url: /examples/deckgl-great-circle
+          - link "Grid Cell Layer" [ref=e86] [cursor=pointer]:
+            - /url: /examples/deckgl-grid-cell
+        - generic [ref=e87]:
+          - generic [ref=e88]: deck.gl Spatial
+          - link "H3 Hexagons" [ref=e89] [cursor=pointer]:
+            - /url: /examples/deckgl-h3
+          - link "H3 Cluster" [ref=e90] [cursor=pointer]:
+            - /url: /examples/deckgl-h3-cluster
+          - link "S2 Layer" [ref=e91] [cursor=pointer]:
+            - /url: /examples/deckgl-s2
+          - link "Geohash Layer" [ref=e92] [cursor=pointer]:
+            - /url: /examples/deckgl-geohash
+          - link "Quadkey Layer" [ref=e93] [cursor=pointer]:
+            - /url: /examples/deckgl-quadkey
+        - generic [ref=e94]:
+          - generic [ref=e95]: deck.gl Geographic
+          - link "MVT Layer" [ref=e96] [cursor=pointer]:
+            - /url: /examples/deckgl-mvt
+          - link "Tile Layer" [ref=e97] [cursor=pointer]:
+            - /url: /examples/deckgl-tile
+          - link "WMS Layer" [ref=e98] [cursor=pointer]:
+            - /url: /examples/deckgl-wms
+          - link "Terrain Layer" [ref=e99] [cursor=pointer]:
+            - /url: /examples/deckgl-terrain
+        - generic [ref=e100]:
+          - generic [ref=e101]: deck.gl 3D
+          - link "Scenegraph" [ref=e102] [cursor=pointer]:
+            - /url: /examples/deckgl-scenegraph
+          - link "Simple Mesh" [ref=e103] [cursor=pointer]:
+            - /url: /examples/deckgl-simple-mesh
+          - link "Point Cloud" [ref=e104] [cursor=pointer]:
+            - /url: /examples/deckgl-point-cloud
+        - generic [ref=e105]:
+          - generic [ref=e106]: Satellite & Raster
+          - link "COG Layer" [ref=e107] [cursor=pointer]:
+            - /url: /examples/deckgl-cog
+          - link "Land Cover" [ref=e108] [cursor=pointer]:
+            - /url: /examples/deckgl-landcover
+          - link "NAIP Mosaic" [ref=e109] [cursor=pointer]:
+            - /url: /examples/deckgl-naip
+        - generic [ref=e110]:
+          - generic [ref=e111]: LiDAR
+          - link "COPC Streaming" [ref=e112] [cursor=pointer]:
+            - /url: /examples/lidar-copc
+          - link "EPT Streaming" [ref=e113] [cursor=pointer]:
+            - /url: /examples/lidar-ept
+          - link "Classification Filter" [ref=e114] [cursor=pointer]:
+            - /url: /examples/lidar-classification
+          - link "Multiple Sources" [ref=e115] [cursor=pointer]:
+            - /url: /examples/lidar-multiple
+      - link "All Examples" [ref=e117] [cursor=pointer]:
+        - /url: /examples
+        - img [ref=e118]
+        - text: All Examples
+    - generic [ref=e120]:
+      - generic [ref=e122]:
+        - generic [ref=e123]:
+          - generic [ref=e125]: deck.gl
+          - heading "Contour Layer" [level=1] [ref=e126]
+          - paragraph [ref=e127]: Density contour isolines from point data.
+          - generic [ref=e128]:
+            - generic [ref=e129]: Installation
+            - code [ref=e131]: npx mapcn add map
+        - generic [ref=e132]:
+          - link "Column Layer" [ref=e133] [cursor=pointer]:
+            - /url: /examples/deckgl-column
+            - img [ref=e134]
+            - text: Column Layer
+          - link "Grid Layer" [ref=e136] [cursor=pointer]:
+            - /url: /examples/deckgl-grid
+            - text: Grid Layer
+            - img [ref=e137]
+      - generic [ref=e139]:
+        - button "Toggle theme" [ref=e141] [cursor=pointer]:
+          - img
+        - generic [ref=e144]:
+          - region "Map" [ref=e150]
+          - group [ref=e151]:
+            - generic "Toggle attribution" [ref=e152] [cursor=pointer]
+            - generic [ref=e153]:
+              - text: ©
+              - link "CARTO" [ref=e154] [cursor=pointer]:
+                - /url: https://carto.com/about-carto/
+              - text: ", ©"
+              - link "OpenStreetMap" [ref=e155] [cursor=pointer]:
+                - /url: http://www.openstreetmap.org/about/
+              - text: contributors
+          - generic [ref=e156]:
+            - paragraph [ref=e158]: Density Contours
+            - generic [ref=e159]:
+              - button "1+" [disabled]:
+                - generic: 1+
+              - button "5+" [disabled]:
+                - generic: 5+
+              - button "15+" [disabled]:
+                - generic: 15+
+              - button "30+" [disabled]:
+                - generic: 30+
+  - button "Open Next.js Dev Tools" [ref=e165] [cursor=pointer]:
+    - img [ref=e166]
+  - alert [ref=e169]

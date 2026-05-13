@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ContourLayer } from "@deck.gl/aggregation-layers";
 
@@ -25,6 +26,13 @@ function generatePoints() {
 }
 
 const data = generatePoints();
+
+const contourLevels = [
+  { threshold: "1+", color: "rgba(0, 128, 255, 0.65)" },
+  { threshold: "5+", color: "rgba(0, 200, 150, 0.75)" },
+  { threshold: "15+", color: "rgba(255, 200, 0, 0.82)" },
+  { threshold: "30+", color: "rgba(255, 80, 50, 0.9)" },
+];
 
 function ContourOverlay() {
   const { map, isLoaded } = useMap();
@@ -74,6 +82,17 @@ export function DeckglContourCard() {
     <div className="h-full w-full">
       <Map center={[-122.41, 37.78]} zoom={12}>
         <ContourOverlay />
+        <MapLegend title="Density Contours" position="bottom-left" collapsible>
+          {contourLevels.map((level) => (
+            <MapLegendItem
+              key={level.threshold}
+              color={level.color}
+              label={level.threshold}
+              swatchShape="line"
+              disabled
+            />
+          ))}
+        </MapLegend>
       </Map>
     </div>
   );

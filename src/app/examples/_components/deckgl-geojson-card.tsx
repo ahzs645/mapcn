@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { GeoJsonLayer } from "@deck.gl/layers";
 
@@ -10,7 +11,7 @@ const geojsonData: GeoJSON.FeatureCollection = {
   features: [
     {
       type: "Feature",
-      properties: { name: "Zone A", height: 500, color: [0, 128, 255] },
+      properties: { name: "Zone A", height: 500, color: [255, 140, 0] },
       geometry: {
         type: "Polygon",
         coordinates: [[
@@ -20,7 +21,7 @@ const geojsonData: GeoJSON.FeatureCollection = {
     },
     {
       type: "Feature",
-      properties: { name: "Zone B", height: 800, color: [255, 100, 50] },
+      properties: { name: "Zone B", height: 800, color: [0, 200, 150] },
       geometry: {
         type: "Polygon",
         coordinates: [[
@@ -30,7 +31,7 @@ const geojsonData: GeoJSON.FeatureCollection = {
     },
     {
       type: "Feature",
-      properties: { name: "Zone C", height: 300, color: [50, 200, 100] },
+      properties: { name: "Zone C", height: 600, color: [138, 43, 226] },
       geometry: {
         type: "Polygon",
         coordinates: [[
@@ -38,8 +39,28 @@ const geojsonData: GeoJSON.FeatureCollection = {
         ]],
       },
     },
+    {
+      type: "Feature",
+      properties: { name: "Route", color: [255, 255, 255] },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [-122.45, 37.76],
+          [-122.42, 37.78],
+          [-122.39, 37.77],
+          [-122.36, 37.79],
+        ],
+      },
+    },
   ],
 };
+
+const legendItems = [
+  { label: "Zone A", color: "#ff8c00", shape: "square" },
+  { label: "Zone B", color: "#00c896", shape: "square" },
+  { label: "Zone C", color: "#8a2be2", shape: "square" },
+  { label: "Route", color: "#ffffff", shape: "line" },
+] as const;
 
 function GeoJsonOverlay() {
   const { map, isLoaded } = useMap();
@@ -58,8 +79,8 @@ function GeoJsonOverlay() {
             wireframe: true,
             getElevation: (f: GeoJSON.Feature) => (f.properties?.height ?? 100) as number,
             getFillColor: (f: GeoJSON.Feature) => (f.properties?.color ?? [128, 128, 128]) as [number, number, number],
-            getLineColor: [255, 255, 255, 100],
-            lineWidthMinPixels: 1,
+            getLineColor: (f: GeoJSON.Feature) => (f.properties?.color ?? [255, 255, 255]) as [number, number, number],
+            lineWidthMinPixels: 2,
             opacity: 0.7,
           }),
         ],
@@ -88,6 +109,17 @@ export function DeckglGeoJsonCard() {
     <div className="h-full w-full">
       <Map center={[-122.41, 37.78]} zoom={12} pitch={45} bearing={-17}>
         <GeoJsonOverlay />
+        <MapLegend title="GeoJSON Features" position="bottom-left" collapsible>
+          {legendItems.map((item) => (
+            <MapLegendItem
+              key={item.label}
+              color={item.color}
+              label={item.label}
+              swatchShape={item.shape}
+              disabled
+            />
+          ))}
+        </MapLegend>
       </Map>
     </div>
   );

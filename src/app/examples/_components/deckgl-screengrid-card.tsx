@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ScreenGridLayer } from "@deck.gl/aggregation-layers";
 
@@ -23,6 +24,15 @@ function generatePoints() {
 
 const data = generatePoints();
 
+const densityColors = [
+  "rgba(0, 25, 0, 0.1)",
+  "rgba(0, 85, 0, 0.4)",
+  "rgba(0, 127, 0, 0.6)",
+  "rgba(0, 170, 0, 0.72)",
+  "rgba(0, 190, 0, 0.8)",
+  "rgba(0, 255, 0, 0.92)",
+];
+
 function ScreenGridOverlay() {
   const { map, isLoaded } = useMap();
   const overlayRef = useRef<MapboxOverlay | null>(null);
@@ -39,8 +49,12 @@ function ScreenGridOverlay() {
             getPosition: (d: [number, number]) => d,
             cellSizePixels: 20,
             colorRange: [
-              [0, 25, 0, 25], [0, 85, 0, 100], [0, 127, 0, 150],
-              [0, 170, 0, 180], [0, 190, 0, 200], [0, 255, 0, 230],
+              [0, 25, 0, 25],
+              [0, 85, 0, 100],
+              [0, 127, 0, 150],
+              [0, 170, 0, 180],
+              [0, 190, 0, 200],
+              [0, 255, 0, 230],
             ],
             opacity: 0.8,
           }),
@@ -70,6 +84,9 @@ export function DeckglScreenGridCard() {
     <div className="h-full w-full">
       <Map center={[-122.41, 37.78]} zoom={11.5}>
         <ScreenGridOverlay />
+        <MapLegend title="Screen Density" position="bottom-left" collapsible>
+          <MapGradientLegendItem colors={densityColors} minLabel="Low" maxLabel="High" />
+        </MapLegend>
       </Map>
     </div>
   );

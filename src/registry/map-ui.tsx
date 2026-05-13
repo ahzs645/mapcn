@@ -1,6 +1,7 @@
 "use client";
 
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
+import { ChevronDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -249,17 +250,45 @@ function MapSwatch({
 
 type MapLegendProps = MapOverlayProps & {
   title?: ReactNode;
+  collapsible?: boolean;
+  defaultCollapsed?: boolean;
 };
 
-function MapLegend({ title, className, children, ...props }: MapLegendProps) {
+function MapLegend({
+  title,
+  collapsible = false,
+  defaultCollapsed = false,
+  className,
+  children,
+  ...props
+}: MapLegendProps) {
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
+
   return (
     <MapOverlay className={cn("p-2", className)} {...props}>
       {title ? (
-        <MapOverlayHeader>
-          <MapOverlayTitle>{title}</MapOverlayTitle>
+        <MapOverlayHeader className={cn(!collapsed && "mb-2")}>
+          {collapsible ? (
+            <button
+              type="button"
+              aria-expanded={!collapsed}
+              onClick={() => setCollapsed((value) => !value)}
+              className="hover:text-foreground flex w-full items-center justify-between gap-3 text-left"
+            >
+              <MapOverlayTitle>{title}</MapOverlayTitle>
+              <ChevronDown
+                className={cn(
+                  "text-muted-foreground size-3.5 shrink-0 transition-transform",
+                  collapsed && "-rotate-90",
+                )}
+              />
+            </button>
+          ) : (
+            <MapOverlayTitle>{title}</MapOverlayTitle>
+          )}
         </MapOverlayHeader>
       ) : null}
-      <MapOverlayContent>{children}</MapOverlayContent>
+      {!collapsed ? <MapOverlayContent>{children}</MapOverlayContent> : null}
     </MapOverlay>
   );
 }
@@ -295,6 +324,37 @@ function MapLegendItem({
         {label}
       </span>
     </button>
+  );
+}
+
+type MapGradientLegendItemProps = ComponentPropsWithoutRef<"div"> & {
+  colors: string[];
+  minLabel: ReactNode;
+  maxLabel: ReactNode;
+};
+
+function MapGradientLegendItem({
+  colors,
+  minLabel,
+  maxLabel,
+  className,
+  style,
+  ...props
+}: MapGradientLegendItemProps) {
+  return (
+    <div className={cn("min-w-24 space-y-1", className)} {...props}>
+      <div
+        className="h-2 rounded-sm border"
+        style={{
+          background: `linear-gradient(to right, ${colors.join(", ")})`,
+          ...style,
+        }}
+      />
+      <div className="text-muted-foreground flex items-center justify-between gap-3 text-[9px]">
+        <span>{minLabel}</span>
+        <span>{maxLabel}</span>
+      </div>
+    </div>
   );
 }
 
@@ -398,6 +458,7 @@ export {
   MapSwatch,
   MapLegend,
   MapLegendItem,
+  MapGradientLegendItem,
   MapLayerToggle,
   MapMarkerDot,
   MapNumberedMarker,

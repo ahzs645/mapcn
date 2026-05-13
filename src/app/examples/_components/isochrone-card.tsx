@@ -39,7 +39,7 @@ const MODES: { value: TransportMode; label: string; Icon: typeof Car }[] = [
 
 function IsochroneLayer({
   data,
-  fillOpacity = 0.7,
+  fillOpacity = 0.78,
 }: {
   data: IsochroneData;
   fillOpacity?: number;
@@ -47,46 +47,95 @@ function IsochroneLayer({
   const { map, isLoaded } = useMap();
   const idBase = useId();
   const sourceId = `iso-src-${idBase}`;
-  const fillId = `iso-fill-${idBase}`;
-  const lineId = `iso-line-${idBase}`;
 
   useEffect(() => {
     if (!map || !isLoaded) return;
 
     const processed: IsochroneData = {
       type: "FeatureCollection",
-      features: [...data.features].reverse().map((f) => ({
-        ...f,
-        properties: {
-          ...f.properties,
-          fillColor: f.properties.color.startsWith("#")
-            ? f.properties.color
-            : `#${f.properties.color}`,
-        },
-      })),
+      features: data.features.map((feature) => {
+        const contourValue =
+          typeof feature.properties.contour === "number"
+            ? feature.properties.contour
+            : 0;
+
+        return {
+          ...feature,
+          properties: {
+            ...feature.properties,
+            contourValue,
+            fillColor: feature.properties.color.startsWith("#")
+              ? feature.properties.color
+              : `#${feature.properties.color}`,
+          },
+        };
+      }),
+    };
+
+    const contourValues = Array.from(
+      new Set(
+        processed.features
+          .map((feature) => feature.properties.contourValue)
+          .filter((value): value is number => typeof value === "number"),
+      ),
+    ).sort((a, b) => b - a);
+
+    const removeIsochroneLayers = () => {
+      for (const contourValue of contourValues) {
+        const fillId = `iso-fill-${idBase}-${contourValue}`;
+        const lineId = `iso-line-${idBase}-${contourValue}`;
+
+        if (map.getLayer(lineId)) map.removeLayer(lineId);
+        if (map.getLayer(fillId)) map.removeLayer(fillId);
+      }
     };
 
     const add = () => {
       try {
         if (map.getSource(sourceId)) {
+          removeIsochroneLayers();
           (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(
             processed as unknown as GeoJSON.GeoJSON
           );
-          return;
+        } else {
+          map.addSource(sourceId, {
+            type: "geojson",
+            data: processed as unknown as GeoJSON.GeoJSON,
+          });
         }
-        map.addSource(sourceId, { type: "geojson", data: processed as unknown as GeoJSON.GeoJSON });
-        map.addLayer({
-          id: fillId,
-          type: "fill",
-          source: sourceId,
-          paint: { "fill-color": ["get", "fillColor"], "fill-opacity": fillOpacity },
-        });
-        map.addLayer({
-          id: lineId,
-          type: "line",
-          source: sourceId,
-          paint: { "line-color": ["get", "fillColor"], "line-width": 1, "line-opacity": 0.5 },
-        });
+
+        for (const contourValue of contourValues) {
+          const fillId = `iso-fill-${idBase}-${contourValue}`;
+          const lineId = `iso-line-${idBase}-${contourValue}`;
+          const filter: maplibregl.FilterSpecification = [
+            "==",
+            ["get", "contourValue"],
+            contourValue,
+          ];
+
+          map.addLayer({
+            id: fillId,
+            type: "fill",
+            source: sourceId,
+            filter,
+            paint: {
+              "fill-color": ["get", "fillColor"],
+              "fill-opacity": fillOpacity,
+            },
+          });
+
+          map.addLayer({
+            id: lineId,
+            type: "line",
+            source: sourceId,
+            filter,
+            paint: {
+              "line-color": ["get", "fillColor"],
+              "line-width": 1.5,
+              "line-opacity": 0.75,
+            },
+          });
+        }
       } catch {}
     };
 
@@ -95,8 +144,7 @@ function IsochroneLayer({
 
     return () => {
       try {
-        if (map.getLayer(lineId)) map.removeLayer(lineId);
-        if (map.getLayer(fillId)) map.removeLayer(fillId);
+        removeIsochroneLayers();
         if (map.getSource(sourceId)) map.removeSource(sourceId);
       } catch {}
     };

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapGradientLegendItem, MapLegend } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { HexagonLayer } from "@deck.gl/aggregation-layers";
 
@@ -23,6 +24,15 @@ function generatePoints() {
 
 const data = generatePoints();
 
+const densityColors = [
+  "#0198bd",
+  "#49e3ce",
+  "#d8feb5",
+  "#feedb1",
+  "#fead54",
+  "#d1374e",
+];
+
 function HexagonOverlay() {
   const { map, isLoaded } = useMap();
   const overlayRef = useRef<MapboxOverlay | null>(null);
@@ -41,8 +51,12 @@ function HexagonOverlay() {
             elevationScale: 4,
             extruded: true,
             colorRange: [
-              [1, 152, 189], [73, 227, 206], [216, 254, 181],
-              [254, 237, 177], [254, 173, 84], [209, 55, 78],
+              [1, 152, 189],
+              [73, 227, 206],
+              [216, 254, 181],
+              [254, 237, 177],
+              [254, 173, 84],
+              [209, 55, 78],
             ],
           }),
         ],
@@ -71,6 +85,9 @@ export function DeckglHexagonCard() {
     <div className="h-full w-full">
       <Map center={[-122.41, 37.78]} zoom={11.5} pitch={45} bearing={-17}>
         <HexagonOverlay />
+        <MapLegend title="Point Density" position="bottom-left" collapsible>
+          <MapGradientLegendItem colors={densityColors} minLabel="Low" maxLabel="High" />
+        </MapLegend>
       </Map>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Map, useMap } from "@/registry/map";
+import { MapLegend, MapLegendItem } from "@/registry/map-ui";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ArcLayer } from "@deck.gl/layers";
 
@@ -64,6 +65,10 @@ export function DeckglArcCard() {
     <div className="h-full w-full">
       <Map center={[0, 25]} zoom={1.2}>
         <ArcOverlay />
+        <MapLegend title="Arc Endpoints" position="bottom-left" collapsible>
+          <MapLegendItem color="#0080ff" label="Origin" swatchShape="line" disabled />
+          <MapLegendItem color="#ff6432" label="Destination" swatchShape="line" disabled />
+        </MapLegend>
       </Map>
     </div>
   );
