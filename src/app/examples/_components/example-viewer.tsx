@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ArrowLeft,
-  ArrowRight,
   ChevronLeft,
   ChevronRight,
   PanelLeftClose,
@@ -98,6 +97,7 @@ import { GlobeDayNightCard } from "./globe-day-night-card";
 import { HhiMapCard } from "./hhi-map-card";
 import { NycSnowPlowingCard } from "./nyc-snow-plowing-card";
 import { WindCard } from "./wind-card";
+import { WebglWindCard } from "./webgl-wind-card";
 import { ActransitCard } from "./actransit-card";
 import { TimelineCard } from "./timeline-card";
 import { TransitiveCard } from "./transitive-card";
@@ -178,6 +178,7 @@ const componentMap: Record<string, ComponentType> = {
   "hhi-map": HhiMapCard,
   "nyc-snow": NycSnowPlowingCard,
   "wind": WindCard,
+  "webgl-wind": WebglWindCard,
   "actransit": ActransitCard,
   "transitive": TransitiveCard,
   "timeline": TimelineCard,
