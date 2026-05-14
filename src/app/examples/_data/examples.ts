@@ -41,6 +41,7 @@ export const examples: ExampleMeta[] = [
   { slug: "actransit", title: "AC Transit", description: "Simulated real-time bus tracking with route visualization.", category: "Featured" },
   { slug: "transitive", title: "Transitive Journey", description: "Fake Transitive-style transit data rendered as routes, stops, transfers, and walk connectors.", category: "Featured" },
   { slug: "wind", title: "Wind Animation", description: "Global wind speed and direction visualization with color-coded particles.", category: "Featured" },
+  { slug: "wind-map", title: "Wind Map Block", description: "The installable wind-map block with animated 10 m surface wind particles and compact map overlays.", category: "Featured" },
   { slug: "webgl-wind", title: "WebGL Wind", description: "GPU particle wind simulation ported from the WebGL wind demo with encoded GFS vector fields.", category: "Featured" },
   // ── Animation & Globe ──────────────────────────────────────────
   { slug: "flyto", title: "FlyTo Cities", description: "Smooth camera animations to cities around the world.", category: "Animation & Globe" },

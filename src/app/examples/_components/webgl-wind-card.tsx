@@ -58,7 +58,11 @@ void main() {
 `;
 
 const DRAW_FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
 
 uniform sampler2D u_wind;
 uniform vec2 u_wind_min;
@@ -93,7 +97,11 @@ void main() {
 `;
 
 const SCREEN_FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
 
 uniform sampler2D u_screen;
 uniform float u_opacity;
@@ -102,12 +110,16 @@ varying vec2 v_tex_pos;
 
 void main() {
   vec4 color = texture2D(u_screen, 1.0 - v_tex_pos);
-  gl_FragColor = vec4(floor(255.0 * color * u_opacity) / 255.0);
+  gl_FragColor = floor(color * (255.0 * u_opacity)) / 255.0;
 }
 `;
 
 const UPDATE_FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
+#else
+precision mediump float;
+#endif
 
 uniform sampler2D u_particles;
 uniform sampler2D u_wind;
@@ -154,7 +166,7 @@ void main() {
   vec2 seed = (pos + v_tex_pos) * u_rand_seed;
   float drop_rate = u_drop_rate + speed_t * u_drop_rate_bump;
   float drop = step(1.0 - drop_rate, rand(seed));
-  vec2 random_pos = vec2(rand(seed + 1.3), rand(seed + 2.1));
+  vec2 random_pos = vec2(rand(seed + vec2(1.3)), rand(seed + vec2(2.1)));
   pos = mix(pos, random_pos, drop);
 
   gl_FragColor = vec4(fract(pos * 255.0), floor(pos * 255.0) / 255.0);
@@ -173,7 +185,9 @@ function createShader(
   gl.compileShader(shader);
 
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    throw new Error(gl.getShaderInfoLog(shader) ?? "Shader compile failed.");
+    const log = gl.getShaderInfoLog(shader) ?? "Shader compile failed.";
+    gl.deleteShader(shader);
+    throw new Error(log);
   }
 
   return shader;
@@ -582,6 +596,11 @@ async function loadWindData(hour: number) {
   return { ...meta, image };
 }
 
+function parseWindDate(date: string) {
+  const normalizedDate = date.replace(/T(\d{2}):(\d{2})Z$/, "T$1:$2:00Z");
+  return new Date(normalizedDate);
+}
+
 export function WebglWindCard() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const windRef = useRef<WindGL | null>(null);
@@ -589,6 +608,7 @@ export function WebglWindCard() {
   const [hour, setHour] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [timestamp, setTimestamp] = useState("2016-11-20 00:00 UTC");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -597,9 +617,21 @@ export function WebglWindCard() {
     const gl = canvas.getContext("webgl", { antialias: false });
     if (!gl) return;
 
-    const wind = new WindGL(gl);
-    wind.numParticles = 65536;
-    windRef.current = wind;
+    let wind: WindGL;
+    try {
+      wind = new WindGL(gl);
+      wind.numParticles = 65536;
+      windRef.current = wind;
+    } catch (reason) {
+      queueMicrotask(() => {
+        setError(
+          reason instanceof Error
+            ? reason.message
+            : "Unable to initialize WebGL wind renderer.",
+        );
+      });
+      return;
+    }
 
     function resize() {
       if (!canvas || !windRef.current) return;
@@ -626,19 +658,26 @@ export function WebglWindCard() {
   useEffect(() => {
     let cancelled = false;
 
-    loadWindData(hour).then((data) => {
-      if (cancelled) return;
-      windRef.current?.setWind(data);
-      setTimestamp(
-        new Intl.DateTimeFormat("en", {
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          timeZoneName: "short",
-          timeZone: "UTC",
-        }).format(new Date(data.date)),
-      );
-    });
+    loadWindData(hour)
+      .then((data) => {
+        if (cancelled) return;
+        windRef.current?.setWind(data);
+        setTimestamp(
+          new Intl.DateTimeFormat("en", {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            timeZoneName: "short",
+            timeZone: "UTC",
+          }).format(parseWindDate(data.date)),
+        );
+      })
+      .catch((reason) => {
+        if (cancelled) return;
+        setError(
+          reason instanceof Error ? reason.message : "Unable to load wind data.",
+        );
+      });
 
     return () => {
       cancelled = true;
@@ -665,6 +704,15 @@ export function WebglWindCard() {
     <div className="relative h-full min-h-[18rem] w-full overflow-hidden bg-zinc-950 text-white">
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:10%_20%]" />
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+
+      {error ? (
+        <div className="absolute inset-0 flex items-center justify-center p-6">
+          <div className="max-w-sm rounded-md border border-white/10 bg-black/70 p-4 text-sm text-white shadow-xl backdrop-blur">
+            <p className="font-medium">WebGL wind renderer unavailable</p>
+            <p className="mt-2 text-xs text-white/70">{error}</p>
+          </div>
+        </div>
+      ) : null}
 
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-3">
         <div className="min-w-0 rounded-md border border-white/10 bg-black/50 px-3 py-2 backdrop-blur">

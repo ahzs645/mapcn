@@ -97,6 +97,7 @@ import { GlobeDayNightCard } from "./globe-day-night-card";
 import { HhiMapCard } from "./hhi-map-card";
 import { NycSnowPlowingCard } from "./nyc-snow-plowing-card";
 import { WindCard } from "./wind-card";
+import { WindMapBlockCard } from "./wind-map-block-card";
 import { WebglWindCard } from "./webgl-wind-card";
 import { ActransitCard } from "./actransit-card";
 import { TimelineCard } from "./timeline-card";
@@ -178,6 +179,7 @@ const componentMap: Record<string, ComponentType> = {
   "hhi-map": HhiMapCard,
   "nyc-snow": NycSnowPlowingCard,
   "wind": WindCard,
+  "wind-map": WindMapBlockCard,
   "webgl-wind": WebglWindCard,
   "actransit": ActransitCard,
   "transitive": TransitiveCard,
