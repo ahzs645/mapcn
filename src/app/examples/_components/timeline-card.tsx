@@ -7,6 +7,8 @@ import {
   Pause,
   SkipBack,
   SkipForward,
+  ChevronFirst,
+  ChevronLast,
   ChevronLeft,
   ChevronRight,
   Layers,
@@ -631,18 +633,18 @@ export function TimelineCard({
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">Speed:</span>
               <div className="flex gap-1">
-                {SPEEDS.map((s) => (
+                {TIMELINE_SPEED_OPTIONS.map(({ value, label }) => (
                   <button
-                    key={s}
+                    key={value}
                     className={cn(
                       "rounded-md border px-2 py-0.5 text-xs font-medium transition-colors cursor-pointer",
-                      speed === s
+                      speed === value
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border hover:bg-muted",
                     )}
-                    onClick={() => setSpeed(s)}
+                    onClick={() => setSpeed(value)}
                   >
-                    {s}x
+                    {label}
                   </button>
                 ))}
               </div>
