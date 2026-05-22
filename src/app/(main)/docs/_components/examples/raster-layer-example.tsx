@@ -11,14 +11,14 @@ const tileSources = [
     attribution: "&copy; OpenStreetMap contributors",
   },
   {
-    name: "Stamen Toner",
-    tiles: ["https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}.png"],
-    attribution: "&copy; Stadia Maps &copy; Stamen Design",
+    name: "CARTO Light",
+    tiles: ["https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"],
+    attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
   },
   {
-    name: "Stamen Watercolor",
-    tiles: ["https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg"],
-    attribution: "&copy; Stadia Maps &copy; Stamen Design",
+    name: "CARTO Dark",
+    tiles: ["https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"],
+    attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
   },
 ];
 

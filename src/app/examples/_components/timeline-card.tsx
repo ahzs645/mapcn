@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Map, useMap } from "@/registry/map";
 import {
   Play,
   Pause,
   SkipBack,
   SkipForward,
-  ChevronFirst,
-  ChevronLast,
+  ChevronLeft,
+  ChevronRight,
   Layers,
   Info,
   X,
@@ -21,9 +21,87 @@ import { cn } from "@/lib/utils";
 const START_DATE = new Date(2024, 6, 1);
 const END_DATE = new Date(2024, 9, 31);
 const DEFAULT_DATE = new Date(2024, 7, 20);
-const SPEEDS = [0.5, 1, 2, 4] as const;
 const SOURCE_ID = "disturbance-src";
 const LAYER_IDS = { high: "dist-high", medium: "dist-medium", low: "dist-low" } as const;
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export const TIMELINE_MAP_STYLES = {
+  light: {
+    name: "Light",
+    styles: {
+      light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+      dark: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+    },
+  },
+  topographic: {
+    name: "Topographic",
+    styles: {
+      light: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
+      dark: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
+    },
+  },
+  dark: {
+    name: "Dark",
+    styles: {
+      light: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+      dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+    },
+  },
+} as const;
+
+export type TimelineMapStyleKey = keyof typeof TIMELINE_MAP_STYLES;
+
+export const TIMELINE_CONTROL_STYLES = {
+  classic: {
+    name: "Classic",
+    description: "Single scrubber with start and end labels.",
+  },
+  activity: {
+    name: "Activity bars",
+    description: "PGMaps-style intensity bars above the scrubber.",
+  },
+  compact: {
+    name: "Compact ticks",
+    description: "Dense tick strip with month markers.",
+  },
+} as const;
+
+export type TimelineControlStyleKey = keyof typeof TIMELINE_CONTROL_STYLES;
+
+export const TIMELINE_GRANULARITY_OPTIONS = {
+  week: "Week",
+  month: "Month",
+  year: "Year",
+} as const;
+
+export type TimelineGranularity = keyof typeof TIMELINE_GRANULARITY_OPTIONS;
+
+export const TIMELINE_WINDOW_OPTIONS = [
+  { value: 1, label: "1 period" },
+  { value: 2, label: "2 periods" },
+  { value: 3, label: "3 periods" },
+  { value: 4, label: "4 periods" },
+  { value: 6, label: "6 periods" },
+  { value: -1, label: "Cumulative" },
+] as const;
+
+export type TimelineWindowSize = (typeof TIMELINE_WINDOW_OPTIONS)[number]["value"];
+export type TimelineWindowAnchor = "start" | "end";
+
+const TIMELINE_SPEED_OPTIONS = [
+  { value: 0.5, label: "0.5x" },
+  { value: 1, label: "1x" },
+  { value: 2, label: "2x" },
+  { value: 4, label: "4x" },
+] as const;
+
+interface TimelineBucket {
+  key: string;
+  date: Date;
+  label: string;
+  shortLabel: string;
+  intensity: number;
+}
 
 interface LayerConfig {
   id: string;
@@ -39,12 +117,75 @@ const INITIAL_LAYERS: LayerConfig[] = [
 ];
 
 // ── Helpers ─────────────────────────────────────────────────────────
-const fmtDate = (d: Date) =>
-  d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 const fmtShort = (d: Date) =>
   d.toLocaleDateString("en-US", { year: "numeric", month: "short" });
-const pctOf = (d: Date) =>
-  ((d.getTime() - START_DATE.getTime()) / (END_DATE.getTime() - START_DATE.getTime())) * 100;
+
+function getWindowOptions(granularity: TimelineGranularity) {
+  const values: TimelineWindowSize[] = granularity === "week" ? [1, 2, 4, -1] : [1, 3, 6, -1];
+  const unit = granularity === "week" ? "wk" : granularity === "month" ? "mo" : "yr";
+
+  return values.map((value) => ({
+    value,
+    label: value === -1 ? "Cumul." : `${value} ${unit}`,
+  }));
+}
+
+function snapToBucket(date: Date, granularity: TimelineGranularity) {
+  if (granularity === "year") return new Date(date.getFullYear(), 0, 1);
+  if (granularity === "month") return new Date(date.getFullYear(), date.getMonth(), 1);
+
+  const next = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  next.setDate(next.getDate() - next.getDay());
+  return next;
+}
+
+function bucketKey(date: Date, granularity: TimelineGranularity) {
+  if (granularity === "year") return String(date.getFullYear());
+  if (granularity === "month") return `${date.getFullYear()}-${String(date.getMonth()).padStart(2, "0")}`;
+  return snapToBucket(date, "week").toISOString().slice(0, 10);
+}
+
+function buildTimelineBuckets(granularity: TimelineGranularity): TimelineBucket[] {
+  const buckets: TimelineBucket[] = [];
+  const cursor = snapToBucket(START_DATE, granularity);
+  let index = 0;
+
+  while (cursor <= END_DATE) {
+    const date = new Date(cursor);
+    const key = bucketKey(date, granularity);
+    const label =
+      granularity === "year"
+        ? String(date.getFullYear())
+        : granularity === "month"
+          ? date.toLocaleDateString("en-US", { month: "short", year: "numeric" })
+          : date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    const shortLabel =
+      granularity === "year"
+        ? String(date.getFullYear())
+        : granularity === "month"
+          ? `${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`
+          : date.getDate() <= 7
+            ? `${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`
+            : String(date.getDate());
+    const seasonalPulse = Math.sin((index / 16) * Math.PI * 2 - 0.8) * 0.35 + 0.55;
+    const weatherPulse = seededRand(date.getTime(), index, date.getMonth()) * 0.45;
+
+    buckets.push({
+      key,
+      date,
+      label,
+      shortLabel,
+      intensity: Math.max(0.1, Math.min(1, seasonalPulse + weatherPulse)),
+    });
+
+    if (granularity === "year") cursor.setFullYear(cursor.getFullYear() + 1);
+    else if (granularity === "month") cursor.setMonth(cursor.getMonth() + 1);
+    else cursor.setDate(cursor.getDate() + 7);
+    index += 1;
+  }
+
+  return buckets;
+}
 
 /** Deterministic pseudo-random from seed + coords */
 function seededRand(seed: number, x: number, y: number) {
@@ -186,44 +327,116 @@ function DisturbanceLayer({
 }
 
 // ── Main Card ───────────────────────────────────────────────────────
-export function TimelineCard() {
+export function TimelineCard({
+  timelineStyle = "dark",
+  timelineControlStyle = "activity",
+  timelineGranularity = "week",
+  timelineWindowSize = 1,
+  timelineWindowAnchor = "start",
+  onTimelineWindowSizeChange,
+  showRangeControl = true,
+  showSpeedControl = true,
+  showBucketCounts = true,
+  showStats = true,
+  showCloseControl = true,
+}: {
+  timelineStyle?: TimelineMapStyleKey;
+  timelineControlStyle?: TimelineControlStyleKey;
+  timelineGranularity?: TimelineGranularity;
+  timelineWindowSize?: TimelineWindowSize;
+  timelineWindowAnchor?: TimelineWindowAnchor;
+  showRangeControl?: boolean;
+  showSpeedControl?: boolean;
+  showBucketCounts?: boolean;
+  showStats?: boolean;
+  showCloseControl?: boolean;
+  onTimelineWindowSizeChange?: (size: TimelineWindowSize) => void;
+}) {
   const [currentDate, setCurrentDate] = useState(DEFAULT_DATE);
   const [layers, setLayers] = useState(INITIAL_LAYERS);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
+  const [internalWindowSize, setInternalWindowSize] =
+    useState<TimelineWindowSize>(timelineWindowSize);
   const [showLayers, setShowLayers] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
-
-  const progress = pctOf(currentDate);
+  const [timelineOpen, setTimelineOpen] = useState(true);
+  const selectedStyle = TIMELINE_MAP_STYLES[timelineStyle];
+  const activeWindowSize = timelineWindowSize ?? internalWindowSize;
+  const windowOptions = getWindowOptions(timelineGranularity);
+  const timelineBuckets = useMemo(
+    () => buildTimelineBuckets(timelineGranularity),
+    [timelineGranularity],
+  );
+  const currentBucketIndex = Math.max(
+    0,
+    timelineBuckets.findIndex((bucket) => bucket.key === bucketKey(currentDate, timelineGranularity)),
+  );
+  const isCumulative = activeWindowSize === -1;
+  const maxPosition =
+    !isCumulative && timelineWindowAnchor === "start"
+      ? Math.max(0, timelineBuckets.length - activeWindowSize)
+      : Math.max(0, timelineBuckets.length - 1);
+  const boundedIndex = Math.min(currentBucketIndex, maxPosition);
+  const windowStart =
+    isCumulative
+      ? 0
+      : timelineWindowAnchor === "end"
+        ? Math.max(0, boundedIndex - activeWindowSize + 1)
+        : boundedIndex;
+  const windowEnd =
+    isCumulative
+      ? boundedIndex
+      : timelineWindowAnchor === "end"
+        ? boundedIndex
+        : Math.min(timelineBuckets.length - 1, boundedIndex + activeWindowSize - 1);
+  const formattedTimelineDate =
+    isCumulative
+      ? `Through ${timelineBuckets[boundedIndex]?.label ?? ""}`
+      : windowStart === windowEnd
+        ? timelineBuckets[boundedIndex]?.label ?? ""
+        : `${timelineBuckets[windowStart]?.label ?? ""} - ${timelineBuckets[windowEnd]?.label ?? ""}`;
+  const statsLabel = `${windowEnd - windowStart + 1} ${timelineGranularity}${windowEnd === windowStart ? "" : "s"} active`;
+  const unitLabel =
+    timelineGranularity === "year" ? "year" : timelineGranularity === "month" ? "month" : "week";
 
   const stepForward = useCallback(() => {
     setCurrentDate((prev) => {
-      const d = new Date(prev);
-      d.setDate(d.getDate() + 1);
-      if (d > END_DATE) {
+      const idx = timelineBuckets.findIndex((bucket) => bucket.key === bucketKey(prev, timelineGranularity));
+      const nextBucket = timelineBuckets[Math.min(idx + 1, maxPosition)];
+
+      if (!nextBucket || idx >= maxPosition) {
         setIsPlaying(false);
         return START_DATE;
       }
-      return d;
+
+      return nextBucket.date;
     });
-  }, []);
+  }, [maxPosition, timelineBuckets, timelineGranularity]);
 
   const stepBackward = useCallback(() => {
     setCurrentDate((prev) => {
-      const d = new Date(prev);
-      d.setDate(d.getDate() - 1);
-      return d >= START_DATE ? d : prev;
+      const idx = timelineBuckets.findIndex((bucket) => bucket.key === bucketKey(prev, timelineGranularity));
+      return timelineBuckets[Math.max(0, idx - 1)]?.date ?? prev;
     });
-  }, []);
+  }, [timelineBuckets, timelineGranularity]);
 
-  const seek = useCallback((p: number) => {
-    const total = END_DATE.getTime() - START_DATE.getTime();
-    setCurrentDate(new Date(START_DATE.getTime() + (total * p) / 100));
-  }, []);
+  const seek = useCallback(
+    (index: number) => {
+      const bucket = timelineBuckets[Math.min(Math.max(0, index), maxPosition)];
+      if (bucket) setCurrentDate(bucket.date);
+    },
+    [maxPosition, timelineBuckets],
+  );
 
   const toggleLayer = useCallback((id: string) => {
     setLayers((prev) => prev.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)));
   }, []);
+
+  const handleWindowSizeChange = useCallback((size: TimelineWindowSize) => {
+    setInternalWindowSize(size);
+    onTimelineWindowSizeChange?.(size);
+  }, [onTimelineWindowSizeChange]);
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -234,7 +447,13 @@ export function TimelineCard() {
 
   return (
     <div className="relative h-full w-full">
-      <Map theme="dark" center={[-95.0, 40.0]} zoom={4} className="h-full w-full">
+      <Map
+        theme="dark"
+        center={[-95.0, 40.0]}
+        zoom={4}
+        styles={selectedStyle.styles}
+        className="h-full w-full"
+      >
         <DisturbanceLayer currentDate={currentDate} layers={layers} />
       </Map>
 
@@ -332,6 +551,17 @@ export function TimelineCard() {
       )}
 
       {/* Bottom timeline controls */}
+      {!timelineOpen ? (
+        <div className="absolute bottom-4 left-4 z-10">
+          <button
+            type="button"
+            onClick={() => setTimelineOpen(true)}
+            className="rounded-md border border-border/50 bg-background/95 px-3 py-2 text-xs font-medium shadow-lg backdrop-blur-sm transition-colors hover:bg-muted cursor-pointer"
+          >
+            Show timeline
+          </button>
+        </div>
+      ) : (
       <div className="absolute bottom-4 left-4 right-4 z-10">
         <div className="rounded-xl bg-background/95 shadow-lg backdrop-blur-sm border border-border/50 p-4">
           {/* Controls row */}
@@ -339,7 +569,10 @@ export function TimelineCard() {
             <div className="flex gap-1">
               <button
                 className="flex size-8 items-center justify-center rounded-md border border-border/50 transition-colors hover:bg-muted cursor-pointer"
-                onClick={() => { setIsPlaying(false); setCurrentDate(START_DATE); }}
+                onClick={() => {
+                  setIsPlaying(false);
+                  setCurrentDate(timelineBuckets[0]?.date ?? START_DATE);
+                }}
                 title="Skip to start"
               >
                 <ChevronFirst className="size-4" />
@@ -371,7 +604,10 @@ export function TimelineCard() {
               </button>
               <button
                 className="flex size-8 items-center justify-center rounded-md border border-border/50 transition-colors hover:bg-muted cursor-pointer"
-                onClick={() => { setIsPlaying(false); setCurrentDate(END_DATE); }}
+                onClick={() => {
+                  setIsPlaying(false);
+                  setCurrentDate(timelineBuckets[maxPosition]?.date ?? END_DATE);
+                }}
                 title="Skip to end"
               >
                 <ChevronLast className="size-4" />
@@ -380,8 +616,14 @@ export function TimelineCard() {
 
             {/* Date badge */}
             <div className="rounded-md border border-primary/50 bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
-              {fmtDate(currentDate)}
+              {formattedTimelineDate}
             </div>
+
+            {showStats && (
+              <div className="hidden text-xs text-muted-foreground lg:block">
+                {statsLabel}
+              </div>
+            )}
 
             <div className="flex-1" />
 
@@ -405,28 +647,119 @@ export function TimelineCard() {
                 ))}
               </div>
             </div>
+
+            {showCloseControl && (
+              <button
+                type="button"
+                className="flex size-8 items-center justify-center rounded-md border border-border/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
+                onClick={() => {
+                  setTimelineOpen(false);
+                  setIsPlaying(false);
+                }}
+                title="Close timeline"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* Slider */}
+          {timelineControlStyle === "activity" && showBucketCounts && (
+            <div className="mb-2 hidden h-10 items-end gap-px sm:flex">
+              {timelineBuckets.map((bucket, index) => {
+                const isActive = index >= windowStart && index <= windowEnd;
+                return (
+                  <button
+                    key={bucket.key}
+                    type="button"
+                    className="flex-1 cursor-pointer transition-opacity"
+                    style={{
+                      height: `${Math.max(3, bucket.intensity * 100)}%`,
+                      backgroundColor: "var(--color-primary)",
+                      opacity: isActive ? 0.95 : 0.22,
+                      borderRadius: "1px 1px 0 0",
+                      minWidth: "2px",
+                    }}
+                    title={`${bucket.label} intensity`}
+                    onClick={() => {
+                      setCurrentDate(bucket.date);
+                      setIsPlaying(false);
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
+
+          {timelineControlStyle === "compact" && (
+            <div className="mb-2 flex h-6 items-end">
+              {timelineBuckets.map((bucket, index) => {
+                const isCurrent = index === boundedIndex;
+                const isPeriodStart =
+                  timelineGranularity === "week"
+                    ? bucket.date.getDate() <= 7
+                    : timelineGranularity === "month"
+                      ? bucket.date.getMonth() === 0
+                      : true;
+                const isActive = index >= windowStart && index <= windowEnd;
+
+                return (
+                  <button
+                    key={bucket.key}
+                    type="button"
+                    className="flex flex-1 cursor-pointer flex-col items-center"
+                    title={bucket.label}
+                    onClick={() => {
+                      setCurrentDate(bucket.date);
+                      setIsPlaying(false);
+                    }}
+                  >
+                    {isPeriodStart && (
+                      <span className="hidden text-[9px] leading-none text-muted-foreground sm:block">
+                        {bucket.shortLabel}
+                      </span>
+                    )}
+                    <span
+                      className={cn(
+                        "block w-full transition-colors",
+                        isCurrent
+                          ? "h-4 bg-primary"
+                          : isActive
+                            ? "h-2.5 bg-primary/70"
+                            : isPeriodStart
+                              ? "h-2 bg-muted-foreground/30"
+                              : "h-1 bg-muted-foreground/15",
+                      )}
+                      style={{ borderRadius: "1px 1px 0 0", minWidth: "2px" }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <div className="flex items-center gap-3">
             <span className="text-xs text-muted-foreground whitespace-nowrap min-w-[60px]">
-              {fmtShort(START_DATE)}
+              {timelineBuckets[0]?.shortLabel ?? fmtShort(START_DATE)}
             </span>
             <input
               type="range"
               min={0}
-              max={100}
-              step={0.1}
-              value={progress}
-              onChange={(e) => seek(Number(e.target.value))}
+              max={maxPosition}
+              step={1}
+              value={boundedIndex}
+              onChange={(e) => {
+                seek(Number(e.target.value));
+                setIsPlaying(false);
+              }}
               className="w-full h-1.5 accent-primary cursor-pointer"
             />
             <span className="text-xs text-muted-foreground whitespace-nowrap min-w-[60px] text-right">
-              {fmtShort(END_DATE)}
+              {timelineBuckets[maxPosition]?.shortLabel ?? fmtShort(END_DATE)}
             </span>
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

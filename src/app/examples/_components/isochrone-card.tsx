@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback, useId } from "react";
+import { useEffect, useState, useCallback, useId, useMemo } from "react";
 import { Map, MapMarker, MarkerContent, useMap } from "@/registry/map";
 import { Car, Bike, Footprints, Clock, Ruler, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,15 @@ const DISTANCE_CONTOURS = [
   { distance: 5, color: "2563eb", label: "5 km", hex: "#2563eb" },
   { distance: 10, color: "16a34a", label: "10 km", hex: "#16a34a" },
 ];
+
+const SAMPLE_ORIGIN: [number, number] = [-96.797, 32.777];
+const SAMPLE_DATA_URL = "/examples/isochrone/dallas-auto-time.geojson";
+
+const MODE_SCALE: Record<TransportMode, number> = {
+  auto: 1,
+  bicycle: 0.45,
+  pedestrian: 0.18,
+};
 
 const MODES: { value: TransportMode; label: string; Icon: typeof Car }[] = [
   { value: "auto", label: "Car", Icon: Car },
@@ -250,67 +259,48 @@ function IsochroneControls({
 }
 
 function IsochroneMapContent() {
-  const { map, isLoaded } = useMap();
-  const [origin, setOrigin] = useState<[number, number]>([-96.797, 32.777]);
-  const [data, setData] = useState<IsochroneData | null>(null);
+  const [origin, setOrigin] = useState<[number, number]>(SAMPLE_ORIGIN);
+  const [sampleData, setSampleData] = useState<IsochroneData | null>(null);
   const [metric, setMetric] = useState<MetricType>("time");
   const [mode, setMode] = useState<TransportMode>("auto");
   const [loading, setLoading] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
 
   const contours =
     metric === "time"
       ? TIME_CONTOURS.map((c) => ({ label: c.label, hex: c.hex }))
       : DISTANCE_CONTOURS.map((c) => ({ label: c.label, hex: c.hex }));
 
-  const fetchIsochrone = useCallback(
-    async (lng: number, lat: number, m: MetricType, t: TransportMode) => {
-      abortRef.current?.abort();
-      const controller = new AbortController();
-      abortRef.current = controller;
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadSampleData() {
       setLoading(true);
 
-      const contoursParam =
-        m === "time"
-          ? TIME_CONTOURS.map((c) => ({ time: c.time, color: c.color }))
-          : DISTANCE_CONTOURS.map((c) => ({ distance: c.distance, color: c.color }));
-
-      const params = {
-        locations: [{ lat, lon: lng }],
-        costing: t,
-        contours: contoursParam,
-        polygons: true,
-        denoise: 0.5,
-        generalize: 50,
-      };
-
       try {
-        const res = await fetch(
-          `/api/valhalla?endpoint=isochrone&json=${encodeURIComponent(JSON.stringify(params))}`,
-          { signal: controller.signal }
-        );
-        if (!res.ok) throw new Error("API error");
-        const json = await res.json();
-        if (!controller.signal.aborted) setData(json);
+        const res = await fetch(SAMPLE_DATA_URL);
+        if (!res.ok) throw new Error(`Sample data error: ${res.status}`);
+        const json = (await res.json()) as IsochroneData;
+        if (!ignore) setSampleData(json);
       } catch (e) {
-        if (e instanceof Error && e.name !== "AbortError") {
-          console.error("Isochrone fetch error:", e);
+        if (e instanceof Error) {
+          console.error("Isochrone sample data error:", e);
         }
       } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!ignore) setLoading(false);
       }
-    },
-    []
-  );
+    }
 
-  useEffect(() => {
-    if (!map || !isLoaded) return;
-    fetchIsochrone(origin[0], origin[1], metric, mode);
-  }, [map, isLoaded, origin, metric, mode, fetchIsochrone]);
+    loadSampleData();
 
-  useEffect(() => {
-    return () => abortRef.current?.abort();
+    return () => {
+      ignore = true;
+    };
   }, []);
+
+  const data = useMemo(() => {
+    if (!sampleData) return null;
+    return transformIsochroneData(sampleData, origin, metric, mode);
+  }, [sampleData, origin, metric, mode]);
 
   const handleDragEnd = useCallback((lngLat: { lng: number; lat: number }) => {
     setOrigin([lngLat.lng, lngLat.lat]);
@@ -344,9 +334,80 @@ function IsochroneMapContent() {
 export function IsochroneCard() {
   return (
     <div className="h-full w-full relative">
-      <Map center={[-96.797, 32.777]} zoom={10}>
+      <Map center={SAMPLE_ORIGIN} zoom={10}>
         <IsochroneMapContent />
       </Map>
     </div>
   );
+}
+
+function transformIsochroneData(
+  data: IsochroneData,
+  origin: [number, number],
+  metric: MetricType,
+  mode: TransportMode,
+): IsochroneData {
+  const contourConfig = metric === "time" ? TIME_CONTOURS : DISTANCE_CONTOURS;
+  const scale = metric === "time" ? MODE_SCALE[mode] : 1;
+  const sortedFeatures = [...data.features].sort(
+    (a, b) => (a.properties.contour ?? 0) - (b.properties.contour ?? 0),
+  );
+
+  return {
+    type: "FeatureCollection",
+    features: sortedFeatures.map((feature, index) => {
+      const contour = contourConfig[index] ?? contourConfig[contourConfig.length - 1];
+      const contourValue =
+        "time" in contour ? contour.time : contour.distance;
+
+      return {
+        ...feature,
+        properties: {
+          ...feature.properties,
+          color: contour.color,
+          contour: contourValue,
+          metric,
+        },
+        geometry: transformGeometry(feature.geometry, origin, scale),
+      };
+    }),
+  };
+}
+
+function transformGeometry(
+  geometry: GeoJSON.Polygon | GeoJSON.MultiPolygon,
+  origin: [number, number],
+  scale: number,
+): GeoJSON.Polygon | GeoJSON.MultiPolygon {
+  if (geometry.type === "Polygon") {
+    return {
+      ...geometry,
+      coordinates: geometry.coordinates.map((ring) =>
+        ring.map((coordinate) => transformCoordinate(coordinate, origin, scale)),
+      ),
+    };
+  }
+
+  return {
+    ...geometry,
+    coordinates: geometry.coordinates.map((polygon) =>
+      polygon.map((ring) =>
+        ring.map((coordinate) => transformCoordinate(coordinate, origin, scale)),
+      ),
+    ),
+  };
+}
+
+function transformCoordinate(
+  coordinate: GeoJSON.Position,
+  origin: [number, number],
+  scale: number,
+): GeoJSON.Position {
+  const [lng, lat, ...rest] = coordinate;
+
+  return [
+    origin[0] + (lng - SAMPLE_ORIGIN[0]) * scale,
+    origin[1] + (lat - SAMPLE_ORIGIN[1]) * scale,
+    ...rest,
+  ];
 }

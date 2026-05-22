@@ -45,6 +45,15 @@ interface LegInfo {
   distance: number;
 }
 
+interface CachedRoutes {
+  routes: {
+    coordinates: LngLat[];
+    duration: number;
+    distance: number;
+    legs: LegInfo[];
+  }[];
+}
+
 // ── Constants ────────────────────────────────────────────────────
 const INITIAL_STOPS: StopInfo[] = [
   { name: "Ferry Building", coordinates: [-122.3936, 37.7956], type: "start" },
@@ -215,6 +224,31 @@ function MultiStopMapContent() {
     };
 
     try {
+      const shouldUseCachedRoute = currentStops.every(
+        (stop, idx) =>
+          stop.coordinates[0] === INITIAL_STOPS[idx]?.coordinates[0] &&
+          stop.coordinates[1] === INITIAL_STOPS[idx]?.coordinates[1],
+      );
+
+      if (shouldUseCachedRoute) {
+        const cachedRes = await fetch("/examples/valhalla/sf-multi-stop-route.json", {
+          signal: controller.signal,
+        });
+
+        if (cachedRes.ok) {
+          const cached: CachedRoutes = await cachedRes.json();
+          const route = cached.routes[0];
+
+          if (!controller.signal.aborted && route?.coordinates.length > 1) {
+            setRouteCoords(route.coordinates);
+            setLegs(route.legs);
+            setTotalDuration(route.duration);
+            setTotalDistance(route.distance);
+            return;
+          }
+        }
+      }
+
       const res = await fetch(
         `/api/valhalla?endpoint=optimized_route&json=${encodeURIComponent(JSON.stringify(params))}`,
         { signal: controller.signal },

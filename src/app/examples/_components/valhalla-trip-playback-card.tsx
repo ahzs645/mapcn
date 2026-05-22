@@ -27,6 +27,14 @@ const ORIGIN: LngLat = [-74.006, 40.7128];
 const DESTINATION: LngLat = [-73.8648, 40.7614];
 const BASE_DURATION = 15; // seconds at 1x speed
 
+interface CachedRoutes {
+  routes: {
+    coordinates: LngLat[];
+    duration: number;
+    distance: number;
+  }[];
+}
+
 // ── Hook: manages map layers + animation ─────────────────────────
 function usePlaybackAnimation(
   routeCoords: LngLat[],
@@ -385,6 +393,27 @@ function PlaybackContent() {
         directions_options: { units: "kilometers" },
       };
       try {
+        const cachedRes = await fetch("/examples/valhalla/nyc-playback-route.json", {
+          signal: controller.signal,
+        });
+
+        if (cachedRes.ok) {
+          const cached: CachedRoutes = await cachedRes.json();
+          const route = cached.routes[0];
+
+          if (!controller.signal.aborted && route?.coordinates.length > 1) {
+            const sd = computeSegmentDistances(route.coordinates);
+            setRouteCoords(route.coordinates);
+            setSegDists(sd);
+            setTotalDist(sd.reduce((a, b) => a + b, 0));
+            setRouteInfo({
+              duration: route.duration,
+              distance: route.distance,
+            });
+            return;
+          }
+        }
+
         const res = await fetch(
           `/api/valhalla?endpoint=route&json=${encodeURIComponent(JSON.stringify(params))}`,
           { signal: controller.signal },

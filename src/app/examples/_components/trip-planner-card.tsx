@@ -57,6 +57,10 @@ interface ValhallaResponse {
   trip: { legs: ValhallaLeg[]; summary: { length: number; time: number } };
 }
 
+interface CachedRoute {
+  coordinates: [number, number][];
+}
+
 // ── Polyline decoder ─────────────────────────────────────────────
 function decodePolyline(encoded: string, precision = 6): [number, number][] {
   const coords: [number, number][] = [];
@@ -348,30 +352,56 @@ export function TripPlannerCard() {
       setData(tripData);
 
       if (tripData.routeWaypoints.length > 1) {
-        const locations = tripData.routeWaypoints.map(([lon, lat]) => ({
-          lat,
-          lon,
-          type: "break",
-        }));
-        const params = {
-          locations,
-          costing: "auto",
-          directions_options: { units: "kilometers" },
-        };
-        const routeRes = await fetch(
-          `/api/valhalla?endpoint=route&json=${encodeURIComponent(JSON.stringify(params))}`,
-          { signal: controller.signal }
-        );
-        if (!routeRes.ok) throw new Error("Route API error");
-        const routeData: ValhallaResponse = await routeRes.json();
+        if (!controller.signal.aborted) setRouteCoords(tripData.routeWaypoints);
 
-        const allCoords: [number, number][] = [];
-        if (routeData.trip?.legs) {
-          for (const leg of routeData.trip.legs) {
-            allCoords.push(...decodePolyline(leg.shape));
+        try {
+          const cachedRouteRes = await fetch("/examples/trip-planner/pacific-coast-route.json", {
+            signal: controller.signal,
+          });
+
+          if (cachedRouteRes.ok) {
+            const cachedRoute: CachedRoute = await cachedRouteRes.json();
+            if (!controller.signal.aborted && cachedRoute.coordinates.length > 1) {
+              setRouteCoords(cachedRoute.coordinates);
+              return;
+            }
+          }
+
+          const locations = tripData.routeWaypoints.map(([lon, lat]) => ({
+            lat,
+            lon,
+            type: "break",
+          }));
+          const params = {
+            locations,
+            costing: "auto",
+            directions_options: { units: "kilometers" },
+          };
+          const routeRes = await fetch(
+            `/api/valhalla?endpoint=route&json=${encodeURIComponent(JSON.stringify(params))}`,
+            { signal: controller.signal }
+          );
+
+          if (!routeRes.ok) {
+            const error = await routeRes.json().catch(() => null);
+            throw new Error(error?.error || "Route API error");
+          }
+
+          const routeData: ValhallaResponse = await routeRes.json();
+          const allCoords: [number, number][] = [];
+
+          if (routeData.trip?.legs) {
+            for (const leg of routeData.trip.legs) {
+              allCoords.push(...decodePolyline(leg.shape));
+            }
+          }
+
+          if (!controller.signal.aborted && allCoords.length > 1) setRouteCoords(allCoords);
+        } catch (error) {
+          if (error instanceof Error && error.name !== "AbortError") {
+            console.warn("Trip planner routing unavailable; using waypoint preview.", error);
           }
         }
-        if (!controller.signal.aborted) setRouteCoords(allCoords);
       }
     } catch (e) {
       if (e instanceof Error && e.name !== "AbortError") {

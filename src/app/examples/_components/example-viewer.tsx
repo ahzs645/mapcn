@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -100,8 +100,21 @@ import { WindCard } from "./wind-card";
 import { WindMapBlockCard } from "./wind-map-block-card";
 import { WebglWindCard } from "./webgl-wind-card";
 import { ActransitCard } from "./actransit-card";
-import { TimelineCard } from "./timeline-card";
+import {
+  TimelineCard,
+  TIMELINE_CONTROL_STYLES,
+  TIMELINE_GRANULARITY_OPTIONS,
+  TIMELINE_MAP_STYLES,
+  TIMELINE_WINDOW_OPTIONS,
+  type TimelineControlStyleKey,
+  type TimelineGranularity,
+  type TimelineMapStyleKey,
+  type TimelineWindowAnchor,
+  type TimelineWindowSize,
+} from "./timeline-card";
 import { TransitiveCard } from "./transitive-card";
+
+const SIDEBAR_SCROLL_KEY = "mapcn:examples-sidebar-scroll";
 
 const componentMap: Record<string, ComponentType> = {
   "basic-map": BasicMapCard,
@@ -196,6 +209,39 @@ function Sidebar({
 }) {
   const pathname = usePathname();
   const currentSlug = pathname.split("/").pop();
+  const navRef = useRef<HTMLElement>(null);
+  const activeLinkRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (collapsed) return;
+
+    const nav = navRef.current;
+    const activeLink = activeLinkRef.current;
+    if (!nav || !activeLink) return;
+
+    const savedScroll = window.sessionStorage.getItem(SIDEBAR_SCROLL_KEY);
+    if (savedScroll) {
+      nav.scrollTop = Number(savedScroll);
+    }
+
+    window.requestAnimationFrame(() => {
+      const navRect = nav.getBoundingClientRect();
+      const activeRect = activeLink.getBoundingClientRect();
+      const activeIsVisible =
+        activeRect.top >= navRect.top && activeRect.bottom <= navRect.bottom;
+
+      if (!activeIsVisible) {
+        activeLink.scrollIntoView({ block: "nearest" });
+      }
+    });
+  }, [collapsed, currentSlug]);
+
+  const handleNavScroll = () => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    window.sessionStorage.setItem(SIDEBAR_SCROLL_KEY, String(nav.scrollTop));
+  };
 
   return (
     <aside
@@ -220,7 +266,11 @@ function Sidebar({
       </div>
 
       {!collapsed && (
-        <nav className="flex-1 overflow-y-auto py-2 px-2">
+        <nav
+          ref={navRef}
+          onScroll={handleNavScroll}
+          className="flex-1 overflow-y-auto py-2 px-2"
+        >
           {categories.map((category) => {
             const items = examples.filter((e) => e.category === category);
             return (
@@ -231,6 +281,7 @@ function Sidebar({
                 {items.map((item) => (
                   <Link
                     key={item.slug}
+                    ref={currentSlug === item.slug ? activeLinkRef : undefined}
                     href={`/examples/${item.slug}`}
                     className={cn(
                       "block rounded-md px-2 py-1.5 text-xs transition-colors",
@@ -264,8 +315,58 @@ function Sidebar({
 }
 
 // ── Info panel ────────────────────────────────────────────────────
-function InfoPanel({ example }: { example: ExampleMeta }) {
+function InfoPanel({
+  example,
+  timelineGranularity,
+  onTimelineGranularityChange,
+  timelineControlStyle,
+  onTimelineControlStyleChange,
+  timelineWindowSize,
+  onTimelineWindowSizeChange,
+  timelineWindowAnchor,
+  onTimelineWindowAnchorChange,
+  showBucketCounts,
+  onShowBucketCountsChange,
+  showStats,
+  onShowStatsChange,
+  showCloseControl,
+  onShowCloseControlChange,
+  timelineStyle,
+  onTimelineStyleChange,
+}: {
+  example: ExampleMeta;
+  timelineGranularity?: TimelineGranularity;
+  onTimelineGranularityChange?: (granularity: TimelineGranularity) => void;
+  timelineControlStyle?: TimelineControlStyleKey;
+  onTimelineControlStyleChange?: (style: TimelineControlStyleKey) => void;
+  timelineWindowSize?: TimelineWindowSize;
+  onTimelineWindowSizeChange?: (size: TimelineWindowSize) => void;
+  timelineWindowAnchor?: TimelineWindowAnchor;
+  onTimelineWindowAnchorChange?: (anchor: TimelineWindowAnchor) => void;
+  showBucketCounts?: boolean;
+  onShowBucketCountsChange?: (show: boolean) => void;
+  showStats?: boolean;
+  onShowStatsChange?: (show: boolean) => void;
+  showCloseControl?: boolean;
+  onShowCloseControlChange?: (show: boolean) => void;
+  timelineStyle?: TimelineMapStyleKey;
+  onTimelineStyleChange?: (style: TimelineMapStyleKey) => void;
+}) {
   const { prev, next } = getAdjacentExamples(example.slug);
+  const showTimelineStyle = example.slug === "timeline" && timelineStyle && onTimelineStyleChange;
+  const showTimelineControlStyle =
+    example.slug === "timeline" && timelineControlStyle && onTimelineControlStyleChange;
+  const showTimelineOptions =
+    example.slug === "timeline" &&
+    timelineGranularity &&
+    onTimelineGranularityChange &&
+    timelineWindowSize !== undefined &&
+    onTimelineWindowSizeChange &&
+    timelineWindowAnchor &&
+    onTimelineWindowAnchorChange &&
+    onShowBucketCountsChange &&
+    onShowStatsChange &&
+    onShowCloseControlChange;
 
   return (
     <div className="h-full flex flex-col border-r border-border/50 bg-background">
@@ -281,6 +382,161 @@ function InfoPanel({ example }: { example: ExampleMeta }) {
         <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
           {example.description}
         </p>
+
+        {showTimelineControlStyle && (
+          <div className="mt-6">
+            <div className="text-xs font-medium text-foreground mb-2">
+              Timeline style
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {Object.entries(TIMELINE_CONTROL_STYLES).map(([key, option]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => onTimelineControlStyleChange(key as TimelineControlStyleKey)}
+                  className={cn(
+                    "rounded-md border px-3 py-2 text-left transition-colors cursor-pointer",
+                    timelineControlStyle === key
+                      ? "border-primary/50 bg-primary/10 text-foreground"
+                      : "border-border/50 bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                  )}
+                >
+                  <span className="block text-xs font-medium">{option.name}</span>
+                  <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
+                    {option.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {showTimelineOptions && (
+          <div className="mt-6 space-y-4">
+            <div>
+              <div className="text-xs font-medium text-foreground mb-2">
+                Granularity
+              </div>
+              <div className="grid grid-cols-3 gap-1 rounded-md border border-border/50 p-1">
+                {Object.entries(TIMELINE_GRANULARITY_OPTIONS).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => onTimelineGranularityChange(key as TimelineGranularity)}
+                    className={cn(
+                      "rounded px-2 py-1 text-[11px] font-medium transition-colors cursor-pointer",
+                      timelineGranularity === key
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-xs font-medium text-foreground mb-2">
+                Range window
+              </div>
+              <div className="grid grid-cols-2 gap-1 rounded-md border border-border/50 p-1">
+                {TIMELINE_WINDOW_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => onTimelineWindowSizeChange(option.value)}
+                    className={cn(
+                      "rounded px-2 py-1 text-[11px] font-medium transition-colors cursor-pointer",
+                      timelineWindowSize === option.value
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-xs font-medium text-foreground mb-2">
+                Window anchor
+              </div>
+              <div className="grid grid-cols-2 gap-1 rounded-md border border-border/50 p-1">
+                {(["start", "end"] as const).map((anchor) => (
+                  <button
+                    key={anchor}
+                    type="button"
+                    disabled={timelineWindowSize === -1}
+                    onClick={() => onTimelineWindowAnchorChange(anchor)}
+                    className={cn(
+                      "rounded px-2 py-1 text-[11px] font-medium capitalize transition-colors cursor-pointer disabled:pointer-events-none disabled:opacity-40",
+                      timelineWindowAnchor === anchor
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                    )}
+                  >
+                    {anchor}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-xs font-medium text-foreground mb-2">
+                Display
+              </div>
+              <div className="space-y-2 rounded-md border border-border/50 p-2">
+                {[
+                  ["Bucket counts", showBucketCounts, onShowBucketCountsChange],
+                  ["Stats label", showStats, onShowStatsChange],
+                  ["Close control", showCloseControl, onShowCloseControlChange],
+                ].map(([label, checked, onChange]) => (
+                  <label
+                    key={label as string}
+                    className="flex items-center justify-between gap-3 text-xs text-muted-foreground"
+                  >
+                    <span>{label as string}</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(checked)}
+                      onChange={(event) => {
+                        (onChange as (show: boolean) => void)(event.target.checked);
+                      }}
+                      className="size-4 accent-primary cursor-pointer"
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showTimelineStyle && (
+          <div className="mt-6">
+            <div className="text-xs font-medium text-foreground mb-2">
+              Map style
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {Object.entries(TIMELINE_MAP_STYLES).map(([key, option]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => onTimelineStyleChange(key as TimelineMapStyleKey)}
+                  className={cn(
+                    "rounded-md border px-3 py-2 text-left text-xs font-medium transition-colors cursor-pointer",
+                    timelineStyle === key
+                      ? "border-primary/50 bg-primary/10 text-foreground"
+                      : "border-border/50 bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                  )}
+                >
+                  {option.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-6">
           <div className="text-xs font-medium text-foreground mb-2">
@@ -325,6 +581,18 @@ function InfoPanel({ example }: { example: ExampleMeta }) {
 // ── Main viewer ──────────────────────────────────────────────────
 export function ExampleViewer({ slug }: { slug: string }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [timelineStyle, setTimelineStyle] = useState<TimelineMapStyleKey>("dark");
+  const [timelineControlStyle, setTimelineControlStyle] =
+    useState<TimelineControlStyleKey>("activity");
+  const [timelineGranularity, setTimelineGranularity] =
+    useState<TimelineGranularity>("week");
+  const [timelineWindowSize, setTimelineWindowSize] =
+    useState<TimelineWindowSize>(1);
+  const [timelineWindowAnchor, setTimelineWindowAnchor] =
+    useState<TimelineWindowAnchor>("start");
+  const [showBucketCounts, setShowBucketCounts] = useState(true);
+  const [showStats, setShowStats] = useState(true);
+  const [showCloseControl, setShowCloseControl] = useState(true);
   const example = getExampleBySlug(slug);
   const Component = componentMap[slug];
 
@@ -340,7 +608,25 @@ export function ExampleViewer({ slug }: { slug: string }) {
       <div className="flex-1 flex min-w-0">
         {/* Info panel — 1/3 */}
         <div className="hidden md:flex w-80 shrink-0">
-          <InfoPanel example={example} />
+          <InfoPanel
+            example={example}
+            timelineGranularity={timelineGranularity}
+            onTimelineGranularityChange={setTimelineGranularity}
+            timelineControlStyle={timelineControlStyle}
+            onTimelineControlStyleChange={setTimelineControlStyle}
+            timelineWindowSize={timelineWindowSize}
+            onTimelineWindowSizeChange={setTimelineWindowSize}
+            timelineWindowAnchor={timelineWindowAnchor}
+            onTimelineWindowAnchorChange={setTimelineWindowAnchor}
+            showBucketCounts={showBucketCounts}
+            onShowBucketCountsChange={setShowBucketCounts}
+            showStats={showStats}
+            onShowStatsChange={setShowStats}
+            showCloseControl={showCloseControl}
+            onShowCloseControlChange={setShowCloseControl}
+            timelineStyle={timelineStyle}
+            onTimelineStyleChange={setTimelineStyle}
+          />
         </div>
 
         {/* Map — fills remaining space */}
@@ -364,7 +650,20 @@ export function ExampleViewer({ slug }: { slug: string }) {
           </div>
 
           <div className="h-full w-full">
-            <Component />
+            {slug === "timeline" ? (
+              <TimelineCard
+                timelineStyle={timelineStyle}
+                timelineControlStyle={timelineControlStyle}
+                timelineGranularity={timelineGranularity}
+                timelineWindowSize={timelineWindowSize}
+                timelineWindowAnchor={timelineWindowAnchor}
+                showBucketCounts={showBucketCounts}
+                showStats={showStats}
+                showCloseControl={showCloseControl}
+              />
+            ) : (
+              <Component />
+            )}
           </div>
         </div>
       </div>

@@ -37,6 +37,14 @@ import { ValhallaFitBounds, ValhallaRouteLayer } from "./valhalla-route-layer";
 const STORE_LOCATION: LngLat = [-0.14, 51.5154];
 const HOME_LOCATION: LngLat = [-0.05, 51.5134];
 
+interface CachedRoutes {
+  routes: {
+    coordinates: LngLat[];
+    duration: number;
+    distance: number;
+  }[];
+}
+
 // ── Delivery panel ───────────────────────────────────────────────
 function DeliveryPanel({
   duration,
@@ -179,6 +187,23 @@ function DeliveryMapContent() {
     };
 
     try {
+      const cachedRes = await fetch("/examples/valhalla/london-delivery-route.json", {
+        signal: controller.signal,
+      });
+
+      if (cachedRes.ok) {
+        const cached: CachedRoutes = await cachedRes.json();
+        const route = cached.routes[0];
+
+        if (!controller.signal.aborted && route?.coordinates.length > 1) {
+          setRouteCoords(route.coordinates);
+          setDuration(route.duration);
+          setDistance(route.distance);
+          setTruckPos(route.coordinates[Math.floor(route.coordinates.length / 2)] ?? null);
+          return;
+        }
+      }
+
       const res = await fetch(
         `/api/valhalla?endpoint=route&json=${encodeURIComponent(JSON.stringify(params))}`,
         { signal: controller.signal },

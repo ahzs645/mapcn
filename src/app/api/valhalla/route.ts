@@ -18,21 +18,33 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const res = await fetch(
-    `https://valhalla1.openstreetmap.de/${endpoint}?json=${encodeURIComponent(json)}`,
-    {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "mapcn/1.0",
-      },
-      next: { revalidate: 3600 },
-    }
-  );
+  let res: Response;
+  try {
+    res = await fetch(
+      `https://valhalla1.openstreetmap.de/${endpoint}?json=${encodeURIComponent(json)}`,
+      {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "mapcn/1.0",
+        },
+        next: { revalidate: 3600 },
+      }
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown network error";
+
+    return NextResponse.json(
+      { error: "Valhalla API request failed", details: message },
+      { status: 502 }
+    );
+  }
 
   if (!res.ok) {
+    const details = await res.text().catch(() => "");
+
     return NextResponse.json(
-      { error: `Valhalla API error: ${res.status}` },
-      { status: res.status }
+      { error: `Valhalla API error: ${res.status}`, details },
+      { status: 502 }
     );
   }
 

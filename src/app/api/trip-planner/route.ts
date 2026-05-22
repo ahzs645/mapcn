@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 interface OverpassElement {
   type: string;
@@ -56,6 +56,69 @@ const DEFAULT_WAYPOINTS: Waypoint[] = [
   { name: "Santa Barbara", lat: 34.4208, lon: -119.6982 },
   { name: "Los Angeles", lat: 34.0522, lon: -118.2437 },
 ];
+
+const FALLBACK_POIS: Record<
+  string,
+  Record<"attraction" | "restaurant" | "hotel", { name: string; lat: number; lon: number }[]>
+> = {
+  "San Francisco": {
+    attraction: [
+      { name: "Ferry Building", lat: 37.7955, lon: -122.3937 },
+      { name: "Coit Tower", lat: 37.8024, lon: -122.4058 },
+    ],
+    restaurant: [
+      { name: "Tartine Bakery", lat: 37.7614, lon: -122.4241 },
+      { name: "Swan Oyster Depot", lat: 37.7882, lon: -122.4214 },
+    ],
+    hotel: [{ name: "Hotel San Francisco", lat: 37.7866, lon: -122.4089 }],
+  },
+  "Big Sur": {
+    attraction: [
+      { name: "Bixby Creek Bridge", lat: 36.3713, lon: -121.9018 },
+      { name: "Pfeiffer Beach", lat: 36.2383, lon: -121.8159 },
+    ],
+    restaurant: [
+      { name: "Nepenthe", lat: 36.2254, lon: -121.7648 },
+      { name: "Big Sur Bakery", lat: 36.2717, lon: -121.8071 },
+    ],
+    hotel: [{ name: "Big Sur Lodge", lat: 36.2506, lon: -121.7852 }],
+  },
+  "Santa Barbara": {
+    attraction: [
+      { name: "Santa Barbara County Courthouse", lat: 34.424, lon: -119.7024 },
+      { name: "Stearns Wharf", lat: 34.4108, lon: -119.685 },
+    ],
+    restaurant: [
+      { name: "The Lark", lat: 34.4142, lon: -119.6909 },
+      { name: "La Super-Rica Taqueria", lat: 34.4239, lon: -119.6887 },
+    ],
+    hotel: [{ name: "Hotel Californian", lat: 34.4137, lon: -119.6921 }],
+  },
+  "Los Angeles": {
+    attraction: [
+      { name: "Griffith Observatory", lat: 34.1184, lon: -118.3004 },
+      { name: "The Broad", lat: 34.0545, lon: -118.2501 },
+    ],
+    restaurant: [
+      { name: "Grand Central Market", lat: 34.0505, lon: -118.2488 },
+      { name: "Guelaguetza", lat: 34.0529, lon: -118.3002 },
+    ],
+    hotel: [{ name: "Downtown LA Hotel", lat: 34.0497, lon: -118.255 }],
+  },
+};
+
+function fallbackElements(
+  wp: Waypoint,
+  type: "attraction" | "restaurant" | "hotel"
+): OverpassElement[] {
+  return (FALLBACK_POIS[wp.name]?.[type] ?? []).map((poi, index) => ({
+    type: "node",
+    id: index,
+    lat: poi.lat,
+    lon: poi.lon,
+    tags: { name: poi.name },
+  }));
+}
 
 async function fetchPOIs(
   lat: number,
@@ -148,7 +211,7 @@ function calculateBudget(daysCount: number): string {
   return `$${Math.round(estimated / 100) * 100}`;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const waypoints = DEFAULT_WAYPOINTS;
   const days: DayPlan[] = [];
   const routeWaypoints: [number, number][] = [];
@@ -163,9 +226,9 @@ export async function GET(request: NextRequest) {
       fetchPOIs(wp.lat, wp.lon, 5000, "hotel").catch(() => []),
     ]);
 
-    const sa = shuffleArray(attractions);
-    const sr = shuffleArray(restaurants);
-    const sh = shuffleArray(hotels);
+    const sa = shuffleArray(attractions.length > 0 ? attractions : fallbackElements(wp, "attraction"));
+    const sr = shuffleArray(restaurants.length > 0 ? restaurants : fallbackElements(wp, "restaurant"));
+    const sh = shuffleArray(hotels.length > 0 ? hotels : fallbackElements(wp, "hotel"));
 
     const activities: Activity[] = [
       createActivity(sa[0], wp, "Attraction", ACTIVITY_TIMES[0]!, "Visit", "Explore"),

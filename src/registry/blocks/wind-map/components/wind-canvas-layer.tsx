@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import { cn } from "@/lib/utils";
 import { useMap } from "@/registry/map";
 import { WIND_GRID_STEP, WIND_VECTORS } from "../data";
+
+export type WindInteractionMode = "live" | "hide-while-moving";
 
 type Particle = {
   lng: number;
@@ -102,10 +105,32 @@ function buildWindSampler() {
   };
 }
 
-export function WindCanvasLayer() {
+type WindCanvasLayerProps = {
+  interactionMode?: WindInteractionMode;
+};
+
+export function WindCanvasLayer({
+  interactionMode = "live",
+}: WindCanvasLayerProps) {
   const { map, isLoaded } = useMap();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isMoving, setIsMoving] = useState(false);
   const sampler = useMemo(() => buildWindSampler(), []);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    const handleMoveStart = () => setIsMoving(true);
+    const handleMoveEnd = () => setIsMoving(false);
+
+    map.on("movestart", handleMoveStart);
+    map.on("moveend", handleMoveEnd);
+
+    return () => {
+      map.off("movestart", handleMoveStart);
+      map.off("moveend", handleMoveEnd);
+    };
+  }, [map, isLoaded]);
 
   useEffect(() => {
     if (!map || !isLoaded || !canvasRef.current) return;
@@ -208,7 +233,12 @@ export function WindCanvasLayer() {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 z-[2] h-full w-full mix-blend-screen"
+      className={cn(
+        "pointer-events-none absolute inset-0 z-[2] h-full w-full mix-blend-screen transition-opacity duration-150",
+        interactionMode === "hide-while-moving" && isMoving
+          ? "opacity-0"
+          : "opacity-100",
+      )}
     />
   );
 }

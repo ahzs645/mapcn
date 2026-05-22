@@ -36,6 +36,10 @@ interface RouteOption {
   distance: number;
 }
 
+interface CachedRoutes {
+  routes: RouteOption[];
+}
+
 // ── Constants ────────────────────────────────────────────────────
 const ORIGIN: LngLat = [4.4777, 51.9244];
 const DESTINATION: LngLat = [4.9041, 52.3676];
@@ -151,6 +155,19 @@ function RoutePlanningMapContent() {
     };
 
     try {
+      const cachedRes = await fetch("/examples/valhalla/rotterdam-amsterdam-routes.json", {
+        signal: controller.signal,
+      });
+
+      if (cachedRes.ok) {
+        const cached: CachedRoutes = await cachedRes.json();
+        if (!controller.signal.aborted && cached.routes.length > 0) {
+          setRoutes(cached.routes);
+          setSelected(0);
+          return;
+        }
+      }
+
       const res = await fetch(
         `/api/valhalla?endpoint=route&json=${encodeURIComponent(JSON.stringify(params))}`,
         { signal: controller.signal },

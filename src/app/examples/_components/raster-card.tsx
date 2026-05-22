@@ -8,8 +8,8 @@ export function RasterCard() {
     <div className="h-full w-full">
       <Map center={[-73.98, 40.75]} zoom={11}>
         <MapRasterLayer
-          tiles={["https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg"]}
-          attribution="&copy; Stadia Maps &copy; Stamen Design"
+          tiles={["https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"]}
+          attribution="&copy; OpenStreetMap contributors &copy; CARTO"
           opacity={0.7}
         />
       </Map>
