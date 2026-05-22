@@ -100,6 +100,30 @@ export const examples: ExampleMeta[] = [
   { slug: "promap", title: "Home Price Explorer", description: "US home price bubble map with city-level visualization.", category: "Featured" },
   // ── Timeline ──────────────────────────────────────────────────────
   { slug: "timeline", title: "Timeline Map", description: "NASA Worldview-style time-series map with animated playback, layer management, and disturbance data overlay.", category: "Featured" },
+  // ── Defense / Tactical ──────────────────────────────────────────
+  { slug: "defense-air-defense", title: "Air Defense Radar", description: "Layered SHORAD/MRSAM/LRSAM coverage with altitude filtering and animated radar sweep.", category: "Defense" },
+  { slug: "defense-artillery", title: "Artillery Planner", description: "Fire-mission planning with click-to-target, range fans, and ballistic arcs.", category: "Defense" },
+  { slug: "defense-battlefield", title: "Battlefield Terrain", description: "Terrain analysis with friendly/enemy units, terrain slope, and movement corridors.", category: "Defense" },
+  { slug: "defense-border-surveillance", title: "Border Surveillance", description: "Sensor towers, intrusion zones, and patrol routes along a contested border.", category: "Defense" },
+  { slug: "defense-comms", title: "Comms Network", description: "Radio/microwave link health with line-of-sight checks and node status.", category: "Defense" },
+  { slug: "defense-convoy", title: "Convoy Tracker", description: "Convoy routing with checkpoints, ETA, and vehicle telemetry along desert corridors.", category: "Defense" },
+  { slug: "defense-drone-c2", title: "Drone C2", description: "UAV command and control with patrol paths, telemetry, and follow-camera.", category: "Defense" },
+  { slug: "defense-maritime", title: "Maritime Surveillance", description: "EEZ enforcement with radar stations, vessel tracks, and type filtering.", category: "Defense" },
+  { slug: "defense-nbc-plume", title: "NBC Plume", description: "Gaussian dispersion modeling for nuclear, biological, and chemical hazards.", category: "Defense" },
+  { slug: "defense-sar", title: "Search & Rescue", description: "24-sector SAR grid with helicopter sweep routes and progress tracking.", category: "Defense" },
+  { slug: "defense-sensor-network", title: "Sensor Network", description: "Tactical sensor mesh with pulsing detection radii and live threat ticker.", category: "Defense" },
+  { slug: "defense-spectral", title: "Spectral Analysis", description: "Multi-band satellite imagery comparison with swipe slider.", category: "Defense" },
+  { slug: "defense-troop-nav", title: "Troop Navigation", description: "Waypoint navigation in mountainous terrain with elevation profile.", category: "Defense" },
+  { slug: "defense-viewshed", title: "Viewshed Analysis", description: "Line-of-sight viewshed with click-to-place observers and height presets.", category: "Defense" },
+  { slug: "defense-zone-planner", title: "Zone Planner", description: "Draw polygons and rectangles to plan operational zones with area calculations.", category: "Defense" },
+  // ── Weather / Hazards ──────────────────────────────────────────
+  { slug: "flood-forecasting", title: "Flood Forecasting", description: "Historical flood events worldwide with year-bucketed playback and severity overlays.", category: "Weather & Hazards" },
+  { slug: "google-flood-forecasting", title: "Google Flood Forecasting", description: "Live Google Flood Forecasting API integration with gauge forecasts and inundation polygons.", category: "Weather & Hazards" },
+  // ── Satellite & Raster (added) ──────────────────────────────────
+  { slug: "deckgl-aef-mosaic", title: "AEF Mosaic", description: "Annual Earth Fields mosaic with year and band controls.", category: "Satellite & Raster" },
+  { slug: "deckgl-sentinel2", title: "Sentinel-2 Composite", description: "Sentinel-2 multi-band composite with true/false/SWIR color presets.", category: "Satellite & Raster" },
+  { slug: "deckgl-zarr-ecmwf", title: "ECMWF Zarr", description: "ECMWF 2 m temperature grid rendered from Zarr-style data via BitmapLayer.", category: "Satellite & Raster" },
+  { slug: "deckgl-comparison", title: "Imagery Comparison", description: "Swipe-compare two satellite imagery providers with opacity blend.", category: "Satellite & Raster" },
 ];
 
 export const categories = [
@@ -115,6 +139,8 @@ export const categories = [
   "deck.gl 3D",
   "Satellite & Raster",
   "LiDAR",
+  "Defense",
+  "Weather & Hazards",
 ];
 
 export function getExampleBySlug(slug: string): ExampleMeta | undefined {

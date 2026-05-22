@@ -113,6 +113,30 @@ import {
   type TimelineWindowSize,
 } from "./timeline-card";
 import { TransitiveCard } from "./transitive-card";
+// ── Defense scenarios ──────────────────────────────────────────────
+import { DefenseAirDefenseCard } from "./defense-air-defense-card";
+import { DefenseArtilleryCard } from "./defense-artillery-card";
+import { DefenseBattlefieldCard } from "./defense-battlefield-card";
+import { DefenseBorderSurveillanceCard } from "./defense-border-surveillance-card";
+import { DefenseCommsCard } from "./defense-comms-card";
+import { DefenseConvoyCard } from "./defense-convoy-card";
+import { DefenseDroneC2Card } from "./defense-drone-c2-card";
+import { DefenseMaritimeCard } from "./defense-maritime-card";
+import { DefenseNbcPlumeCard } from "./defense-nbc-plume-card";
+import { DefenseSarCard } from "./defense-sar-card";
+import { DefenseSensorNetworkCard } from "./defense-sensor-network-card";
+import { DefenseSpectralCard } from "./defense-spectral-card";
+import { DefenseTroopNavCard } from "./defense-troop-nav-card";
+import { DefenseViewshedCard } from "./defense-viewshed-card";
+import { DefenseZonePlannerCard } from "./defense-zone-planner-card";
+// ── Weather / Hazards ──────────────────────────────────────────────
+import { FloodForecastingCard } from "./flood-forecasting-card";
+import { GoogleFloodForecastingCard } from "./google-flood-forecasting-card";
+// ── Satellite / Raster (added) ─────────────────────────────────────
+import { DeckglAefMosaicCard } from "./deckgl-aef-mosaic-card";
+import { DeckglSentinel2Card } from "./deckgl-sentinel2-card";
+import { DeckglZarrEcmwfCard } from "./deckgl-zarr-ecmwf-card";
+import { DeckglComparisonCard } from "./deckgl-comparison-card";
 
 const SIDEBAR_SCROLL_KEY = "mapcn:examples-sidebar-scroll";
 
@@ -197,6 +221,30 @@ const componentMap: Record<string, ComponentType> = {
   "actransit": ActransitCard,
   "transitive": TransitiveCard,
   "timeline": TimelineCard,
+  // ── Defense ──────────────────────────────────────────────────────
+  "defense-air-defense": DefenseAirDefenseCard,
+  "defense-artillery": DefenseArtilleryCard,
+  "defense-battlefield": DefenseBattlefieldCard,
+  "defense-border-surveillance": DefenseBorderSurveillanceCard,
+  "defense-comms": DefenseCommsCard,
+  "defense-convoy": DefenseConvoyCard,
+  "defense-drone-c2": DefenseDroneC2Card,
+  "defense-maritime": DefenseMaritimeCard,
+  "defense-nbc-plume": DefenseNbcPlumeCard,
+  "defense-sar": DefenseSarCard,
+  "defense-sensor-network": DefenseSensorNetworkCard,
+  "defense-spectral": DefenseSpectralCard,
+  "defense-troop-nav": DefenseTroopNavCard,
+  "defense-viewshed": DefenseViewshedCard,
+  "defense-zone-planner": DefenseZonePlannerCard,
+  // ── Weather / Hazards ────────────────────────────────────────────
+  "flood-forecasting": FloodForecastingCard,
+  "google-flood-forecasting": GoogleFloodForecastingCard,
+  // ── Satellite / Raster (added) ───────────────────────────────────
+  "deckgl-aef-mosaic": DeckglAefMosaicCard,
+  "deckgl-sentinel2": DeckglSentinel2Card,
+  "deckgl-zarr-ecmwf": DeckglZarrEcmwfCard,
+  "deckgl-comparison": DeckglComparisonCard,
 };
 
 // ── Sidebar ───────────────────────────────────────────────────────
