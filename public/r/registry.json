@@ -152,6 +152,35 @@
       }
     },
     {
+      "name": "old-maps-timeline",
+      "type": "registry:block",
+      "title": "Old Maps Timeline",
+      "description": "MapLibre historical map explorer with an OldMapsOnline-inspired bottom timeline control.",
+      "dependencies": ["lucide-react"],
+      "registryDependencies": ["@mapcn/map", "button"],
+      "files": [
+        {
+          "path": "src/registry/blocks/old-maps-timeline/page.tsx",
+          "type": "registry:page",
+          "target": "app/old-maps/page.tsx"
+        },
+        {
+          "path": "src/registry/blocks/old-maps-timeline/data.ts",
+          "type": "registry:component",
+          "target": "app/old-maps/data.ts"
+        },
+        {
+          "path": "src/registry/blocks/old-maps-timeline/components/old-maps-timeline.tsx",
+          "type": "registry:component",
+          "target": "app/old-maps/components/old-maps-timeline.tsx"
+        }
+      ],
+      "categories": ["history", "timeline"],
+      "meta": {
+        "iframeHeight": "780px"
+      }
+    },
+    {
       "name": "air-quality",
       "type": "registry:block",
       "title": "Air Quality Monitor",
