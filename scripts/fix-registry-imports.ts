@@ -5,6 +5,7 @@ const REGISTRY_DIR = path.join(process.cwd(), "public", "r");
 const IMPORT_REWRITES = [
   ["@/registry/map-ui", "@/components/ui/map-ui"],
   ["@/registry/map-layers", "@/components/ui/map-layers"],
+  ["@/registry/map-scale", "@/components/ui/map-scale"],
   ["@/registry/map", "@/components/ui/map"],
 ] as const;
 

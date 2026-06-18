@@ -44,6 +44,21 @@
       ]
     },
     {
+      "name": "map-scale",
+      "type": "registry:ui",
+      "title": "Map Scale",
+      "description": "A scale-bar control showing the distance covered on the map, with an optional Leaflet-style dual metric + imperial display.",
+      "dependencies": ["maplibre-gl"],
+      "registryDependencies": ["@mapcn/map"],
+      "files": [
+        {
+          "path": "src/registry/map-scale.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/map-scale.tsx"
+        }
+      ]
+    },
+    {
       "name": "analytics-map",
       "type": "registry:block",
       "title": "Analytics Map",
