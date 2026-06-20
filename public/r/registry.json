@@ -196,6 +196,40 @@
       }
     },
     {
+      "name": "gps-playback",
+      "type": "registry:block",
+      "title": "GPS Playback",
+      "description": "Animated GPS track playback with a vis.js-style scrubbing timeline — draggable cursor, pan, zoom, play/pause, and speed controls.",
+      "dependencies": ["lucide-react"],
+      "registryDependencies": ["@mapcn/map", "button"],
+      "files": [
+        {
+          "path": "src/registry/blocks/gps-playback/page.tsx",
+          "type": "registry:page",
+          "target": "app/gps-playback/page.tsx"
+        },
+        {
+          "path": "src/registry/blocks/gps-playback/data.ts",
+          "type": "registry:component",
+          "target": "app/gps-playback/data.ts"
+        },
+        {
+          "path": "src/registry/blocks/gps-playback/components/playback-timeline.tsx",
+          "type": "registry:component",
+          "target": "app/gps-playback/components/playback-timeline.tsx"
+        },
+        {
+          "path": "src/registry/blocks/gps-playback/components/use-playback-clock.ts",
+          "type": "registry:component",
+          "target": "app/gps-playback/components/use-playback-clock.ts"
+        }
+      ],
+      "categories": ["tracking", "timeline"],
+      "meta": {
+        "iframeHeight": "740px"
+      }
+    },
+    {
       "name": "air-quality",
       "type": "registry:block",
       "title": "Air Quality Monitor",
