@@ -2,11 +2,7 @@
 
 import { MapMarker, MarkerContent } from "@/registry/map";
 
-import type { Cluster } from "./clustering";
-import type {
-  SegmentLabelPlacement,
-  StopLabelPlacement,
-} from "./labeler";
+import type { SegmentLabelPlacement, StopLabelPlacement } from "./labeler";
 import {
   MAJOR_STOP_RADIUS,
   NOT_FOCUSED_STROKE,
@@ -14,21 +10,18 @@ import {
   PLACE_RADIUS,
   STOP_RADIUS,
   STOP_STROKE,
-  clamp01,
   pixels,
 } from "./styler";
-import type { Place, Stop } from "./types";
+import type { LngLat, Place } from "./types";
 
 const LABEL_TEXT_SHADOW =
   "0 1px 0 var(--background),0 -1px 0 var(--background),1px 0 0 var(--background),-1px 0 0 var(--background)";
 
 function LabelSpan({
   placement,
-  text,
   opacity = 1,
 }: {
   placement: StopLabelPlacement | undefined;
-  text: string;
   opacity?: number;
 }) {
   if (!placement || opacity <= 0.01) return null;
@@ -42,24 +35,23 @@ function LabelSpan({
         opacity,
       }}
     >
-      {text}
+      {placement.text}
     </span>
   );
 }
 
+/** Plain circular stop marker. */
 export function StopMarker({
-  stop,
+  lngLat,
   scale,
   major,
   focused,
-  opacity,
   placement,
 }: {
-  stop: Stop;
+  lngLat: LngLat;
   scale: number;
   major: boolean;
   focused: boolean;
-  opacity: number;
   placement: StopLabelPlacement | undefined;
 }) {
   const radius = major ? MAJOR_STOP_RADIUS(scale) : STOP_RADIUS(scale);
@@ -68,11 +60,7 @@ export function StopMarker({
   const borderColor = focused ? "var(--foreground)" : NOT_FOCUSED_STROKE;
 
   return (
-    <MapMarker
-      longitude={stop.stop_lon}
-      latitude={stop.stop_lat}
-      anchor="center"
-    >
+    <MapMarker longitude={lngLat[0]} latitude={lngLat[1]} anchor="center">
       <MarkerContent className="size-0 cursor-default">
         <div className="pointer-events-none absolute left-0 top-0 size-0">
           <div
@@ -83,10 +71,9 @@ export function StopMarker({
               borderColor,
               borderStyle: "solid",
               borderWidth: stroke,
-              opacity,
             }}
           />
-          <LabelSpan placement={placement} text={stop.stop_name} />
+          <LabelSpan placement={placement} />
         </div>
       </MarkerContent>
     </MapMarker>
@@ -94,33 +81,33 @@ export function StopMarker({
 }
 
 /**
- * Mirror of transitive's MultiPoint rect for transfer hubs — morphs from a
- * narrow tall pill at low zoom into a rounded square at high zoom, the way
- * the source renders Metro Center / Rosslyn.
+ * Transfer hub / merged-stop marker — transitive's MultiPoint rounded rect.
+ * Used both for convergence stops (e.g. Metro Center) and for clusters of
+ * stops merged into one vertex at low zoom.
  */
 export function HubMarker({
-  stop,
+  lngLat,
   scale,
   focused,
   placement,
+  members,
 }: {
-  stop: Stop;
+  lngLat: LngLat;
   scale: number;
   focused: boolean;
   placement: StopLabelPlacement | undefined;
+  members: number;
 }) {
-  const width = pixels(scale, 7, 22, 32);
+  // a multi-stop cluster reads as a slightly larger pill than a single transfer
+  const grow = members > 1 ? 1.25 : 1;
+  const width = pixels(scale, 7, 22, 32) * grow;
   const height = pixels(scale, 16, 26, 32);
   const radius = pixels(scale, 4, 7, 10);
   const borderColor = focused ? "#0b1f4d" : NOT_FOCUSED_STROKE;
   const borderWidth = pixels(scale, 1.4, 2.2, 3);
 
   return (
-    <MapMarker
-      longitude={stop.stop_lon}
-      latitude={stop.stop_lat}
-      anchor="center"
-    >
+    <MapMarker longitude={lngLat[0]} latitude={lngLat[1]} anchor="center">
       <MarkerContent className="size-0 cursor-default">
         <div className="pointer-events-none absolute left-0 top-0 size-0">
           <div
@@ -134,55 +121,7 @@ export function HubMarker({
               borderRadius: radius,
             }}
           />
-          <LabelSpan placement={placement} text={stop.stop_name} />
-        </div>
-      </MarkerContent>
-    </MapMarker>
-  );
-}
-
-export function ClusterMarker({
-  cluster,
-  focused,
-  placement,
-}: {
-  cluster: Cluster;
-  focused: boolean;
-  placement: StopLabelPlacement | undefined;
-}) {
-  const opacity = clamp01(cluster.mergeFactor);
-  if (opacity <= 0.01) return null;
-
-  const { width, height, offsetX, offsetY, radius } = cluster.pixelBox;
-  const borderColor = focused ? "#000088" : NOT_FOCUSED_STROKE;
-
-  return (
-    <MapMarker
-      longitude={cluster.centroid[0]}
-      latitude={cluster.centroid[1]}
-      anchor="center"
-    >
-      <MarkerContent className="size-0 cursor-default">
-        <div
-          className="pointer-events-none absolute left-0 top-0 size-0"
-          style={{ opacity }}
-        >
-          <div
-            className="absolute left-0 top-0 bg-background shadow-sm"
-            style={{
-              width,
-              height,
-              transform: `translate(${offsetX - width / 2}px, ${offsetY - height / 2}px)`,
-              borderColor,
-              borderStyle: "solid",
-              borderWidth: 2,
-              borderRadius: radius,
-            }}
-          />
-          <LabelSpan
-            placement={placement}
-            text={placement?.text ?? cluster.children[0]?.stop_name ?? ""}
-          />
+          <LabelSpan placement={placement} />
         </div>
       </MarkerContent>
     </MapMarker>
@@ -207,11 +146,7 @@ export function PlaceMarker({
   const borderColor = focused ? "var(--foreground)" : NOT_FOCUSED_STROKE;
 
   return (
-    <MapMarker
-      longitude={place.place_lon}
-      latitude={place.place_lat}
-      anchor="center"
-    >
+    <MapMarker longitude={place.place_lon} latitude={place.place_lat} anchor="center">
       <MarkerContent className="size-0 cursor-default">
         <div className="pointer-events-none absolute left-0 top-0 size-0">
           <div
@@ -227,7 +162,7 @@ export function PlaceMarker({
           >
             {letter}
           </div>
-          <LabelSpan placement={placement} text={place.place_name} />
+          <LabelSpan placement={placement} />
         </div>
       </MarkerContent>
     </MapMarker>
@@ -251,10 +186,7 @@ export function RouteBadge({
       <MarkerContent className="size-0 cursor-default">
         <span
           className="pointer-events-none absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 rounded px-1.5 py-0.5 font-bold leading-none text-white shadow-sm"
-          style={{
-            backgroundColor: placement.color,
-            fontSize: placement.fontSize,
-          }}
+          style={{ backgroundColor: placement.color, fontSize: placement.fontSize }}
         >
           {placement.text}
         </span>

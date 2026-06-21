@@ -4,20 +4,18 @@ import { useMemo, useState } from "react";
 
 import { Map as MapView } from "@/registry/map";
 
-import { computeClusters } from "./transitive/clustering";
 import { transitiveData } from "./transitive/data";
+import { getLayout, partitionForZoom } from "./transitive/engine/layout";
 import { focusFromJourney } from "./transitive/focus";
-import { hubStopIds } from "./transitive/graph";
 import { placeLabels } from "./transitive/labeler";
 import {
-  ClusterMarker,
   HubMarker,
   PlaceMarker,
   RouteBadge,
   StopMarker,
 } from "./transitive/markers";
 import { TransitiveNetworkLayer } from "./transitive/network-layer";
-import { zoomToProgress, zoomToScale } from "./transitive/styler";
+import { zoomToScale } from "./transitive/styler";
 import type { LngLat } from "./transitive/types";
 
 const INITIAL_VIEWPORT = {
@@ -39,55 +37,31 @@ export function TransitiveCard() {
   const [viewport, setViewport] = useState(INITIAL_VIEWPORT);
   const [selectedJourney, setSelectedJourney] = useState<string | null>(null);
 
-  const progress = zoomToProgress(viewport.zoom);
+  const partition = partitionForZoom(viewport.zoom);
   const scale = zoomToScale(viewport.zoom);
+
+  const layout = useMemo(() => getLayout(partition), [partition]);
 
   const focus = useMemo(
     () => focusFromJourney(selectedJourney),
     [selectedJourney],
   );
 
-  const { clusters, stopVisibility } = useMemo(
-    () => computeClusters(viewport.zoom, scale),
-    [viewport.zoom, scale],
-  );
-
-  const hiddenStopIds = useMemo(() => {
-    const hidden = new Set<string>();
-    for (const [stopId, vis] of stopVisibility) {
-      if (vis.cluster && vis.cluster.mergeFactor >= 0.99) hidden.add(stopId);
-    }
-    return hidden;
-  }, [stopVisibility]);
-
   const labels = useMemo(
-    () => placeLabels(viewport.zoom, scale, progress, clusters, hiddenStopIds),
-    [viewport.zoom, scale, progress, clusters, hiddenStopIds],
+    () => placeLabels(viewport.zoom, scale, layout),
+    [viewport.zoom, scale, layout],
   );
 
   return (
     <div className="relative h-full w-full">
-      <MapView
-        viewport={viewport}
-        theme="light"
-        onViewportChange={setViewport}
-      >
-        <TransitiveNetworkLayer progress={progress} focus={focus} />
+      <MapView viewport={viewport} theme="light" onViewportChange={setViewport}>
+        <TransitiveNetworkLayer layout={layout} focus={focus} />
 
         {labels.segments.map((seg) => (
           <RouteBadge
             key={seg.edge_id}
             placement={seg}
-            focused={focus.patternIds.size > 0 && isSegmentFocused(seg, focus)}
-          />
-        ))}
-
-        {clusters.map((cluster) => (
-          <ClusterMarker
-            key={cluster.cluster_id}
-            cluster={cluster}
-            focused={cluster.children.some((c) => focus.stopIds.has(c.stop_id))}
-            placement={labels.places.get(`__cluster__${cluster.cluster_id}`)}
+            focused={focus.patternIds.has(seg.patternId)}
           />
         ))}
 
@@ -102,29 +76,31 @@ export function TransitiveCard() {
           />
         ))}
 
-        {transitiveData.stops.map((stop) => {
-          const vis = stopVisibility.get(stop.stop_id);
-          if (!vis || vis.individualOpacity <= 0.01) return null;
-          if (hubStopIds.has(stop.stop_id)) {
+        {layout.vertices.map((vertex) => {
+          const focused = vertex.memberStopIds.some((id) =>
+            focus.stopIds.has(id),
+          );
+          const placement = labels.stops.get(vertex.id);
+          if (vertex.type === "MULTI" || vertex.isTransfer) {
             return (
               <HubMarker
-                key={stop.stop_id}
-                stop={stop}
+                key={vertex.id}
+                lngLat={vertex.lngLat}
                 scale={scale}
-                focused={focus.stopIds.has(stop.stop_id)}
-                placement={labels.stops.get(stop.stop_id)}
+                focused={focused}
+                placement={placement}
+                members={vertex.memberStopIds.length}
               />
             );
           }
           return (
             <StopMarker
-              key={stop.stop_id}
-              stop={stop}
+              key={vertex.id}
+              lngLat={vertex.lngLat}
               scale={scale}
               major={false}
-              focused={focus.stopIds.has(stop.stop_id)}
-              opacity={vis.individualOpacity}
-              placement={labels.stops.get(stop.stop_id)}
+              focused={focused}
+              placement={placement}
             />
           );
         })}
@@ -149,19 +125,11 @@ export function TransitiveCard() {
       </div>
 
       <p className="absolute right-4 bottom-7 z-10 text-[10px] font-medium text-muted-foreground drop-shadow-sm">
-        Zoom {viewport.zoom.toFixed(1)} · lines {Math.round(progress * 100)}%
-        geographic · stops pinned
+        Zoom {viewport.zoom.toFixed(1)} ·{" "}
+        {layout.geographic
+          ? "geographic geometry"
+          : `schematic (P${partition})`}
       </p>
     </div>
   );
-}
-
-function isSegmentFocused(
-  seg: { edge_id: string; route_id: string },
-  focus: { patternIds: Set<string>; walkIds: Set<string> },
-): boolean {
-  for (const patternId of focus.patternIds) {
-    if (seg.edge_id.startsWith(`${patternId}__`)) return true;
-  }
-  return focus.walkIds.has(seg.edge_id);
 }

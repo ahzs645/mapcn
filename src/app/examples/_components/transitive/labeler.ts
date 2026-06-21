@@ -1,38 +1,23 @@
 import { transitiveData } from "./data";
-import { LANE_GAP_PX, interpolateEdge, renderedEdges } from "./graph";
+import type { LayoutEdge, TransitiveLayout } from "./engine/layout";
 import {
-  MAJOR_STOP_RADIUS,
   PLACE_FONT,
   PLACE_RADIUS,
   ROUTE_BADGE_FONT,
   STOP_FONT,
   STOP_RADIUS,
   metersPerPixel,
+  pixels,
 } from "./styler";
-import type { LngLat, RenderedEdge } from "./types";
-import type { Cluster } from "./clustering";
+import type { LngLat, Place } from "./types";
 
 export type Orientation = "E" | "W" | "N" | "S" | "NE" | "NW" | "SE" | "SW";
 
 type Bbox = { x: number; y: number; w: number; h: number };
-type OccupiedBbox = Bbox & {
-  kind?: "cluster" | "stop" | "place" | "label" | "segment";
-  id?: string;
-};
-
-type StopLabelInput = {
-  stop_id: string;
-  center: LngLat;
-  renderCenter?: LngLat;
-  nudgeY?: number;
-  radius: number;
-  text: string;
-  fontSize: number;
-  priority: number;
-};
+type OccupiedBbox = Bbox & { kind?: string; id?: string };
 
 export type StopLabelPlacement = {
-  stop_id: string;
+  id: string;
   orientation: Orientation;
   offsetX: number;
   offsetY: number;
@@ -42,6 +27,7 @@ export type StopLabelPlacement = {
 
 export type SegmentLabelPlacement = {
   edge_id: string;
+  patternId: string;
   route_id: string;
   text: string;
   color: string;
@@ -55,98 +41,36 @@ type LabelOutput = {
   segments: SegmentLabelPlacement[];
 };
 
-const STOP_ORIENTATIONS: Orientation[] = [
-  "E",
-  "W",
-];
+const ORIGIN: LngLat = [-77.0395, 38.8993];
+const GAP = 5;
+const STOP_ORIENTATIONS: Orientation[] = ["E", "W", "N", "S"];
+const ANCHOR_OFFSETS = [0, 0.18, -0.18, 0.32, -0.32, 0.45, -0.45];
 
-const segmentEndStopIds = new Set<string>();
-const adjacentStopIdsByPlace = new Map<string, Set<string>>();
+const routeById = new Map(transitiveData.routes.map((r) => [r.route_id, r]));
 
-function addAdjacentPlaceStop(placeId: string, stopId: string) {
-  if (!adjacentStopIdsByPlace.has(placeId)) {
-    adjacentStopIdsByPlace.set(placeId, new Set());
-  }
-  adjacentStopIdsByPlace.get(placeId)!.add(stopId);
-}
-
-for (const journey of transitiveData.journeys) {
-  for (const segment of journey.segments) {
-    if (segment.type === "WALK") {
-      if (segment.from.type === "STOP") {
-        segmentEndStopIds.add(segment.from.stop_id);
-      }
-      if (segment.to.type === "STOP") {
-        segmentEndStopIds.add(segment.to.stop_id);
-      }
-      if (segment.from.type === "PLACE" && segment.to.type === "STOP") {
-        addAdjacentPlaceStop(segment.from.place_id, segment.to.stop_id);
-      }
-      if (segment.from.type === "STOP" && segment.to.type === "PLACE") {
-        addAdjacentPlaceStop(segment.to.place_id, segment.from.stop_id);
-      }
-      continue;
-    }
-
-    const pattern = transitiveData.patterns.find(
-      (p) => p.pattern_id === segment.pattern_id,
-    );
-    const fromStop = pattern?.stops[segment.from_stop_index];
-    const toStop = pattern?.stops[segment.to_stop_index];
-    if (fromStop) segmentEndStopIds.add(fromStop.stop_id);
-    if (toStop) segmentEndStopIds.add(toStop.stop_id);
-  }
-}
-
-function projectToPixels(
-  point: LngLat,
-  origin: LngLat,
-  mpp: number,
-): { x: number; y: number } {
+function projectToPixels(point: LngLat, mpp: number): { x: number; y: number } {
   const dxMeters =
-    (point[0] - origin[0]) * 111320 * Math.cos((origin[1] * Math.PI) / 180);
-  const dyMeters = (point[1] - origin[1]) * 111320;
+    (point[0] - ORIGIN[0]) * 111320 * Math.cos((ORIGIN[1] * Math.PI) / 180);
+  const dyMeters = (point[1] - ORIGIN[1]) * 111320;
   return { x: dxMeters / mpp, y: -dyMeters / mpp };
 }
 
-function unprojectPixels(
-  px: { x: number; y: number },
-  origin: LngLat,
-  mpp: number,
-): LngLat {
+function unprojectPixels(px: { x: number; y: number }, mpp: number): LngLat {
   const dxMeters = px.x * mpp;
   const dyMeters = -px.y * mpp;
-  const lon = origin[0] + dxMeters / (111320 * Math.cos((origin[1] * Math.PI) / 180));
-  const lat = origin[1] + dyMeters / 111320;
+  const lon =
+    ORIGIN[0] + dxMeters / (111320 * Math.cos((ORIGIN[1] * Math.PI) / 180));
+  const lat = ORIGIN[1] + dyMeters / 111320;
   return [lon, lat];
 }
 
 function bboxesOverlap(a: Bbox, b: Bbox): boolean {
-  return !(
-    a.x + a.w < b.x ||
-    b.x + b.w < a.x ||
-    a.y + a.h < b.y ||
-    b.y + b.h < a.y
-  );
+  return !(a.x + a.w < b.x || b.x + b.w < a.x || a.y + a.h < b.y || b.y + b.h < a.y);
 }
 
 function estimateLabelSize(text: string, fontSize: number): { w: number; h: number } {
   return { w: Math.max(8, text.length * fontSize * 0.48), h: fontSize + 2 };
 }
-
-function getClusterLabelStop(cluster: Cluster) {
-  const fromAdjacentStops = adjacentStopIdsByPlace.get("from") ?? new Set();
-  const candidates = cluster.children.filter(
-    (stop) => !fromAdjacentStops.has(stop.stop_id),
-  );
-  const stops = candidates.length > 0 ? candidates : cluster.children;
-
-  return stops.reduce((shortest, stop) =>
-    stop.stop_name.length < shortest.stop_name.length ? stop : shortest,
-  );
-}
-
-const GAP = 5;
 
 function offsetForOrientation(
   radius: number,
@@ -180,17 +104,9 @@ function placeOriented(
   text: string,
   fontSize: number,
   occupied: OccupiedBbox[],
-  orientations: Orientation[],
-  ignore?: (bbox: OccupiedBbox) => boolean,
-): {
-  orientation: Orientation;
-  offsetX: number;
-  offsetY: number;
-  bbox: Bbox;
-} | null {
+): { orientation: Orientation; offsetX: number; offsetY: number; bbox: Bbox } | null {
   const size = estimateLabelSize(text, fontSize);
-
-  for (const orient of orientations) {
+  for (const orient of STOP_ORIENTATIONS) {
     const off = offsetForOrientation(radius, size, orient);
     const bbox: Bbox = {
       x: anchorPx.x + off.x - size.w / 2,
@@ -198,29 +114,156 @@ function placeOriented(
       w: size.w,
       h: size.h,
     };
-    if (
-      occupied.every(
-        (other) => ignore?.(other) || !bboxesOverlap(bbox, other),
-      )
-    ) {
+    if (occupied.every((other) => !bboxesOverlap(bbox, other))) {
       return { orientation: orient, offsetX: off.x, offsetY: off.y, bbox };
     }
   }
-
   return null;
 }
 
-function polylineSamples(
-  coords: LngLat[],
-  origin: LngLat,
-  mpp: number,
-): { px: Array<{ x: number; y: number }>; cumulative: number[] } {
-  const px = coords.map((c) => projectToPixels(c, origin, mpp));
+function vertexRadius(isTransfer: boolean, scale: number): number {
+  return isTransfer ? pixels(scale, 9, 13, 17) : STOP_RADIUS(scale);
+}
+
+/**
+ * Place stop / place labels and route badges. Everything is projected into a
+ * flat pixel space centred on a reference lat (low distortion), then each label
+ * tries candidate orientations until it finds one clear of marker bodies and
+ * previously-placed labels — the same collision strategy as transitive's
+ * Labeler, fed from the engine layout so labels track the schematic geometry.
+ */
+export function placeLabels(
+  zoom: number,
+  scale: number,
+  layout: TransitiveLayout,
+): LabelOutput {
+  const mpp = metersPerPixel(ORIGIN[1], zoom);
+  const occupied: OccupiedBbox[] = [];
+
+  // marker bodies
+  for (const v of layout.vertices) {
+    const px = projectToPixels(v.lngLat, mpp);
+    const r = vertexRadius(v.isTransfer, scale);
+    occupied.push({ kind: "stop", id: v.id, x: px.x - r, y: px.y - r, w: r * 2, h: r * 2 });
+  }
+  for (const place of transitiveData.places) {
+    const px = projectToPixels([place.place_lon, place.place_lat], mpp);
+    const r = PLACE_RADIUS(scale);
+    occupied.push({
+      kind: "place",
+      id: place.place_id,
+      x: px.x - r,
+      y: px.y - r,
+      w: r * 2,
+      h: r * 2,
+    });
+  }
+
+  // route badges first, so stop labels route around them
+  const segments = placeSegmentLabels(layout.edges, scale, zoom, mpp, occupied);
+
+  const stops = new Map<string, StopLabelPlacement>();
+  const places = new Map<string, StopLabelPlacement>();
+
+  type Anchor = {
+    id: string;
+    center: LngLat;
+    radius: number;
+    text: string;
+    fontSize: number;
+    priority: number;
+    kind: "stop" | "place";
+  };
+
+  const anchors: Anchor[] = [];
+  for (const place of transitiveData.places as Place[]) {
+    anchors.push({
+      id: place.place_id,
+      center: [place.place_lon, place.place_lat],
+      radius: PLACE_RADIUS(scale),
+      text: place.place_name,
+      fontSize: PLACE_FONT(scale),
+      priority: 0,
+      kind: "place",
+    });
+  }
+  for (const v of layout.vertices) {
+    // hide minor (non-transfer) stop labels when zoomed far out
+    if (!v.isTransfer && scale < 1.2) continue;
+    anchors.push({
+      id: v.id,
+      center: v.lngLat,
+      radius: vertexRadius(v.isTransfer, scale),
+      text: v.stopName,
+      fontSize: STOP_FONT(scale),
+      priority: v.isTransfer ? 1 : 2,
+      kind: "stop",
+    });
+  }
+
+  anchors.sort((a, b) => a.priority - b.priority);
+
+  for (const anchor of anchors) {
+    const px = projectToPixels(anchor.center, mpp);
+    const placement = placeOriented(px, anchor.radius, anchor.text, anchor.fontSize, occupied);
+    if (!placement) continue;
+    occupied.push({ ...placement.bbox, kind: "label", id: anchor.id });
+    const out: StopLabelPlacement = {
+      id: anchor.id,
+      orientation: placement.orientation,
+      offsetX: placement.offsetX,
+      offsetY: placement.offsetY,
+      fontSize: anchor.fontSize,
+      text: anchor.text,
+    };
+    (anchor.kind === "place" ? places : stops).set(anchor.id, out);
+  }
+
+  return { stops, places, segments };
+}
+
+function estimateLineWidth(edge: LayoutEdge, zoom: number): number {
+  const stops: Array<[number, number]> = [
+    [9, 2],
+    [11, 4],
+    [13, 7],
+    [15, 11],
+    [17, 14],
+  ];
+  const base = edge.width;
+  if (zoom <= stops[0][0]) return stops[0][1] * base;
+  if (zoom >= stops[stops.length - 1][0]) return stops[stops.length - 1][1] * base;
+  for (let i = 1; i < stops.length; i++) {
+    const [z0, w0] = stops[i - 1];
+    const [z1, w1] = stops[i];
+    if (zoom <= z1) return (w0 + (w1 - w0) * ((zoom - z0) / (z1 - z0))) * base;
+  }
+  return stops[stops.length - 1][1] * base;
+}
+
+function applyEdgeOffset(coords: LngLat[], offsetPx: number, mpp: number): LngLat[] {
+  if (offsetPx === 0) return coords;
+  const offsetMeters = offsetPx * mpp;
+  return coords.map((point, i) => {
+    const prev = coords[Math.max(0, i - 1)];
+    const next = coords[Math.min(coords.length - 1, i + 1)];
+    const dx = next[0] - prev[0];
+    const dy = next[1] - prev[1];
+    const len = Math.hypot(dx, dy);
+    if (len === 0) return point;
+    const nx = dy / len;
+    const ny = -dx / len;
+    const dyDeg = (ny * offsetMeters) / 111320;
+    const dxDeg = (nx * offsetMeters) / (111320 * Math.cos((point[1] * Math.PI) / 180));
+    return [point[0] + dxDeg, point[1] + dyDeg];
+  });
+}
+
+function polylineSamples(coords: LngLat[], mpp: number) {
+  const px = coords.map((c) => projectToPixels(c, mpp));
   const cumulative = [0];
   for (let i = 1; i < px.length; i++) {
-    const dx = px[i].x - px[i - 1].x;
-    const dy = px[i].y - px[i - 1].y;
-    cumulative.push(cumulative[i - 1] + Math.hypot(dx, dy));
+    cumulative.push(cumulative[i - 1] + Math.hypot(px[i].x - px[i - 1].x, px[i].y - px[i - 1].y));
   }
   return { px, cumulative };
 }
@@ -245,348 +288,65 @@ function pointAtFraction(
   return px[px.length - 1];
 }
 
-/**
- * Mirror of transitive's `Labeler.doLayout` — projects every anchor into a
- * flat pixel space (centered at a reference lat for low distortion), then
- * tries each candidate orientation per label until it finds one that does
- * not collide with previously-placed labels or marker bodies.
- */
-export function placeLabels(
-  zoom: number,
-  scale: number,
-  progress: number,
-  clusters: Cluster[],
-  hiddenStopIds: Set<string>,
-): LabelOutput {
-  const origin: LngLat = [-77.0395, 38.8993];
-  const mpp = metersPerPixel(origin[1], zoom);
-
-  const occupied: OccupiedBbox[] = [];
-
-  for (const cluster of clusters) {
-    if (cluster.mergeFactor <= 0.01) continue;
-    const px = projectToPixels(cluster.centroid, origin, mpp);
-    occupied.push({
-      kind: "cluster",
-      id: cluster.cluster_id,
-      x: px.x + cluster.pixelBox.offsetX - cluster.pixelBox.width / 2,
-      y: px.y + cluster.pixelBox.offsetY - cluster.pixelBox.height / 2,
-      w: cluster.pixelBox.width,
-      h: cluster.pixelBox.height,
-    });
-  }
-
-  for (const stop of transitiveData.stops) {
-    if (hiddenStopIds.has(stop.stop_id)) continue;
-    const px = projectToPixels([stop.stop_lon, stop.stop_lat], origin, mpp);
-    const radius =
-      stop.stop_id === "rosslyn" || stop.stop_id === "metro"
-        ? MAJOR_STOP_RADIUS(scale)
-        : STOP_RADIUS(scale);
-    occupied.push({
-      kind: "stop",
-      id: stop.stop_id,
-      x: px.x - radius,
-      y: px.y - radius,
-      w: radius * 2,
-      h: radius * 2,
-    });
-  }
-
-  for (const place of transitiveData.places) {
-    const px = projectToPixels([place.place_lon, place.place_lat], origin, mpp);
-    const radius = PLACE_RADIUS(scale);
-    occupied.push({
-      kind: "place",
-      id: place.place_id,
-      x: px.x - radius,
-      y: px.y - radius,
-      w: radius * 2,
-      h: radius * 2,
-    });
-  }
-
-  const placeInputs: StopLabelInput[] = transitiveData.places.map((p) => ({
-    stop_id: p.place_id,
-    center: [p.place_lon, p.place_lat],
-    radius: PLACE_RADIUS(scale),
-    text: p.place_name,
-    fontSize: PLACE_FONT(scale),
-    priority: 0,
-  }));
-
-  const stopInputs: StopLabelInput[] = transitiveData.stops
-    .filter((s) => !hiddenStopIds.has(s.stop_id))
-    .filter((s) => {
-      if (segmentEndStopIds.has(s.stop_id)) return true;
-      return scale >= 1.5;
-    })
-    .map((s) => ({
-      stop_id: s.stop_id,
-      center: [s.stop_lon, s.stop_lat],
-      radius:
-        s.stop_id === "rosslyn" || s.stop_id === "metro"
-          ? MAJOR_STOP_RADIUS(scale)
-          : STOP_RADIUS(scale),
-      text: s.stop_name,
-      fontSize: STOP_FONT(scale),
-      priority: s.stop_id === "rosslyn" || s.stop_id === "metro" ? 1 : 2,
-    }));
-
-  for (const cluster of clusters) {
-    if (cluster.mergeFactor <= 0.01) continue;
-    const labelStop = getClusterLabelStop(cluster);
-    placeInputs.push({
-      stop_id: `__cluster__${cluster.cluster_id}`,
-      center: [labelStop.stop_lon, labelStop.stop_lat],
-      renderCenter: cluster.centroid,
-      nudgeY: cluster.children.some((stop) =>
-        adjacentStopIdsByPlace.get("from")?.has(stop.stop_id),
-      )
-        ? -(STOP_FONT(scale) + 3)
-        : 0,
-      radius: Math.max(cluster.pixelBox.width, cluster.pixelBox.height) / 2,
-      text: labelStop.stop_name,
-      fontSize: STOP_FONT(scale),
-      priority: 1,
-    });
-  }
-
-  // Segment (route) badges are placed FIRST against just the marker bodies,
-  // so they always survive the collision pass. Stop/place labels then route
-  // around them. This matches the source's render order where route boxes
-  // sit above stop labels.
-  const segments = placeSegmentLabels(
-    progress,
-    scale,
-    zoom,
-    origin,
-    mpp,
-    occupied,
-  );
-
-  const places = new Map<string, StopLabelPlacement>();
-  const stops = new Map<string, StopLabelPlacement>();
-
-  const sortedAnchors = [...placeInputs, ...stopInputs].sort(
-    (a, b) => a.priority - b.priority,
-  );
-
-  for (const input of sortedAnchors) {
-    const px = projectToPixels(input.center, origin, mpp);
-    const renderPx = input.renderCenter
-      ? projectToPixels(input.renderCenter, origin, mpp)
-      : px;
-    const placement = placeOriented(
-      px,
-      input.radius,
-      input.text,
-      input.fontSize,
-      occupied,
-      STOP_ORIENTATIONS,
-      input.priority === 0
-        ? (bbox) => {
-            const adjacentStops = adjacentStopIdsByPlace.get(input.stop_id);
-            if (!adjacentStops) return false;
-            if (bbox.kind === "stop") {
-              return adjacentStops.has(bbox.id ?? "");
-            }
-            if (bbox.kind === "cluster") {
-              return [...adjacentStops].some((stopId) =>
-                bbox.id?.includes(stopId),
-              );
-            }
-            return false;
-          }
-        : undefined,
-    );
-    if (!placement) continue;
-
-    occupied.push({ ...placement.bbox, kind: "label", id: input.stop_id });
-    const out: StopLabelPlacement = {
-      stop_id: input.stop_id,
-      orientation: placement.orientation,
-      offsetX: placement.offsetX + px.x - renderPx.x,
-      offsetY: placement.offsetY + px.y - renderPx.y + (input.nudgeY ?? 0),
-      fontSize: input.fontSize,
-      text: input.text,
-    };
-    if (input.stop_id.startsWith("__cluster__") || transitiveData.places.some((p) => p.place_id === input.stop_id)) {
-      places.set(input.stop_id, out);
-    } else {
-      stops.set(input.stop_id, out);
-    }
-  }
-
-  return { stops, places, segments };
-}
-
-const ANCHOR_OFFSETS = [0, 0.18, -0.18, 0.32, -0.32, 0.45, -0.45];
-
 function placeSegmentLabels(
-  progress: number,
+  edges: LayoutEdge[],
   scale: number,
   zoom: number,
-  origin: LngLat,
   mpp: number,
-  occupied: Bbox[],
+  occupied: OccupiedBbox[],
 ): SegmentLabelPlacement[] {
   const placements: SegmentLabelPlacement[] = [];
-  const seenPerGroup = new Set<string>();
+  const seen = new Set<string>();
   const fontSize = ROUTE_BADGE_FONT(scale);
-
-  // At low zoom every edge midpoint collapses to nearly one pixel; if we
-  // enforced collision we would silently drop most badges. Below scale 1
-  // we always emit the badge at the edge midpoint, accepting some overlap.
   const lowZoom = scale < 1;
 
-  const transitEdges = renderedEdges.filter((e) => e.mode === "transit");
+  for (const edge of edges) {
+    if (edge.mode !== "transit") continue;
+    const dedupe = `${[edge.fromStopId, edge.toStopId].sort().join("__")}::${edge.routeId}`;
+    if (seen.has(dedupe)) continue;
 
-  for (const edge of transitEdges) {
-    const groupKey = [edge.from_stop_id, edge.to_stop_id].sort().join("__");
-    const dedupeKey = `${groupKey}::${edge.route_id}`;
-    if (seenPerGroup.has(dedupeKey)) continue;
+    const route = routeById.get(edge.routeId);
+    if (!route) continue;
 
-    const placement = placeBadgeAlongEdge(
-      edge,
-      progress,
-      zoom,
-      origin,
-      mpp,
-      occupied,
-      fontSize,
-      lowZoom,
-    );
-    if (!placement) continue;
-    placements.push(placement);
-    seenPerGroup.add(dedupeKey);
+    const offsetPx = edge.laneOffset * (estimateLineWidth(edge, zoom) + 4);
+    const coords = applyEdgeOffset(edge.coords, offsetPx, mpp);
+    const samples = polylineSamples(coords, mpp);
+    const text = route.route_short_name;
+    const size = estimateLabelSize(text, fontSize);
+
+    const emit = (pt: { x: number; y: number }) => {
+      placements.push({
+        edge_id: edge.id,
+        patternId: edge.patternId,
+        route_id: edge.routeId,
+        text,
+        color: edge.color,
+        position: unprojectPixels(pt, mpp),
+        fontSize,
+      });
+      seen.add(dedupe);
+    };
+
+    if (lowZoom) {
+      emit(pointAtFraction(samples.px, samples.cumulative, 0.5));
+      continue;
+    }
+
+    let placed = false;
+    for (const frac of ANCHOR_OFFSETS) {
+      const t = 0.5 + frac;
+      if (t < 0.05 || t > 0.95) continue;
+      const pt = pointAtFraction(samples.px, samples.cumulative, t);
+      const bbox: Bbox = { x: pt.x - size.w / 2, y: pt.y - size.h / 2, w: size.w, h: size.h };
+      if (occupied.every((o) => !bboxesOverlap(bbox, o))) {
+        occupied.push(bbox);
+        emit(pt);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) emit(pointAtFraction(samples.px, samples.cumulative, 0.5));
   }
 
   return placements;
-}
-
-function placeBadgeAlongEdge(
-  edge: RenderedEdge,
-  progress: number,
-  zoom: number,
-  origin: LngLat,
-  mpp: number,
-  occupied: Bbox[],
-  fontSize: number,
-  alwaysPlaceAtMidpoint: boolean,
-): SegmentLabelPlacement | null {
-  const route = transitiveData.routes.find((r) => r.route_id === edge.route_id);
-  if (!route) return null;
-
-  const baseCoords = interpolateEdge(edge, progress);
-  const offsetPx = edge.offset * (estimateLineWidth(edge, zoom) + LANE_GAP_PX);
-  const coords = applyEdgeOffset(baseCoords, offsetPx, mpp);
-  const samples = polylineSamples(coords, origin, mpp);
-  const text = route.route_short_name;
-  const size = estimateLabelSize(text, fontSize);
-
-  if (alwaysPlaceAtMidpoint) {
-    const pt = pointAtFraction(samples.px, samples.cumulative, 0.5);
-    return {
-      edge_id: edge.edge_id,
-      route_id: edge.route_id,
-      text,
-      color: edge.color,
-      position: unprojectPixels(pt, origin, mpp),
-      fontSize,
-    };
-  }
-
-  for (const offsetFraction of ANCHOR_OFFSETS) {
-    const t = 0.5 + offsetFraction;
-    if (t < 0.05 || t > 0.95) continue;
-    const pt = pointAtFraction(samples.px, samples.cumulative, t);
-    const bbox: Bbox = {
-      x: pt.x - size.w / 2,
-      y: pt.y - size.h / 2,
-      w: size.w,
-      h: size.h,
-    };
-    if (occupied.every((o) => !bboxesOverlap(bbox, o))) {
-      occupied.push(bbox);
-      return {
-        edge_id: edge.edge_id,
-        route_id: edge.route_id,
-        text,
-        color: edge.color,
-        position: unprojectPixels(pt, origin, mpp),
-        fontSize,
-      };
-    }
-  }
-
-  const fallback = pointAtFraction(samples.px, samples.cumulative, 0.5);
-  return {
-    edge_id: edge.edge_id,
-    route_id: edge.route_id,
-    text,
-    color: edge.color,
-    position: unprojectPixels(fallback, origin, mpp),
-    fontSize,
-  };
-}
-
-/**
- * Mirrors the zoom-stop interpolation that `network-layer.lineWidthExpression`
- * uses, so the labeler can predict where a bundled edge actually sits.
- */
-function estimateLineWidth(edge: RenderedEdge, zoom: number): number {
-  const base = edge.mode === "walk" ? 0.6 : edge.width;
-  const stops: Array<[number, number]> = [
-    [9, 2],
-    [11, 4],
-    [13, 7],
-    [15, 11],
-    [17, 14],
-  ];
-  if (zoom <= stops[0][0]) return stops[0][1] * base;
-  if (zoom >= stops[stops.length - 1][0])
-    return stops[stops.length - 1][1] * base;
-  for (let i = 1; i < stops.length; i++) {
-    const [z0, w0] = stops[i - 1];
-    const [z1, w1] = stops[i];
-    if (zoom <= z1) {
-      const t = (zoom - z0) / (z1 - z0);
-      return (w0 + (w1 - w0) * t) * base;
-    }
-  }
-  return stops[stops.length - 1][1] * base;
-}
-
-/**
- * Approximates the perpendicular pixel offset that maplibre's
- * `line-offset` paint property applies, so badges land on the visible
- * line rather than the centerline.
- */
-function applyEdgeOffset(
-  coords: LngLat[],
-  offsetPx: number,
-  mpp: number,
-): LngLat[] {
-  if (offsetPx === 0) return coords;
-  const offsetMeters = offsetPx * mpp;
-  return coords.map((point, i) => {
-    const prev = coords[Math.max(0, i - 1)];
-    const next = coords[Math.min(coords.length - 1, i + 1)];
-    const dx = next[0] - prev[0];
-    const dy = next[1] - prev[1];
-    const len = Math.hypot(dx, dy);
-    if (len === 0) return point;
-    // MapLibre `line-offset` positive = right of direction of travel.
-    // In geo coords (lat-up), right of an east-bound vector is south, so
-    // the perpendicular is (Δlat, -Δlon) — note the sign flip vs the
-    // mathematical CCW perpendicular.
-    const nx = dy / len;
-    const ny = -dx / len;
-    const dyDeg = (ny * offsetMeters) / 111320;
-    const dxDeg =
-      (nx * offsetMeters) /
-      (111320 * Math.cos((point[1] * Math.PI) / 180));
-    return [point[0] + dxDeg, point[1] + dyDeg];
-  });
 }

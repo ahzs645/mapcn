@@ -24,11 +24,6 @@ export function pixels(
   return normal + (max - normal) * ((scale - 1) / 3);
 }
 
-/** Linear morph from schematic geometry (0) to geographic geometry (1). */
-export function zoomToProgress(zoom: number): number {
-  return clamp01((zoom - 13.2) / 2.2);
-}
-
 /**
  * Map MapLibre zoom into transitive's `scale` domain so the `pixels()`
  * formula can drive marker / line / font sizes consistently.
