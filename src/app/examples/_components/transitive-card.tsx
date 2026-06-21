@@ -5,22 +5,22 @@ import { useMemo, useState } from "react";
 import { Map as MapView } from "@/registry/map";
 
 import { transitiveData } from "./transitive/data";
-import { getLayout, partitionForZoom } from "./transitive/engine/layout";
 import { focusFromJourney } from "./transitive/focus";
-import { placeLabels } from "./transitive/labeler";
 import {
-  HubMarker,
-  PlaceMarker,
-  RouteBadge,
-  StopMarker,
-} from "./transitive/markers";
+  placeLayout,
+  placePosition,
+  stopLayout,
+  stopPosition,
+} from "./transitive/graph";
+import { placeLabels } from "./transitive/labeler";
+import { PlaceMarker, RouteBadge, StationMarker } from "./transitive/markers";
 import { TransitiveNetworkLayer } from "./transitive/network-layer";
-import { zoomToScale } from "./transitive/styler";
+import { zoomToProgress, zoomToScale } from "./transitive/styler";
 import type { LngLat } from "./transitive/types";
 
 const INITIAL_VIEWPORT = {
-  center: [-77.0395, 38.8993] as LngLat,
-  zoom: 11.9,
+  center: [-77.043, 38.9011] as LngLat,
+  zoom: 13.2,
   bearing: 0,
   pitch: 0,
 };
@@ -33,14 +33,14 @@ const JOURNEY_OPTIONS = [
   })),
 ];
 
+const PLACE_LETTERS: Record<string, string> = { from: "A", to: "B" };
+
 export function TransitiveCard() {
   const [viewport, setViewport] = useState(INITIAL_VIEWPORT);
   const [selectedJourney, setSelectedJourney] = useState<string | null>(null);
 
-  const partition = partitionForZoom(viewport.zoom);
+  const progress = zoomToProgress(viewport.zoom);
   const scale = zoomToScale(viewport.zoom);
-
-  const layout = useMemo(() => getLayout(partition), [partition]);
 
   const focus = useMemo(
     () => focusFromJourney(selectedJourney),
@@ -48,14 +48,14 @@ export function TransitiveCard() {
   );
 
   const labels = useMemo(
-    () => placeLabels(viewport.zoom, scale, layout),
-    [viewport.zoom, scale, layout],
+    () => placeLabels(viewport.zoom, scale, progress),
+    [viewport.zoom, scale, progress],
   );
 
   return (
     <div className="relative h-full w-full">
       <MapView viewport={viewport} theme="light" onViewportChange={setViewport}>
-        <TransitiveNetworkLayer layout={layout} focus={focus} />
+        <TransitiveNetworkLayer progress={progress} focus={focus} />
 
         {labels.segments.map((seg) => (
           <RouteBadge
@@ -65,45 +65,29 @@ export function TransitiveCard() {
           />
         ))}
 
-        {transitiveData.places.map((place, index) => (
+        {[...placeLayout.values()].map((place) => (
           <PlaceMarker
             key={place.place_id}
-            place={place}
+            position={placePosition(place, progress)}
             scale={scale}
-            letter={index === 0 ? "A" : "B"}
+            letter={PLACE_LETTERS[place.place_id] ?? "•"}
             focused
             placement={labels.places.get(place.place_id)}
           />
         ))}
 
-        {layout.vertices.map((vertex) => {
-          const focused = vertex.memberStopIds.some((id) =>
-            focus.stopIds.has(id),
-          );
-          const placement = labels.stops.get(vertex.id);
-          if (vertex.type === "MULTI" || vertex.isTransfer) {
-            return (
-              <HubMarker
-                key={vertex.id}
-                lngLat={vertex.lngLat}
-                scale={scale}
-                focused={focused}
-                placement={placement}
-                members={vertex.memberStopIds.length}
-              />
-            );
-          }
-          return (
-            <StopMarker
-              key={vertex.id}
-              lngLat={vertex.lngLat}
-              scale={scale}
-              major={false}
-              focused={focused}
-              placement={placement}
-            />
-          );
-        })}
+        {[...stopLayout.values()].map((stop) => (
+          <StationMarker
+            key={stop.stop_id}
+            position={stopPosition(stop, progress)}
+            scale={scale}
+            role={stop.role}
+            laneSpan={stop.laneSpan}
+            angle={stop.angle}
+            focused={focus.stopIds.has(stop.stop_id)}
+            placement={labels.stops.get(stop.stop_id)}
+          />
+        ))}
       </MapView>
 
       <div className="absolute left-2 top-2 z-10 flex flex-wrap gap-1">
@@ -126,9 +110,7 @@ export function TransitiveCard() {
 
       <p className="absolute right-4 bottom-7 z-10 text-[10px] font-medium text-muted-foreground drop-shadow-sm">
         Zoom {viewport.zoom.toFixed(1)} ·{" "}
-        {layout.geographic
-          ? "geographic geometry"
-          : `schematic (P${partition})`}
+        {progress < 0.5 ? "schematic" : "geographic"}
       </p>
     </div>
   );

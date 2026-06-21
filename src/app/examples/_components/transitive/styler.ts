@@ -25,6 +25,24 @@ export function pixels(
 }
 
 /**
+ * Linear morph from schematic geometry (progress 0) to geographic geometry
+ * (progress 1). Mirrors transitive's two zoomFactor regimes (schematic at
+ * minScale 0, geographic at minScale 1.5) but as a smooth crossfade so stops
+ * and lines glide between the two layouts instead of hard-swapping.
+ */
+export function zoomToProgress(zoom: number): number {
+  return clamp01((zoom - 13.8) / 1.6);
+}
+
+/** Component-wise lerp between two lng/lat coordinates. */
+export function lerpLngLat(from: LngLat, to: LngLat, progress: number): LngLat {
+  return [
+    from[0] + (to[0] - from[0]) * progress,
+    from[1] + (to[1] - from[1]) * progress,
+  ];
+}
+
+/**
  * Map MapLibre zoom into transitive's `scale` domain so the `pixels()`
  * formula can drive marker / line / font sizes consistently.
  */

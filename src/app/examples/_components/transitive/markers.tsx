@@ -1,30 +1,29 @@
 "use client";
 
+import type React from "react";
+
 import { MapMarker, MarkerContent } from "@/registry/map";
 
 import type { SegmentLabelPlacement, StopLabelPlacement } from "./labeler";
+import type { StopRole } from "./graph";
 import {
-  MAJOR_STOP_RADIUS,
   NOT_FOCUSED_STROKE,
   PLACE_FONT,
   PLACE_RADIUS,
-  STOP_RADIUS,
   STOP_STROKE,
   pixels,
 } from "./styler";
-import type { LngLat, Place } from "./types";
+import type { LngLat } from "./types";
 
 const LABEL_TEXT_SHADOW =
   "0 1px 0 var(--background),0 -1px 0 var(--background),1px 0 0 var(--background),-1px 0 0 var(--background)";
 
 function LabelSpan({
   placement,
-  opacity = 1,
 }: {
   placement: StopLabelPlacement | undefined;
-  opacity?: number;
 }) {
-  if (!placement || opacity <= 0.01) return null;
+  if (!placement) return null;
   return (
     <span
       className="pointer-events-none absolute left-0 top-0 whitespace-nowrap text-center font-semibold leading-none text-foreground"
@@ -32,7 +31,6 @@ function LabelSpan({
         transform: `translate(${placement.offsetX}px, ${placement.offsetY}px) translate(-50%, -50%)`,
         fontSize: placement.fontSize,
         textShadow: LABEL_TEXT_SHADOW,
-        opacity,
       }}
     >
       {placement.text}
@@ -40,87 +38,82 @@ function LabelSpan({
   );
 }
 
-/** Plain circular stop marker. */
-export function StopMarker({
-  lngLat,
-  scale,
-  major,
-  focused,
-  placement,
-}: {
-  lngLat: LngLat;
-  scale: number;
-  major: boolean;
-  focused: boolean;
-  placement: StopLabelPlacement | undefined;
-}) {
-  const radius = major ? MAJOR_STOP_RADIUS(scale) : STOP_RADIUS(scale);
-  const stroke = STOP_STROKE(scale);
-  const size = radius * 2;
-  const borderColor = focused ? "var(--foreground)" : NOT_FOCUSED_STROKE;
-
-  return (
-    <MapMarker longitude={lngLat[0]} latitude={lngLat[1]} anchor="center">
-      <MarkerContent className="size-0 cursor-default">
-        <div className="pointer-events-none absolute left-0 top-0 size-0">
-          <div
-            className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-background shadow-sm"
-            style={{
-              width: size,
-              height: size,
-              borderColor,
-              borderStyle: "solid",
-              borderWidth: stroke,
-            }}
-          />
-          <LabelSpan placement={placement} />
-        </div>
-      </MarkerContent>
-    </MapMarker>
-  );
+/** Dimensions of the lane-spanning pill drawn for a transfer hub. */
+function hubPill(scale: number, laneSpan: number) {
+  const thickness = pixels(scale, 8, 12, 16);
+  const laneStep = pixels(scale, 8, 13, 18);
+  const length = thickness + (laneSpan + 0.4) * laneStep;
+  return { thickness, length, radius: thickness / 2 };
 }
 
 /**
- * Transfer hub / merged-stop marker — transitive's MultiPoint rounded rect.
- * Used both for convergence stops (e.g. Metro Center) and for clusters of
- * stops merged into one vertex at low zoom.
+ * A station marker that morphs with the network. Three roles, matching the
+ * source: a transfer `hub` is a white pill spanning its lanes (Metro Center),
+ * a `terminal` is a filled circle (Rosslyn / Union), an intermediate `stop` is
+ * a small white dot riding on the line.
  */
-export function HubMarker({
-  lngLat,
+export function StationMarker({
+  position,
   scale,
+  role,
+  laneSpan,
+  angle,
   focused,
   placement,
-  members,
 }: {
-  lngLat: LngLat;
+  position: LngLat;
   scale: number;
+  role: StopRole;
+  laneSpan: number;
+  /** orientation (radians) of the lines through the stop, for pill rotation */
+  angle: number;
   focused: boolean;
   placement: StopLabelPlacement | undefined;
-  members: number;
 }) {
-  // a multi-stop cluster reads as a slightly larger pill than a single transfer
-  const grow = members > 1 ? 1.25 : 1;
-  const width = pixels(scale, 7, 22, 32) * grow;
-  const height = pixels(scale, 16, 26, 32);
-  const radius = pixels(scale, 4, 7, 10);
-  const borderColor = focused ? "#0b1f4d" : NOT_FOCUSED_STROKE;
-  const borderWidth = pixels(scale, 1.4, 2.2, 3);
+  const stroke = focused ? "var(--foreground)" : NOT_FOCUSED_STROKE;
+
+  let body: React.ReactNode;
+  if (role === "hub") {
+    const { thickness, length, radius } = hubPill(scale, laneSpan);
+    body = (
+      <div
+        className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 bg-background shadow-sm"
+        style={{
+          width: thickness,
+          height: length,
+          borderRadius: radius,
+          borderColor: stroke,
+          borderStyle: "solid",
+          borderWidth: pixels(scale, 1.4, 2, 2.6),
+          transform: `rotate(${(angle * 180) / Math.PI}deg)`,
+        }}
+      />
+    );
+  } else {
+    // terminal and intermediate stops both read as hollow white circles
+    // (terminals a touch larger) with a dark ring, matching the source.
+    const r =
+      role === "terminal" ? pixels(scale, 5, 7.5, 10) : pixels(scale, 3.5, 5, 7);
+    body = (
+      <div
+        className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-background shadow-sm"
+        style={{
+          width: r * 2,
+          height: r * 2,
+          borderColor: stroke,
+          borderStyle: "solid",
+          borderWidth:
+            role === "terminal" ? pixels(scale, 1.6, 2.2, 3) : STOP_STROKE(scale),
+        }}
+      />
+    );
+  }
 
   return (
-    <MapMarker longitude={lngLat[0]} latitude={lngLat[1]} anchor="center">
+    <MapMarker longitude={position[0]} latitude={position[1]} anchor="center">
       <MarkerContent className="size-0 cursor-default">
         <div className="pointer-events-none absolute left-0 top-0 size-0">
-          <div
-            className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 bg-background shadow-sm"
-            style={{
-              width,
-              height,
-              borderColor,
-              borderStyle: "solid",
-              borderWidth,
-              borderRadius: radius,
-            }}
-          />
+          {body}
           <LabelSpan placement={placement} />
         </div>
       </MarkerContent>
@@ -129,13 +122,13 @@ export function HubMarker({
 }
 
 export function PlaceMarker({
-  place,
+  position,
   scale,
   letter,
   focused,
   placement,
 }: {
-  place: Place;
+  position: LngLat;
   scale: number;
   letter: string;
   focused: boolean;
@@ -146,7 +139,7 @@ export function PlaceMarker({
   const borderColor = focused ? "var(--foreground)" : NOT_FOCUSED_STROKE;
 
   return (
-    <MapMarker longitude={place.place_lon} latitude={place.place_lat} anchor="center">
+    <MapMarker longitude={position[0]} latitude={position[1]} anchor="center">
       <MarkerContent className="size-0 cursor-default">
         <div className="pointer-events-none absolute left-0 top-0 size-0">
           <div
@@ -186,7 +179,10 @@ export function RouteBadge({
       <MarkerContent className="size-0 cursor-default">
         <span
           className="pointer-events-none absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 rounded px-1.5 py-0.5 font-bold leading-none text-white shadow-sm"
-          style={{ backgroundColor: placement.color, fontSize: placement.fontSize }}
+          style={{
+            backgroundColor: placement.color,
+            fontSize: placement.fontSize,
+          }}
         >
           {placement.text}
         </span>

@@ -1,5 +1,12 @@
 import { transitiveData } from "./data";
-import type { LayoutEdge, TransitiveLayout } from "./engine/layout";
+import {
+  interpolateEdge,
+  placeLayout,
+  placePosition,
+  renderedEdges,
+  stopLayout,
+  stopPosition,
+} from "./graph";
 import {
   PLACE_FONT,
   PLACE_RADIUS,
@@ -9,7 +16,7 @@ import {
   metersPerPixel,
   pixels,
 } from "./styler";
-import type { LngLat, Place } from "./types";
+import type { LngLat, RenderedEdge } from "./types";
 
 export type Orientation = "E" | "W" | "N" | "S" | "NE" | "NW" | "SE" | "SW";
 
@@ -47,6 +54,7 @@ const STOP_ORIENTATIONS: Orientation[] = ["E", "W", "N", "S"];
 const ANCHOR_OFFSETS = [0, 0.18, -0.18, 0.32, -0.32, 0.45, -0.45];
 
 const routeById = new Map(transitiveData.routes.map((r) => [r.route_id, r]));
+const placeById = new Map(transitiveData.places.map((p) => [p.place_id, p]));
 
 function projectToPixels(point: LngLat, mpp: number): { x: number; y: number } {
   const dxMeters =
@@ -121,33 +129,39 @@ function placeOriented(
   return null;
 }
 
-function vertexRadius(isTransfer: boolean, scale: number): number {
-  return isTransfer ? pixels(scale, 9, 13, 17) : STOP_RADIUS(scale);
+function vertexRadius(isHub: boolean, scale: number): number {
+  return isHub ? pixels(scale, 9, 13, 17) : STOP_RADIUS(scale);
 }
 
 /**
  * Place stop / place labels and route badges. Everything is projected into a
- * flat pixel space centred on a reference lat (low distortion), then each label
- * tries candidate orientations until it finds one clear of marker bodies and
- * previously-placed labels — the same collision strategy as transitive's
- * Labeler, fed from the engine layout so labels track the schematic geometry.
+ * flat pixel space centred on a reference lat, then each label tries candidate
+ * orientations until it finds one clear of marker bodies and previously-placed
+ * labels — transitive's Labeler collision strategy, fed the morphed positions so
+ * labels track stops through the schematic→geographic transition.
  */
 export function placeLabels(
   zoom: number,
   scale: number,
-  layout: TransitiveLayout,
+  progress: number,
 ): LabelOutput {
   const mpp = metersPerPixel(ORIGIN[1], zoom);
   const occupied: OccupiedBbox[] = [];
 
+  const stops = [...stopLayout.values()].map((s) => ({
+    ...s,
+    pos: stopPosition(s, progress),
+    isHub: s.role === "hub",
+  }));
+
   // marker bodies
-  for (const v of layout.vertices) {
-    const px = projectToPixels(v.lngLat, mpp);
-    const r = vertexRadius(v.isTransfer, scale);
-    occupied.push({ kind: "stop", id: v.id, x: px.x - r, y: px.y - r, w: r * 2, h: r * 2 });
+  for (const s of stops) {
+    const px = projectToPixels(s.pos, mpp);
+    const r = vertexRadius(s.isHub, scale);
+    occupied.push({ kind: "stop", id: s.stop_id, x: px.x - r, y: px.y - r, w: r * 2, h: r * 2 });
   }
-  for (const place of transitiveData.places) {
-    const px = projectToPixels([place.place_lon, place.place_lat], mpp);
+  for (const place of placeLayout.values()) {
+    const px = projectToPixels(placePosition(place, progress), mpp);
     const r = PLACE_RADIUS(scale);
     occupied.push({
       kind: "place",
@@ -160,10 +174,10 @@ export function placeLabels(
   }
 
   // route badges first, so stop labels route around them
-  const segments = placeSegmentLabels(layout.edges, scale, zoom, mpp, occupied);
+  const segments = placeSegmentLabels(scale, zoom, progress, mpp, occupied);
 
-  const stops = new Map<string, StopLabelPlacement>();
-  const places = new Map<string, StopLabelPlacement>();
+  const stopsOut = new Map<string, StopLabelPlacement>();
+  const placesOut = new Map<string, StopLabelPlacement>();
 
   type Anchor = {
     id: string;
@@ -176,27 +190,27 @@ export function placeLabels(
   };
 
   const anchors: Anchor[] = [];
-  for (const place of transitiveData.places as Place[]) {
+  for (const place of placeLayout.values()) {
     anchors.push({
       id: place.place_id,
-      center: [place.place_lon, place.place_lat],
+      center: placePosition(place, progress),
       radius: PLACE_RADIUS(scale),
-      text: place.place_name,
+      text: placeById.get(place.place_id)?.place_name ?? "",
       fontSize: PLACE_FONT(scale),
       priority: 0,
       kind: "place",
     });
   }
-  for (const v of layout.vertices) {
-    // hide minor (non-transfer) stop labels when zoomed far out
-    if (!v.isTransfer && scale < 1.2) continue;
+  for (const s of stops) {
+    // hide minor (non-hub) stop labels when zoomed far out
+    if (!s.isHub && scale < 1.2) continue;
     anchors.push({
-      id: v.id,
-      center: v.lngLat,
-      radius: vertexRadius(v.isTransfer, scale),
-      text: v.stopName,
+      id: s.stop_id,
+      center: s.pos,
+      radius: vertexRadius(s.isHub, scale),
+      text: s.stop_name,
       fontSize: STOP_FONT(scale),
-      priority: v.isTransfer ? 1 : 2,
+      priority: s.isHub ? 1 : 2,
       kind: "stop",
     });
   }
@@ -216,13 +230,13 @@ export function placeLabels(
       fontSize: anchor.fontSize,
       text: anchor.text,
     };
-    (anchor.kind === "place" ? places : stops).set(anchor.id, out);
+    (anchor.kind === "place" ? placesOut : stopsOut).set(anchor.id, out);
   }
 
-  return { stops, places, segments };
+  return { stops: stopsOut, places: placesOut, segments };
 }
 
-function estimateLineWidth(edge: LayoutEdge, zoom: number): number {
+function estimateLineWidth(edge: RenderedEdge, zoom: number): number {
   const stops: Array<[number, number]> = [
     [9, 2],
     [11, 4],
@@ -289,9 +303,9 @@ function pointAtFraction(
 }
 
 function placeSegmentLabels(
-  edges: LayoutEdge[],
   scale: number,
   zoom: number,
+  progress: number,
   mpp: number,
   occupied: OccupiedBbox[],
 ): SegmentLabelPlacement[] {
@@ -300,25 +314,25 @@ function placeSegmentLabels(
   const fontSize = ROUTE_BADGE_FONT(scale);
   const lowZoom = scale < 1;
 
-  for (const edge of edges) {
+  for (const edge of renderedEdges) {
     if (edge.mode !== "transit") continue;
-    const dedupe = `${[edge.fromStopId, edge.toStopId].sort().join("__")}::${edge.routeId}`;
+    const dedupe = `${[edge.from_stop_id, edge.to_stop_id].sort().join("__")}::${edge.route_id}`;
     if (seen.has(dedupe)) continue;
 
-    const route = routeById.get(edge.routeId);
+    const route = routeById.get(edge.route_id);
     if (!route) continue;
 
-    const offsetPx = edge.laneOffset * (estimateLineWidth(edge, zoom) + 4);
-    const coords = applyEdgeOffset(edge.coords, offsetPx, mpp);
+    const offsetPx = edge.offset * (estimateLineWidth(edge, zoom) + 4);
+    const coords = applyEdgeOffset(interpolateEdge(edge, progress), offsetPx, mpp);
     const samples = polylineSamples(coords, mpp);
     const text = route.route_short_name;
     const size = estimateLabelSize(text, fontSize);
 
     const emit = (pt: { x: number; y: number }) => {
       placements.push({
-        edge_id: edge.id,
-        patternId: edge.patternId,
-        route_id: edge.routeId,
+        edge_id: edge.edge_id,
+        patternId: edge.pattern_id,
+        route_id: edge.route_id,
         text,
         color: edge.color,
         position: unprojectPixels(pt, mpp),

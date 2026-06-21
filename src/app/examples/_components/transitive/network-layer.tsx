@@ -1,16 +1,23 @@
 "use client";
 
 import { useEffect } from "react";
-import type { DataDrivenPropertyValueSpecification } from "maplibre-gl";
+import type {
+  DataDrivenPropertyValueSpecification,
+  GeoJSONSource,
+} from "maplibre-gl";
 
 import { useMap } from "@/registry/map";
 
-import type { LayoutEdge, TransitiveLayout } from "./engine/layout";
 import type { FocusState } from "./focus";
+import {
+  LANE_GAP_PX,
+  dotPosition,
+  dotVertices,
+  interpolateEdge,
+  renderedEdges,
+} from "./graph";
 import { NOT_FOCUSED_COLOR } from "./styler";
-
-/** Gap (px) between sibling lines on top of their stroke width. */
-const LANE_GAP_PX = 4;
+import type { RenderedEdge } from "./types";
 
 const WIDTH_STOPS: Array<[number, number]> = [
   [9, 2],
@@ -20,82 +27,124 @@ const WIDTH_STOPS: Array<[number, number]> = [
   [17, 14],
 ];
 
-const idFor = (edge: LayoutEdge) => edge.id.replace(/[^a-zA-Z0-9_-]/g, "-");
-const SOURCE = (edge: LayoutEdge) => `transitive-${idFor(edge)}-source`;
-const LAYER = (edge: LayoutEdge) => `transitive-${idFor(edge)}-layer`;
+const SOURCE = (id: string) => `transitive-${id}-source`;
+const LAYER = (id: string) => `transitive-${id}-layer`;
+const DOTS_SOURCE = "transitive-dots-source";
+const DOTS_LAYER = "transitive-dots-layer";
 
-function isEdgeFocused(edge: LayoutEdge, focus: FocusState): boolean {
-  if (edge.mode === "walk") return focus.walkIds.has(edge.patternId);
-  return focus.patternIds.has(edge.patternId);
+function dotsFeature(progress: number): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  return {
+    type: "FeatureCollection",
+    features: dotVertices.map((d) => ({
+      type: "Feature",
+      properties: {},
+      geometry: { type: "Point", coordinates: dotPosition(d, progress) },
+    })),
+  };
 }
 
-function lineSortKey(edge: LayoutEdge, focused: boolean): number {
+function isEdgeFocused(edge: RenderedEdge, focus: FocusState): boolean {
+  if (edge.mode === "walk") return focus.walkIds.has(edge.edge_id);
+  return focus.patternIds.has(edge.pattern_id);
+}
+
+function lineSortKey(edge: RenderedEdge, focused: boolean): number {
   if (!focused) return 0;
   if (edge.mode === "walk") return 5;
-  if (edge.routeId === "RED") return 4;
+  if (edge.route_id === "RED") return 4;
   return 3;
 }
 
-/** Zoom-interpolated line width in px. `edge.width` is a 0..1 multiplier. */
+/** Zoom-interpolated line width in pixels. `edge.width` is a 0..1 multiplier. */
 function lineWidthExpression(
-  edge: LayoutEdge,
+  edge: RenderedEdge,
 ): DataDrivenPropertyValueSpecification<number> {
+  const base = edge.width;
   const stops: (number | string | unknown[])[] = [];
-  for (const [zoom, px] of WIDTH_STOPS) stops.push(zoom, px * edge.width);
-  return ["interpolate", ["linear"], ["zoom"], ...stops] as DataDrivenPropertyValueSpecification<number>;
+  for (const [zoom, px] of WIDTH_STOPS) stops.push(zoom, px * base);
+  return [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    ...stops,
+  ] as DataDrivenPropertyValueSpecification<number>;
 }
 
 /**
- * Lane offset scales with the line width at each zoom stop so adjacent bundle
- * members keep a constant gap. `edge.laneOffset` is a lane index (±0.5 for two
- * lanes), not a pixel.
+ * Lane offset scales with line width at each zoom stop so adjacent bundle
+ * members keep a constant `LANE_GAP_PX` gap. `edge.offset` is a lane index
+ * (±0.5 for two lanes), not a pixel — this is the ONLY lane separation, applied
+ * identically in the schematic and geographic regimes.
  */
 function lineOffsetExpression(
-  edge: LayoutEdge,
+  edge: RenderedEdge,
 ): DataDrivenPropertyValueSpecification<number> {
-  if (edge.laneOffset === 0) return 0;
-  const lane = edge.laneOffset;
+  if (edge.offset === 0) return 0;
+  const lane = edge.offset;
+  const base = edge.width;
   const stops: (number | string | unknown[])[] = [];
   for (const [zoom, px] of WIDTH_STOPS) {
-    stops.push(zoom, lane * (px * edge.width + LANE_GAP_PX));
+    stops.push(zoom, lane * (px * base + LANE_GAP_PX));
   }
-  return ["interpolate", ["linear"], ["zoom"], ...stops] as DataDrivenPropertyValueSpecification<number>;
+  return [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    ...stops,
+  ] as DataDrivenPropertyValueSpecification<number>;
+}
+
+function featureFor(
+  edge: RenderedEdge,
+  progress: number,
+): GeoJSON.Feature<GeoJSON.LineString> {
+  return {
+    type: "Feature",
+    properties: {},
+    geometry: {
+      type: "LineString",
+      coordinates: interpolateEdge(edge, progress),
+    },
+  };
 }
 
 export function TransitiveNetworkLayer({
-  layout,
+  progress,
   focus,
 }: {
-  layout: TransitiveLayout;
+  progress: number;
   focus: FocusState;
 }) {
-  const { map, isLoaded } = useMap();
+  const { map } = useMap();
 
-  // Add / remove the line layers. Re-runs when the layout (partition) swaps —
-  // the cleanup removes exactly the edges this run added.
+  // Mount sources/layers. We do NOT gate on the context `isLoaded` flag —
+  // maplibre's `loaded()` / `isStyleLoaded()` can report false negatives even
+  // when the map is fully ready, which would leave the lines unmounted. Instead
+  // add as soon as the style is ready and re-add on every `styledata` (idempotent
+  // because we skip already-present sources), so a style/theme reload re-mounts.
   useEffect(() => {
-    if (!map || !isLoaded) return;
+    if (!map) return;
 
     const add = () => {
-      for (const edge of layout.edges) {
-        const data: GeoJSON.Feature<GeoJSON.LineString> = {
-          type: "Feature",
-          properties: {},
-          geometry: { type: "LineString", coordinates: edge.coords },
-        };
-        if (map.getSource(SOURCE(edge))) continue;
-        map.addSource(SOURCE(edge), { type: "geojson", data });
+      for (const edge of renderedEdges) {
+        if (map.getSource(SOURCE(edge.edge_id))) continue;
+        map.addSource(SOURCE(edge.edge_id), {
+          type: "geojson",
+          data: featureFor(edge, progress),
+        });
         map.addLayer({
-          id: LAYER(edge),
+          id: LAYER(edge.edge_id),
           type: "line",
-          source: SOURCE(edge),
+          source: SOURCE(edge.edge_id),
           layout: {
             "line-cap": "round",
             "line-join": "round",
             "line-sort-key": lineSortKey(edge, isEdgeFocused(edge, focus)),
           },
           paint: {
-            "line-color": isEdgeFocused(edge, focus) ? edge.color : NOT_FOCUSED_COLOR,
+            "line-color": isEdgeFocused(edge, focus)
+              ? edge.color
+              : NOT_FOCUSED_COLOR,
             "line-width": lineWidthExpression(edge),
             "line-opacity":
               edge.mode === "walk" ? 0.95 : isEdgeFocused(edge, focus) ? 0.95 : 0.55,
@@ -104,34 +153,84 @@ export function TransitiveNetworkLayer({
           },
         });
       }
+
+      // station dots strung along the lines, drawn on top
+      if (!map.getSource(DOTS_SOURCE)) {
+        map.addSource(DOTS_SOURCE, {
+          type: "geojson",
+          data: dotsFeature(progress),
+        });
+        map.addLayer({
+          id: DOTS_LAYER,
+          type: "circle",
+          source: DOTS_SOURCE,
+          paint: {
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              11,
+              2,
+              13,
+              3,
+              15,
+              4.5,
+            ],
+            "circle-color": "#ffffff",
+            "circle-stroke-color": "#8b9097",
+            "circle-stroke-width": 1,
+          },
+        });
+      }
     };
 
-    // `isLoaded` (from the map context) already gates on the style being ready,
-    // so add directly — mirrors the registry's own layer components. We avoid
-    // `map.isStyleLoaded()` here because it can report false even when the map
-    // is fully ready to accept sources/layers.
-    add();
+    if (map.isStyleLoaded()) add();
+    map.on("styledata", add);
 
     return () => {
-      for (const edge of [...layout.edges].reverse()) {
+      map.off("styledata", add);
+      try {
+        if (map.getLayer(DOTS_LAYER)) map.removeLayer(DOTS_LAYER);
+        if (map.getSource(DOTS_SOURCE)) map.removeSource(DOTS_SOURCE);
+      } catch {
+        // ignore teardown races
+      }
+      for (const edge of [...renderedEdges].reverse()) {
         try {
-          if (map.getLayer(LAYER(edge))) map.removeLayer(LAYER(edge));
-          if (map.getSource(SOURCE(edge))) map.removeSource(SOURCE(edge));
+          if (map.getLayer(LAYER(edge.edge_id))) map.removeLayer(LAYER(edge.edge_id));
+          if (map.getSource(SOURCE(edge.edge_id))) map.removeSource(SOURCE(edge.edge_id));
         } catch {
-          // tearing down on hot reload / partition swap — ignore
+          // tearing down on hot reload — ignore
         }
       }
     };
-  }, [isLoaded, map, layout]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [map]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Recolor / restyle on focus change (no layout rebuild).
+  // re-morph geometry as progress changes
   useEffect(() => {
-    if (!map || !isLoaded) return;
-    for (const edge of layout.edges) {
-      const layerId = LAYER(edge);
+    if (!map) return;
+    for (const edge of renderedEdges) {
+      const source = map.getSource(SOURCE(edge.edge_id)) as
+        | GeoJSONSource
+        | undefined;
+      source?.setData(featureFor(edge, progress));
+    }
+    const dotsSrc = map.getSource(DOTS_SOURCE) as GeoJSONSource | undefined;
+    dotsSrc?.setData(dotsFeature(progress));
+  }, [map, progress]);
+
+  // recolor on focus change
+  useEffect(() => {
+    if (!map) return;
+    for (const edge of renderedEdges) {
+      const layerId = LAYER(edge.edge_id);
       if (!map.getLayer(layerId)) continue;
       const focused = isEdgeFocused(edge, focus);
-      map.setPaintProperty(layerId, "line-color", focused ? edge.color : NOT_FOCUSED_COLOR);
+      map.setPaintProperty(
+        layerId,
+        "line-color",
+        focused ? edge.color : NOT_FOCUSED_COLOR,
+      );
       map.setPaintProperty(
         layerId,
         "line-opacity",
@@ -139,7 +238,7 @@ export function TransitiveNetworkLayer({
       );
       map.setLayoutProperty(layerId, "line-sort-key", lineSortKey(edge, focused));
     }
-  }, [isLoaded, map, layout, focus]);
+  }, [map, focus]);
 
   return null;
 }
