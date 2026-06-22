@@ -142,11 +142,14 @@ export function PlaceMarker({
     <MapMarker longitude={position[0]} latitude={position[1]} anchor="center">
       <MarkerContent className="size-0 cursor-default">
         <div className="pointer-events-none absolute left-0 top-0 size-0">
+          {/* origin / destination places are solid dark discs in the source */}
           <div
-            className="absolute left-0 top-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-background font-bold shadow-sm"
+            className="absolute left-0 top-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full font-bold shadow-sm"
             style={{
               width: size,
               height: size,
+              background: "var(--foreground)",
+              color: "var(--background)",
               borderColor,
               borderStyle: "solid",
               borderWidth: 2,

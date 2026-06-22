@@ -79,6 +79,15 @@ export type RenderedEdge = {
   color: string;
   mode: "transit" | "walk";
   dashArray?: [number, number];
+  /** true for place→stop connectors (revealed by zoom), not transfer walks */
+  placeWalk?: boolean;
+  /**
+   * Lane index at each end, from alignment bundling (apply2DOffsets port).
+   * Per-END so a line can taper from a bundled lane to lane-0 at a terminal.
+   * Multiply by lane width to get the perpendicular offset baked at render time.
+   */
+  fromLane?: number;
+  toLane?: number;
 };
 
 export type EdgeGroup = {

@@ -15,12 +15,13 @@ import {
 import { placeLabels } from "./transitive/labeler";
 import { PlaceMarker, RouteBadge, StationMarker } from "./transitive/markers";
 import { TransitiveNetworkLayer } from "./transitive/network-layer";
+import { LIVE_SCENARIO_ID, ScenarioExplorer } from "./transitive/scenarios";
 import { zoomToProgress, zoomToScale } from "./transitive/styler";
 import type { LngLat } from "./transitive/types";
 
 const INITIAL_VIEWPORT = {
-  center: [-77.043, 38.9011] as LngLat,
-  zoom: 13.2,
+  center: [-77.042, 38.903] as LngLat,
+  zoom: 13.1,
   bearing: 0,
   pitch: 0,
 };
@@ -35,7 +36,11 @@ const JOURNEY_OPTIONS = [
 
 const PLACE_LETTERS: Record<string, string> = { from: "A", to: "B" };
 
-export function TransitiveCard() {
+export function TransitiveCard({
+  scenario = LIVE_SCENARIO_ID,
+}: {
+  scenario?: string;
+}) {
   const [viewport, setViewport] = useState(INITIAL_VIEWPORT);
   const [selectedJourney, setSelectedJourney] = useState<string | null>(null);
 
@@ -51,6 +56,13 @@ export function TransitiveCard() {
     () => placeLabels(viewport.zoom, scale, progress),
     [viewport.zoom, scale, progress],
   );
+
+  // Engine scenario demos replace the live map with a crafted SVG schematic
+  // that isolates one ported gap (see transitive/scenarios.tsx). `key` resets
+  // the explorer's before/after control state when the scenario changes.
+  if (scenario !== LIVE_SCENARIO_ID) {
+    return <ScenarioExplorer key={scenario} scenarioId={scenario} />;
+  }
 
   return (
     <div className="relative h-full w-full">

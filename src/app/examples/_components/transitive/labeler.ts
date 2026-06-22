@@ -201,13 +201,20 @@ export function placeLabels(
       kind: "place",
     });
   }
+  // when two stops are merged at the schematic (coincident on screen), only one
+  // should carry a label — otherwise the combined node shows two overlapping names
+  const labelledPx: Array<{ x: number; y: number }> = [];
   for (const s of stops) {
     // hide minor (non-hub) stop labels when zoomed far out
     if (!s.isHub && scale < 1.2) continue;
+    const px = projectToPixels(s.pos, mpp);
+    const r = vertexRadius(s.isHub, scale);
+    if (labelledPx.some((p) => Math.hypot(p.x - px.x, p.y - px.y) < r * 2)) continue;
+    labelledPx.push(px);
     anchors.push({
       id: s.stop_id,
       center: s.pos,
-      radius: vertexRadius(s.isHub, scale),
+      radius: r,
       text: s.stop_name,
       fontSize: STOP_FONT(scale),
       priority: s.isHub ? 1 : 2,

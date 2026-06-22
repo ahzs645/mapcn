@@ -19,18 +19,17 @@
  */
 
 import { patternGeometry, transitiveData, walkSegments } from "./data";
+import { computeLaneOffsets } from "./engine/bundle";
 import { lerpLngLat } from "./styler";
-import type { EdgeGroup, LngLat, RenderedEdge, Stop } from "./types";
+import type { EdgeGroup, LngLat, RenderedEdge } from "./types";
 
-/** Gap (px) between sibling lines on top of their stroke width. */
-export const LANE_GAP_PX = 4;
+/** Gap (px) between sibling lines on top of their stroke width. The source
+ * bundles parallel lanes tight against each other, so keep this small. */
+export const LANE_GAP_PX = 1;
 
 const WALK_COLOR = "#59d5ea";
 
 const routeById = new Map(transitiveData.routes.map((r) => [r.route_id, r]));
-const stopById = new Map<string, Stop>(
-  transitiveData.stops.map((s) => [s.stop_id, s]),
-);
 
 function widthScaleForRoute(routeType: number): number {
   return routeType === 1 ? 1 : 0.7;
@@ -98,51 +97,6 @@ function buildEdgeGroups(edges: RenderedEdge[]): EdgeGroup[] {
 }
 
 /**
- * Perpendicular position of an edge's schematic midpoint relative to the group
- * centerline — used to order lanes so neighbouring routes keep their spatial
- * order instead of flipping across the centerline.
- */
-function perpendicularProjection(edge: RenderedEdge, group: EdgeGroup): number {
-  const fromStop = stopById.get(group.from_stop_id);
-  const toStop = stopById.get(group.to_stop_id);
-  if (!fromStop || !toStop) return 0;
-
-  const dLon = toStop.stop_lon - fromStop.stop_lon;
-  const dLat = toStop.stop_lat - fromStop.stop_lat;
-  const px = dLat;
-  const py = -dLon;
-
-  const mid = edge.schematic[Math.floor(edge.schematic.length / 2)];
-  const relLon = mid[0] - fromStop.stop_lon;
-  const relLat = mid[1] - fromStop.stop_lat;
-  return relLon * px + relLat * py;
-}
-
-/**
- * For each corridor, order the parallel pattern edges and assign symmetric lane
- * indices (e.g. -0.5 / +0.5 for two lanes). The actual pixel offset is computed
- * at render time so spacing tracks line width and zoom.
- */
-function applyLaneOffsets(groups: EdgeGroup[]): void {
-  for (const group of groups) {
-    if (group.edges.length === 1) {
-      group.edges[0].offset = 0;
-      continue;
-    }
-    const sorted = [...group.edges].sort(
-      (a, b) =>
-        perpendicularProjection(a, group) - perpendicularProjection(b, group),
-    );
-    const n = sorted.length;
-    sorted.forEach((edge, i) => {
-      const laneIndex = i - (n - 1) / 2;
-      const sameDirection = edge.from_stop_id === group.from_stop_id;
-      edge.offset = laneIndex * (sameDirection ? 1 : -1);
-    });
-  }
-}
-
-/**
  * Collapse the parallel members of each corridor onto a single shared
  * centerline (point-wise mean of their schematic coords). After this, lane
  * separation comes purely from `line-offset`, so a shared station marker sits on
@@ -204,8 +158,13 @@ function buildWalkEdges(): RenderedEdge[] {
 
 const transitEdges = buildTransitEdges();
 export const edgeGroups = buildEdgeGroups(transitEdges);
-applyLaneOffsets(edgeGroups);
+// Blue/Orange share a corridor → collapse onto one centerline so they're
+// collinear (then the bundler fans them into lanes). Red is a separate corridor
+// but its schematic is already authored collinear with the trunk.
 collapseToCenterlines(edgeGroups);
+// Alignment bundling (apply2DOffsets port): assign per-end lane indices across
+// ALL routes, so collinear ends — Red + Orange + Blue into Metro Center — bundle.
+computeLaneOffsets(transitEdges);
 
 const walkEdges = buildWalkEdges();
 export const renderedEdges: RenderedEdge[] = [...transitEdges, ...walkEdges];
@@ -305,6 +264,11 @@ function buildStopLayout(): Map<string, StopLayout> {
     const role: StopRole =
       corridorDegree >= 2 ? "hub" : corridorDegree === 1 ? "terminal" : "stop";
 
+    // a transfer hub's pill must span every route passing through it, including
+    // ones that run in their own offset lane (e.g. Red over the Orange/Blue trunk
+    // at Metro Center), so size by route count, not just the widest corridor.
+    if (role === "hub") laneSpan = Math.max(laneSpan, routeCount);
+
     layout.set(stop.stop_id, {
       stop_id: stop.stop_id,
       stop_name: stop.stop_name,
@@ -354,18 +318,73 @@ function buildPlaceLayout(): Map<string, PlaceLayout> {
         nearest = s;
       }
     }
-    const schematic: LngLat = nearest
-      ? [
-          nearest.schematic[0] + (geo[0] - nearest.geo[0]),
-          nearest.schematic[1] + (geo[1] - nearest.geo[1]),
-        ]
-      : geo;
+    // COLLAPSE: at the schematic (progress 0) the place sits exactly on its
+    // anchor stop — like the source merging nearby points into one — so the
+    // walk is zero-length and hidden. It morphs out to its true geographic
+    // offset as progress → 1, where the walk distance becomes realistic.
+    const schematic: LngLat = nearest ? [nearest.schematic[0], nearest.schematic[1]] : geo;
     layout.set(place.place_id, { place_id: place.place_id, geo, schematic });
   }
   return layout;
 }
 
 export const placeLayout = buildPlaceLayout();
+
+// ── place → stop walk connectors ──────────────────────────────────────────────
+// The source draws a dashed walk from each origin/destination place to its
+// boarding stop. Derive them from the journey WALK segments that touch a place.
+
+export function placeWalkId(placeId: string, stopId: string): string {
+  return `walk-${placeId}-${stopId}`;
+}
+
+function buildPlaceWalks(): RenderedEdge[] {
+  const seen = new Set<string>();
+  const walks: RenderedEdge[] = [];
+  for (const journey of transitiveData.journeys) {
+    for (const seg of journey.segments) {
+      if (seg.type !== "WALK") continue;
+      const place =
+        seg.from.type === "PLACE"
+          ? seg.from
+          : seg.to.type === "PLACE"
+            ? seg.to
+            : null;
+      const stop =
+        seg.from.type === "STOP"
+          ? seg.from
+          : seg.to.type === "STOP"
+            ? seg.to
+            : null;
+      if (!place || !stop) continue;
+      const id = placeWalkId(place.place_id, stop.stop_id);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const pl = placeLayout.get(place.place_id);
+      const st = stopLayout.get(stop.stop_id);
+      if (!pl || !st) continue;
+      walks.push({
+        edge_id: id,
+        pattern_id: id,
+        route_id: "WALK",
+        from_stop_id: stop.stop_id,
+        to_stop_id: stop.stop_id,
+        geo: [pl.geo, st.geo],
+        schematic: [pl.schematic, st.schematic],
+        anchors: [0, 1],
+        offset: 0,
+        width: 0.6,
+        color: WALK_COLOR,
+        mode: "walk",
+        dashArray: [0.1, 1.6],
+        placeWalk: true,
+      });
+    }
+  }
+  return walks;
+}
+
+renderedEdges.push(...buildPlaceWalks());
 
 // ── intermediate station dots ────────────────────────────────────────────────
 // Small dots strung along each corridor between the named stops, like the
@@ -418,3 +437,73 @@ export function placePosition(place: PlaceLayout, progress: number): LngLat {
 export function dotPosition(dot: DotVertex, progress: number): LngLat {
   return lerpLngLat(dot.schematic, dot.geo, progress);
 }
+
+// ── rounded corners ───────────────────────────────────────────────────────────
+// transitive.js renders each elbow as a large smooth arc (its `cornerRadius`),
+// which is what gives the schematic its signature look. MapLibre's line-join only
+// rounds by half the stroke width, so we fillet the polyline ourselves: at each
+// bend, cut back `radius` metres along both segments and sweep a quadratic arc
+// between the cut points. Worked in metres (lng scaled by cos lat) so corners read
+// as circular on screen rather than squashed.
+
+const CORNER_RADIUS_M = 230;
+const CORNER_SAMPLES = 8;
+
+function metresBetween(a: LngLat, b: LngLat): number {
+  const lat = ((a[1] + b[1]) / 2) * (Math.PI / 180);
+  const dx = (b[0] - a[0]) * 111320 * Math.cos(lat);
+  const dy = (b[1] - a[1]) * 111320;
+  return Math.hypot(dx, dy);
+}
+
+function stepToward(from: LngLat, to: LngLat, dMetres: number): LngLat {
+  const len = metresBetween(from, to);
+  if (len === 0) return [from[0], from[1]];
+  const f = dMetres / len;
+  return [from[0] + (to[0] - from[0]) * f, from[1] + (to[1] - from[1]) * f];
+}
+
+function quad(p0: LngLat, p1: LngLat, p2: LngLat, t: number): LngLat {
+  const u = 1 - t;
+  return [
+    u * u * p0[0] + 2 * u * t * p1[0] + t * t * p2[0],
+    u * u * p0[1] + 2 * u * t * p1[1] + t * t * p2[1],
+  ];
+}
+
+export function roundCorners(coords: LngLat[], radiusMetres: number): LngLat[] {
+  if (radiusMetres <= 0 || coords.length < 3) return coords;
+  const out: LngLat[] = [coords[0]];
+  for (let i = 1; i < coords.length - 1; i++) {
+    const a = coords[i - 1];
+    const v = coords[i];
+    const b = coords[i + 1];
+    const lenA = metresBetween(a, v);
+    const lenB = metresBetween(v, b);
+    // skip near-collinear points — no visible corner to round
+    if (lenA === 0 || lenB === 0) {
+      out.push(v);
+      continue;
+    }
+    const ux = (v[0] - a[0]) / lenA;
+    const uy = (v[1] - a[1]) / lenA;
+    const wx = (b[0] - v[0]) / lenB;
+    const wy = (b[1] - v[1]) / lenB;
+    if (ux * wx + uy * wy > 0.999) {
+      out.push(v);
+      continue;
+    }
+    const d = Math.min(radiusMetres, lenA / 2, lenB / 2);
+    const p1 = stepToward(v, a, d);
+    const p2 = stepToward(v, b, d);
+    out.push(p1);
+    for (let s = 1; s < CORNER_SAMPLES; s++) {
+      out.push(quad(p1, v, p2, s / CORNER_SAMPLES));
+    }
+    out.push(p2);
+  }
+  out.push(coords[coords.length - 1]);
+  return out;
+}
+
+export { CORNER_RADIUS_M };

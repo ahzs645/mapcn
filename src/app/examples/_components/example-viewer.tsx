@@ -113,6 +113,11 @@ import {
   type TimelineWindowSize,
 } from "./timeline-card";
 import { TransitiveCard } from "./transitive-card";
+import {
+  LIVE_SCENARIO_ID,
+  SCENARIOS,
+  getScenario,
+} from "./transitive/scenarios";
 // ── Defense scenarios ──────────────────────────────────────────────
 import { DefenseAirDefenseCard } from "./defense-air-defense-card";
 import { DefenseArtilleryCard } from "./defense-artillery-card";
@@ -381,6 +386,8 @@ function InfoPanel({
   onShowCloseControlChange,
   timelineStyle,
   onTimelineStyleChange,
+  transitiveScenario,
+  onTransitiveScenarioChange,
 }: {
   example: ExampleMeta;
   timelineGranularity?: TimelineGranularity;
@@ -399,8 +406,15 @@ function InfoPanel({
   onShowCloseControlChange?: (show: boolean) => void;
   timelineStyle?: TimelineMapStyleKey;
   onTimelineStyleChange?: (style: TimelineMapStyleKey) => void;
+  transitiveScenario?: string;
+  onTransitiveScenarioChange?: (scenario: string) => void;
 }) {
   const { prev, next } = getAdjacentExamples(example.slug);
+  const showTransitiveScenarios =
+    example.slug === "transitive" &&
+    transitiveScenario !== undefined &&
+    onTransitiveScenarioChange;
+  const activeScenario = getScenario(transitiveScenario ?? LIVE_SCENARIO_ID);
   const showTimelineStyle = example.slug === "timeline" && timelineStyle && onTimelineStyleChange;
   const showTimelineControlStyle =
     example.slug === "timeline" && timelineControlStyle && onTimelineControlStyleChange;
@@ -430,6 +444,55 @@ function InfoPanel({
         <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
           {example.description}
         </p>
+
+        {showTransitiveScenarios && (
+          <div className="mt-6">
+            <div className="text-xs font-medium text-foreground mb-2">
+              Scenario
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {[
+                {
+                  id: LIVE_SCENARIO_ID,
+                  name: "Live network",
+                  gaps: [] as string[],
+                  blurb:
+                    "The morphing DC schematic on a real MapLibre map — alignment bundling baked into the live geometry.",
+                },
+                ...SCENARIOS,
+              ].map((sc) => {
+                const selected = transitiveScenario === sc.id;
+                return (
+                  <button
+                    key={sc.id}
+                    type="button"
+                    onClick={() => onTransitiveScenarioChange(sc.id)}
+                    className={cn(
+                      "rounded-md border px-3 py-2 text-left transition-colors cursor-pointer",
+                      selected
+                        ? "border-primary/50 bg-primary/10 text-foreground"
+                        : "border-border/50 bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                    )}
+                  >
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-medium">{sc.name}</span>
+                      {sc.gaps.length > 0 && (
+                        <span className="text-[10px] font-medium text-muted-foreground">
+                          {sc.gaps.join(" ")}
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {activeScenario && (
+              <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+                {activeScenario.blurb}
+              </p>
+            )}
+          </div>
+        )}
 
         {showTimelineControlStyle && (
           <div className="mt-6">
@@ -641,6 +704,7 @@ export function ExampleViewer({ slug }: { slug: string }) {
   const [showBucketCounts, setShowBucketCounts] = useState(true);
   const [showStats, setShowStats] = useState(true);
   const [showCloseControl, setShowCloseControl] = useState(true);
+  const [transitiveScenario, setTransitiveScenario] = useState(LIVE_SCENARIO_ID);
   const example = getExampleBySlug(slug);
   const Component = componentMap[slug];
 
@@ -674,6 +738,8 @@ export function ExampleViewer({ slug }: { slug: string }) {
             onShowCloseControlChange={setShowCloseControl}
             timelineStyle={timelineStyle}
             onTimelineStyleChange={setTimelineStyle}
+            transitiveScenario={transitiveScenario}
+            onTransitiveScenarioChange={setTransitiveScenario}
           />
         </div>
 
@@ -709,6 +775,8 @@ export function ExampleViewer({ slug }: { slug: string }) {
                 showStats={showStats}
                 showCloseControl={showCloseControl}
               />
+            ) : slug === "transitive" ? (
+              <TransitiveCard scenario={transitiveScenario} />
             ) : (
               <Component />
             )}
