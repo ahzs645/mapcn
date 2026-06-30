@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo } from "react";
 import type MapLibreGL from "maplibre-gl";
 
 import { useMap } from "@/registry/map";
@@ -18,14 +18,28 @@ const SOURCE_ID = "old-maps-footprints";
 const FILL_ID = "old-maps-footprints-fill";
 const LINE_ID = "old-maps-footprints-line";
 
-// Opacity / width ramps are theme-independent; only the hues come from tokens.
+// OldMapsOnline palette — red for the active sheet, amber on hover, sepia ink
+// for the rest. Hard-coded so the explorer keeps its own identity.
+const RED = "#ab1000";
+const AMBER = "#e7903a";
+const INK = "#675c44";
+
+const stateColor: MapLibreGL.ExpressionSpecification = [
+  "match",
+  ["get", "state"],
+  "selected",
+  RED,
+  "hovered",
+  AMBER,
+  INK,
+];
 const fillOpacity: MapLibreGL.ExpressionSpecification = [
   "match",
   ["get", "state"],
   "selected",
   0.22,
   "hovered",
-  0.14,
+  0.16,
   0.05,
 ];
 const lineWidth: MapLibreGL.ExpressionSpecification = [
@@ -43,54 +57,9 @@ const lineOpacity: MapLibreGL.ExpressionSpecification = [
   "selected",
   1,
   "hovered",
-  0.85,
+  0.9,
   0.4,
 ];
-
-const FALLBACK_COLORS = { primary: "rgb(38, 38, 38)", muted: "rgb(115, 115, 115)" };
-
-/**
- * Resolves mapcn's CSS design tokens to concrete `rgb()` strings that MapLibre
- * can parse, and refreshes them whenever the theme (the `.dark` class or the
- * system preference) changes — so footprint colors track the active theme.
- */
-function readTokenColors() {
-  if (typeof document === "undefined") return FALLBACK_COLORS;
-  const probe = document.createElement("span");
-  probe.style.cssText = "position:absolute;visibility:hidden;pointer-events:none";
-  document.body.appendChild(probe);
-  const read = (expr: string) => {
-    probe.style.color = "rgb(0, 0, 0)";
-    probe.style.color = expr;
-    return getComputedStyle(probe).color || "rgb(0, 0, 0)";
-  };
-  const colors = {
-    primary: read("var(--primary)"),
-    muted: read("var(--muted-foreground)"),
-  };
-  probe.remove();
-  return colors;
-}
-
-function useTokenColors() {
-  const [colors, setColors] = useState(FALLBACK_COLORS);
-  useEffect(() => {
-    const update = () => setColors(readTokenColors());
-    update();
-    const observer = new MutationObserver(update);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class", "style"],
-    });
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    mediaQuery.addEventListener("change", update);
-    return () => {
-      observer.disconnect();
-      mediaQuery.removeEventListener("change", update);
-    };
-  }, []);
-  return colors;
-}
 
 /** Draws coverage rectangles for each historical map sheet on the basemap. */
 export function MapFootprints({
@@ -101,30 +70,11 @@ export function MapFootprints({
   onHoverMap,
 }: MapFootprintsProps) {
   const { map, isLoaded } = useMap();
-  const colors = useTokenColors();
 
   const data = useMemo(
     () => footprintCollection(maps, selectedMapId, hoveredMapId),
     [maps, selectedMapId, hoveredMapId],
   );
-
-  // Hue is selected/hovered → primary, otherwise the muted neutral token.
-  const colorExpression = useMemo<MapLibreGL.ExpressionSpecification>(
-    () => [
-      "match",
-      ["get", "state"],
-      "selected",
-      colors.primary,
-      "hovered",
-      colors.primary,
-      colors.muted,
-    ],
-    [colors],
-  );
-
-  // Keep the latest color expression available to layer (re)creation.
-  const colorRef = useRef(colorExpression);
-  colorRef.current = colorExpression;
 
   // Create the source + layers, and re-create them if the style reloads
   // (e.g. on a light/dark theme switch, which discards custom layers).
@@ -140,7 +90,7 @@ export function MapFootprints({
           id: FILL_ID,
           type: "fill",
           source: SOURCE_ID,
-          paint: { "fill-color": colorRef.current, "fill-opacity": fillOpacity },
+          paint: { "fill-color": stateColor, "fill-opacity": fillOpacity },
         });
       }
       if (!map.getLayer(LINE_ID)) {
@@ -150,7 +100,7 @@ export function MapFootprints({
           source: SOURCE_ID,
           layout: { "line-join": "round" },
           paint: {
-            "line-color": colorRef.current,
+            "line-color": stateColor,
             "line-width": lineWidth,
             "line-opacity": lineOpacity,
           },
@@ -182,17 +132,6 @@ export function MapFootprints({
       | undefined;
     source?.setData(data);
   }, [isLoaded, map, data]);
-
-  // Re-apply token-derived colors when the theme changes.
-  useEffect(() => {
-    if (!isLoaded || !map) return;
-    if (map.getLayer(FILL_ID)) {
-      map.setPaintProperty(FILL_ID, "fill-color", colorExpression);
-    }
-    if (map.getLayer(LINE_ID)) {
-      map.setPaintProperty(LINE_ID, "line-color", colorExpression);
-    }
-  }, [isLoaded, map, colorExpression]);
 
   // Interactions: clicking a footprint selects it, hovering highlights it.
   useEffect(() => {

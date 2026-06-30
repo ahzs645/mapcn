@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useRef } from "react";
 import {
   ChevronDown,
   ChevronLeft,
@@ -21,20 +22,37 @@ type OldMapsTimelineProps = {
   onHoverMap?: (mapId: string | null) => void;
 };
 
-function clampYear(year: number) {
-  return Math.min(timelineBounds.max, Math.max(timelineBounds.min, year));
-}
+// OldMapsOnline palette — kept as literals so the timeline owns its look.
+const RED = "#ab1000";
+const INK = "#675c44";
 
 const YEAR_WIDTH = 10;
-const TIMELINE_YEARS = timelineBounds.max - timelineBounds.min + 1;
-const STRIP_WIDTH = TIMELINE_YEARS * YEAR_WIDTH;
+const MIN = timelineBounds.min;
+const MAX = timelineBounds.max;
+const SPAN = MAX - MIN;
+const STRIP_WIDTH = SPAN * YEAR_WIDTH;
 
-function yearToOffset(year: number) {
-  return (year - timelineBounds.min) * YEAR_WIDTH;
+// Vertical anchors, measured from the bottom of the timeline (px).
+const BASELINE = 26;
+const LABEL_LEVELS = [46, 70, 94];
+
+function clampYear(year: number) {
+  return Math.min(MAX, Math.max(MIN, year));
 }
 
-function mapCountNearYear(maps: HistoricalMapRecord[], year: number) {
-  return maps.filter((map) => Math.abs(map.year - year) <= 18).length;
+function yearToOffset(year: number) {
+  return (year - MIN) * YEAR_WIDTH;
+}
+
+/** A tiny Mexican tricolour standing in for OldMapsOnline's country flags. */
+function MiniFlag() {
+  return (
+    <span className="flex h-[9px] w-[13px] overflow-hidden rounded-[1px] border border-black/20 shadow-sm">
+      <span className="flex-1 bg-[#006847]" />
+      <span className="flex-1 bg-white" />
+      <span className="flex-1 bg-[#ce1126]" />
+    </span>
+  );
 }
 
 export function OldMapsTimeline({
@@ -47,198 +65,249 @@ export function OldMapsTimeline({
   onSelectMap,
   onHoverMap,
 }: OldMapsTimelineProps) {
-  const selectedMap = maps.find((map) => map.id === selectedMapId);
-  const currentOffset = yearToOffset(year);
-  const years = Array.from(
-    { length: TIMELINE_YEARS },
-    (_, index) => timelineBounds.min + index,
-  );
-  const decadeLabels = years.filter((sliceYear) => sliceYear % 50 === 0);
+  const dragRef = useRef<{ x: number; year: number } | null>(null);
 
-  function updateYearFromPointer(clientX: number, element: HTMLDivElement) {
-    const rect = element.getBoundingClientRect();
-    const yearOffset = (clientX - rect.left - rect.width / 2) / YEAR_WIDTH;
-    onYearChange(clampYear(Math.round(year + yearOffset)));
+  const currentOffset = yearToOffset(year);
+
+  const years = useMemo(
+    () => Array.from({ length: SPAN + 1 }, (_, index) => MIN + index),
+    [],
+  );
+
+  // Stable label rows: sort by year, then stagger across three heights.
+  const labelled = useMemo(() => {
+    return [...maps]
+      .sort((a, b) => a.year - b.year)
+      .map((map, index) => ({
+        map,
+        level: LABEL_LEVELS[index % LABEL_LEVELS.length],
+      }));
+  }, [maps]);
+
+  const sortedByYear = useMemo(
+    () => [...maps].sort((a, b) => a.year - b.year),
+    [maps],
+  );
+  const prevMap = [...sortedByYear].reverse().find((map) => map.year < year);
+  const nextMap = sortedByYear.find((map) => map.year > year);
+
+  function startDrag(event: React.PointerEvent<HTMLDivElement>) {
+    dragRef.current = { x: event.clientX, year };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+  function moveDrag(event: React.PointerEvent<HTMLDivElement>) {
+    if (!dragRef.current) return;
+    const dx = event.clientX - dragRef.current.x;
+    onYearChange(clampYear(Math.round(dragRef.current.year - dx / YEAR_WIDTH)));
+  }
+  function endDrag() {
+    dragRef.current = null;
   }
 
   return (
     <div
       className={cn(
-        "absolute right-0 bottom-0 left-0 z-20 h-[176px] md:bottom-[30px] md:h-[136px]",
+        "absolute inset-x-0 bottom-0 z-20 h-[156px] select-none",
         className,
       )}
     >
-      <div className="from-background via-background/60 pointer-events-none absolute inset-0 bg-gradient-to-t to-transparent" />
+      {/* Parchment fade — kept constant across themes so the OldMapsOnline
+          ruler stays readable on both light and dark basemaps. */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,#fdfaf2_0%,#fdfaf2_38%,rgba(253,250,242,0.85)_62%,rgba(253,250,242,0)_100%)]" />
 
-      <div className="group bg-primary absolute top-3 left-1/2 z-20 flex -translate-x-1/2 items-center rounded-lg shadow-[0_2px_5px_rgba(0,0,0,0.15)] md:top-0">
-        <button
-          type="button"
-          aria-label="Previous year"
-          onClick={() => onYearChange(clampYear(year - 1))}
-          className="text-primary-foreground/80 hover:text-primary-foreground grid h-[36px] w-[28px] place-items-center opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
-        >
-          <ChevronUp className="size-4" />
-        </button>
-        <input
-          aria-label="Selected year"
-          type="number"
-          min={timelineBounds.min}
-          max={timelineBounds.max}
-          inputMode="numeric"
-          value={year}
-          onChange={(event) => {
-            const nextYear = Number(event.target.value);
-            if (Number.isFinite(nextYear)) onYearChange(clampYear(nextYear));
-          }}
-          className="bg-background text-foreground h-9 w-[66px] [appearance:textfield] rounded-lg text-center text-lg font-medium outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-        />
-        <button
-          type="button"
-          aria-label="Next year"
-          onClick={() => onYearChange(clampYear(year + 1))}
-          className="text-primary-foreground/80 hover:text-primary-foreground grid h-[36px] w-[28px] place-items-center opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
-        >
-          <ChevronDown className="size-4" />
-        </button>
-      </div>
-
-      <div className="pointer-events-none absolute right-0 bottom-0 left-0 z-10 h-[112px] md:h-[104px]">
-        <div
-          className="absolute top-[18px] flex -translate-x-1/2 items-center md:top-[17px]"
-          style={{
-            left: `calc(50% + ${yearToOffset(selectedMap?.year ?? year) - currentOffset}px)`,
-          }}
-        >
-          <button
-            type="button"
-            aria-label="Previous map"
-            onClick={() => onYearChange(clampYear(year - 1))}
-            className="bg-primary text-primary-foreground pointer-events-auto grid size-8 place-items-center rounded-full opacity-0 shadow-sm transition-opacity hover:opacity-100 focus:opacity-100"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <button
-            type="button"
-            aria-label="Next map"
-            onClick={() => onYearChange(clampYear(year + 1))}
-            className="bg-primary text-primary-foreground pointer-events-auto grid size-8 place-items-center rounded-full opacity-0 shadow-sm transition-opacity hover:opacity-100 focus:opacity-100"
-          >
-            <ChevronRight className="size-4" />
-          </button>
-        </div>
-      </div>
-
+      {/* Centre guide connecting the year flag to the handle. */}
       <div
-        className="absolute right-0 bottom-0 left-0 z-[2] h-[112px] cursor-grab overflow-hidden px-[50%] select-none [mask:linear-gradient(90deg,rgba(0,0,0,0)_0%,#000_7.5%,#000_92.5%,rgba(0,0,0,0)_100%)] active:cursor-grabbing md:h-[104px]"
-        onPointerDown={(event) => {
-          updateYearFromPointer(event.clientX, event.currentTarget);
-          event.currentTarget.setPointerCapture(event.pointerId);
-        }}
-        onPointerMove={(event) => {
-          if (event.buttons !== 1) return;
-          updateYearFromPointer(event.clientX, event.currentTarget);
-        }}
+        className="pointer-events-none absolute left-1/2 w-px -translate-x-1/2"
+        style={{ bottom: BASELINE, height: 78, backgroundColor: `${RED}33` }}
+      />
+
+      {/* Draggable ruler with ticks, year labels and map flags. */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-[120px] cursor-grab touch-none overflow-hidden px-[50%] [mask:linear-gradient(90deg,rgba(0,0,0,0)_0%,#000_6%,#000_94%,rgba(0,0,0,0)_100%)] active:cursor-grabbing"
+        onPointerDown={startDrag}
+        onPointerMove={moveDrag}
+        onPointerUp={endDrag}
+        onPointerLeave={endDrag}
       >
         <div
-          className="relative h-full transition-transform duration-300 ease-out"
+          className="relative h-full transition-transform duration-200 ease-out"
           style={{
             width: STRIP_WIDTH,
             transform: `translateX(${-currentOffset}px)`,
           }}
         >
-          {years.map((sliceYear) => {
-            const count = mapCountNearYear(maps, sliceYear);
-            const major = sliceYear % 50 === 0;
-            const bold = sliceYear % 100 === 0;
+          <div
+            className="absolute left-0"
+            style={{
+              bottom: BASELINE,
+              width: STRIP_WIDTH,
+              height: 1,
+              backgroundColor: `${INK}66`,
+            }}
+          />
 
+          {years.map((tickYear) => {
+            const major = tickYear % 50 === 0;
+            const medium = tickYear % 10 === 0;
             return (
               <div
-                key={sliceYear}
-                className="absolute bottom-[52px] h-[30px] md:bottom-12"
-                style={{ left: yearToOffset(sliceYear), width: YEAR_WIDTH }}
+                key={tickYear}
+                className="absolute"
+                style={{ left: yearToOffset(tickYear), bottom: BASELINE }}
               >
                 <div
-                  className={cn(
-                    "bg-muted-foreground/40 absolute bottom-0 left-0 w-px",
-                    major && "bg-muted-foreground/70 h-5",
-                    bold && "bg-foreground h-6",
-                    !major && !bold && "h-[7px]",
-                  )}
+                  style={{
+                    width: 1,
+                    height: major ? 16 : medium ? 9 : 5,
+                    backgroundColor: major ? INK : `${INK}99`,
+                  }}
                 />
-                {count ? (
-                  <div
-                    className={cn(
-                      "bg-primary absolute bottom-0 left-0 w-[6px] origin-bottom rounded-t-sm opacity-40 transition-transform duration-500",
-                      Math.abs(sliceYear - year) <= 10 && "opacity-90",
-                    )}
-                    style={{
-                      height: 30,
-                      transform: `scale3d(1, ${Math.min(1, count / 4)}, 1)`,
-                    }}
-                  />
+                {major ? (
+                  <span
+                    className="absolute top-[18px] -translate-x-1/2 text-xs tabular-nums"
+                    style={{ color: INK }}
+                  >
+                    {tickYear}
+                  </span>
                 ) : null}
               </div>
             );
           })}
 
-          {decadeLabels.map((tick) => (
-            <button
-              key={tick}
-              type="button"
-              onClick={() => onYearChange(tick)}
-              className="text-muted-foreground hover:text-foreground absolute bottom-0 w-[42px] -translate-x-[21px] text-sm tabular-nums transition-colors"
-              style={{ left: yearToOffset(tick) }}
-            >
-              {tick}
-            </button>
-          ))}
-
-          {maps.map((map) => {
-            const isSelected = map.id === selectedMapId;
-            const isHovered = !isSelected && map.id === hoveredMapId;
+          {labelled.map(({ map, level }) => {
+            const selected = map.id === selectedMapId;
+            const hovered = map.id === hoveredMapId;
+            const distance = Math.abs(map.year - year);
+            const opacity = selected
+              ? 1
+              : Math.max(0.4, 1 - distance / 70);
             return (
               <button
                 key={map.id}
                 type="button"
                 aria-label={`${map.title}, ${map.year}`}
+                onPointerDown={(event) => event.stopPropagation()}
                 onClick={(event) => {
                   event.stopPropagation();
                   onSelectMap(map.id);
                 }}
-                onPointerDown={(event) => event.stopPropagation()}
                 onPointerEnter={() => onHoverMap?.(map.id)}
                 onPointerLeave={() => onHoverMap?.(null)}
-                className={cn(
-                  "border-background absolute bottom-[39px] -translate-x-1/2 rounded-full border-2 transition-transform hover:scale-110",
-                  isSelected
-                    ? "bg-background ring-primary z-10 size-[34px] cursor-grab shadow-md ring-[10px] active:cursor-grabbing"
-                    : isHovered
-                      ? "bg-primary/70 z-[5] size-4 shadow-md"
-                      : "bg-muted-foreground size-3 shadow-sm",
-                )}
-                style={{ left: yearToOffset(map.year) }}
-              />
+                className="absolute flex -translate-x-1/2 flex-col items-center gap-0.5"
+                style={{ left: yearToOffset(map.year), bottom: level, opacity }}
+              >
+                <span
+                  className="absolute top-full left-1/2 w-px -translate-x-1/2"
+                  style={{
+                    height: level - BASELINE,
+                    backgroundColor: selected ? RED : `${INK}59`,
+                  }}
+                />
+                <MiniFlag />
+                <span
+                  className={cn(
+                    "max-w-[92px] truncate text-[10px] leading-tight font-medium",
+                    (selected || hovered) && "font-semibold",
+                  )}
+                  style={{ color: selected ? RED : INK }}
+                >
+                  {map.place}
+                </span>
+                <span
+                  className="text-[10px] leading-none tabular-nums"
+                  style={{ color: selected ? RED : `${INK}cc` }}
+                >
+                  {map.year}
+                </span>
+              </button>
             );
           })}
         </div>
       </div>
 
+      {/* Position handle with previous / next map arrows (fixed at centre). */}
+      <div
+        className="absolute left-1/2 z-20 flex -translate-x-1/2 items-center gap-2"
+        style={{ bottom: BASELINE - 14 }}
+      >
+        <button
+          type="button"
+          aria-label="Previous map"
+          disabled={!prevMap}
+          onClick={() => prevMap && onSelectMap(prevMap.id)}
+          className="grid size-7 place-items-center rounded-full text-white shadow-sm transition disabled:opacity-30"
+          style={{ backgroundColor: RED }}
+        >
+          <ChevronLeft className="size-4" />
+        </button>
+        <span
+          className="size-7 rounded-full border-[3px] bg-white shadow-md"
+          style={{ borderColor: RED }}
+        />
+        <button
+          type="button"
+          aria-label="Next map"
+          disabled={!nextMap}
+          onClick={() => nextMap && onSelectMap(nextMap.id)}
+          className="grid size-7 place-items-center rounded-full text-white shadow-sm transition disabled:opacity-30"
+          style={{ backgroundColor: RED }}
+        >
+          <ChevronRight className="size-4" />
+        </button>
+      </div>
+
+      {/* Centred year flag with step arrows and a downward pointer. */}
+      <div className="absolute top-0 left-1/2 z-30 flex -translate-x-1/2 flex-col items-center">
+        <div
+          className="flex flex-col items-center rounded-md px-3 py-1 shadow-[0_3px_8px_rgba(0,0,0,0.25)]"
+          style={{ backgroundColor: RED }}
+        >
+          <button
+            type="button"
+            aria-label="Increase year"
+            onClick={() => onYearChange(clampYear(year + 1))}
+            className="-mb-1 text-white/70 transition-colors hover:text-white"
+          >
+            <ChevronUp className="size-4" />
+          </button>
+          <input
+            aria-label="Selected year"
+            type="number"
+            min={MIN}
+            max={MAX}
+            inputMode="numeric"
+            value={year}
+            onChange={(event) => {
+              const next = Number(event.target.value);
+              if (Number.isFinite(next)) onYearChange(clampYear(next));
+            }}
+            className="w-[60px] [appearance:textfield] bg-transparent text-center text-lg font-semibold text-white outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          />
+          <button
+            type="button"
+            aria-label="Decrease year"
+            onClick={() => onYearChange(clampYear(year - 1))}
+            className="-mt-1 text-white/70 transition-colors hover:text-white"
+          >
+            <ChevronDown className="size-4" />
+          </button>
+        </div>
+        <div
+          className="size-0 border-x-[7px] border-t-[8px] border-x-transparent"
+          style={{ borderTopColor: RED }}
+        />
+      </div>
+
       <input
         aria-label="Timeline year"
         type="range"
-        min={timelineBounds.min}
-        max={timelineBounds.max}
+        min={MIN}
+        max={MAX}
         step={timelineBounds.step}
         value={year}
         onChange={(event) => onYearChange(Number(event.target.value))}
-        className="pointer-events-none absolute right-0 bottom-0 left-0 z-[1] h-[112px] opacity-0 md:h-[104px]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[120px] opacity-0"
       />
-
-      {selectedMap ? (
-        <div className="bg-background/95 ring-border pointer-events-none absolute bottom-[154px] left-1/2 hidden max-w-[260px] -translate-x-1/2 truncate rounded-md px-3 py-1.5 text-xs shadow-sm ring-1 backdrop-blur sm:block md:bottom-[118px]">
-          <span className="font-medium">{selectedMap.title}</span>
-        </div>
-      ) : null}
     </div>
   );
 }
