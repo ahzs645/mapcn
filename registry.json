@@ -170,9 +170,9 @@
       "name": "old-maps-timeline",
       "type": "registry:block",
       "title": "Old Maps Timeline",
-      "description": "MapLibre historical map explorer with an OldMapsOnline-inspired bottom timeline control.",
+      "description": "MapLibre historical map explorer recreating the OldMapsOnline experience: a bottom timeline, a linked results sidebar, and map coverage footprints that all stay in sync on hover and selection.",
       "dependencies": ["lucide-react"],
-      "registryDependencies": ["@mapcn/map", "button"],
+      "registryDependencies": ["@mapcn/map"],
       "files": [
         {
           "path": "src/registry/blocks/old-maps-timeline/page.tsx",
@@ -188,6 +188,21 @@
           "path": "src/registry/blocks/old-maps-timeline/components/old-maps-timeline.tsx",
           "type": "registry:component",
           "target": "app/old-maps/components/old-maps-timeline.tsx"
+        },
+        {
+          "path": "src/registry/blocks/old-maps-timeline/components/results-sidebar.tsx",
+          "type": "registry:component",
+          "target": "app/old-maps/components/results-sidebar.tsx"
+        },
+        {
+          "path": "src/registry/blocks/old-maps-timeline/components/map-thumbnail.tsx",
+          "type": "registry:component",
+          "target": "app/old-maps/components/map-thumbnail.tsx"
+        },
+        {
+          "path": "src/registry/blocks/old-maps-timeline/components/map-footprints.tsx",
+          "type": "registry:component",
+          "target": "app/old-maps/components/map-footprints.tsx"
         }
       ],
       "categories": ["history", "timeline"],

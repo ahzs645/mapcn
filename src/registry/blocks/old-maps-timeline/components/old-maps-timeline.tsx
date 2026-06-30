@@ -14,9 +14,11 @@ type OldMapsTimelineProps = {
   year: number;
   maps: HistoricalMapRecord[];
   selectedMapId: string;
+  hoveredMapId?: string | null;
   className?: string;
   onYearChange: (year: number) => void;
   onSelectMap: (mapId: string) => void;
+  onHoverMap?: (mapId: string | null) => void;
 };
 
 function clampYear(year: number) {
@@ -39,9 +41,11 @@ export function OldMapsTimeline({
   year,
   maps,
   selectedMapId,
+  hoveredMapId,
   className,
   onYearChange,
   onSelectMap,
+  onHoverMap,
 }: OldMapsTimelineProps) {
   const selectedMap = maps.find((map) => map.id === selectedMapId);
   const currentOffset = yearToOffset(year);
@@ -189,25 +193,33 @@ export function OldMapsTimeline({
             </button>
           ))}
 
-          {maps.map((map) => (
-            <button
-              key={map.id}
-              type="button"
-              aria-label={`${map.title}, ${map.year}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                onSelectMap(map.id);
-              }}
-              onPointerDown={(event) => event.stopPropagation()}
-              className={cn(
-                "absolute bottom-[39px] -translate-x-1/2 rounded-full border-2 border-white transition-transform hover:scale-110",
-                map.id === selectedMapId
-                  ? "z-10 size-[34px] cursor-grab bg-white shadow-md ring-[10px] ring-[#ab1000] active:cursor-grabbing"
-                  : "size-3 bg-[#a39b8b] shadow-sm",
-              )}
-              style={{ left: yearToOffset(map.year) }}
-            />
-          ))}
+          {maps.map((map) => {
+            const isSelected = map.id === selectedMapId;
+            const isHovered = !isSelected && map.id === hoveredMapId;
+            return (
+              <button
+                key={map.id}
+                type="button"
+                aria-label={`${map.title}, ${map.year}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSelectMap(map.id);
+                }}
+                onPointerDown={(event) => event.stopPropagation()}
+                onPointerEnter={() => onHoverMap?.(map.id)}
+                onPointerLeave={() => onHoverMap?.(null)}
+                className={cn(
+                  "absolute bottom-[39px] -translate-x-1/2 rounded-full border-2 border-white transition-transform hover:scale-110",
+                  isSelected
+                    ? "z-10 size-[34px] cursor-grab bg-white shadow-md ring-[10px] ring-[#ab1000] active:cursor-grabbing"
+                    : isHovered
+                      ? "z-[5] size-4 bg-[#e7903a] shadow-md"
+                      : "size-3 bg-[#a39b8b] shadow-sm",
+                )}
+                style={{ left: yearToOffset(map.year) }}
+              />
+            );
+          })}
         </div>
       </div>
 
