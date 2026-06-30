@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { timelineBounds, type HistoricalMapRecord } from "../data";
@@ -278,20 +273,24 @@ export function OldMapsTimeline({
         </button>
       </div>
 
-      {/* Centred year flag with step arrows and a downward pointer. */}
-      <div className="absolute top-0 left-1/2 z-30 flex -translate-x-1/2 flex-col items-center">
+      {/* Centred year flag — the step arrows float separately above and below
+          the card, as on OldMapsOnline. */}
+      <div className="absolute top-0 left-1/2 z-30 flex -translate-x-1/2 flex-col items-center gap-1.5">
+        <button
+          type="button"
+          aria-label="Increase year"
+          onClick={() => onYearChange(clampYear(year + 1))}
+          className="flex justify-center px-2 py-0.5 opacity-90 transition-opacity hover:opacity-100"
+        >
+          <span
+            className="size-0 border-x-[8px] border-b-[9px] border-x-transparent"
+            style={{ borderBottomColor: RED }}
+          />
+        </button>
         <div
-          className="flex flex-col items-center rounded-md px-3 py-1 shadow-[0_3px_8px_rgba(0,0,0,0.25)]"
+          className="rounded-md px-3 py-1 shadow-[0_3px_8px_rgba(0,0,0,0.25)]"
           style={{ backgroundColor: RED }}
         >
-          <button
-            type="button"
-            aria-label="Increase year"
-            onClick={() => onYearChange(clampYear(year + 1))}
-            className="-mb-1 text-white/70 transition-colors hover:text-white"
-          >
-            <ChevronUp className="size-4" />
-          </button>
           <input
             aria-label="Selected year"
             type="number"
@@ -303,21 +302,20 @@ export function OldMapsTimeline({
               const next = Number(event.target.value);
               if (Number.isFinite(next)) onYearChange(clampYear(next));
             }}
-            className="w-[60px] [appearance:textfield] bg-transparent text-center text-lg font-semibold text-white outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="w-[62px] [appearance:textfield] bg-transparent text-center text-lg font-semibold text-white outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
-          <button
-            type="button"
-            aria-label="Decrease year"
-            onClick={() => onYearChange(clampYear(year - 1))}
-            className="-mt-1 text-white/70 transition-colors hover:text-white"
-          >
-            <ChevronDown className="size-4" />
-          </button>
         </div>
-        <div
-          className="size-0 border-x-[7px] border-t-[8px] border-x-transparent"
-          style={{ borderTopColor: RED }}
-        />
+        <button
+          type="button"
+          aria-label="Decrease year"
+          onClick={() => onYearChange(clampYear(year - 1))}
+          className="flex justify-center px-2 py-0.5 opacity-90 transition-opacity hover:opacity-100"
+        >
+          <span
+            className="size-0 border-x-[8px] border-t-[9px] border-x-transparent"
+            style={{ borderTopColor: RED }}
+          />
+        </button>
       </div>
 
       <input
