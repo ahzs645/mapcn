@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   ChevronLeft,
@@ -23,8 +23,11 @@ type OldMapsTimelineProps = {
 };
 
 // OldMapsOnline palette — kept as literals so the timeline owns its look.
+// The red stays constant; the sepia ink lightens on dark basemaps so the
+// ruler keeps reading without a glowing parchment panel.
 const RED = "#ab1000";
-const INK = "#675c44";
+const INK_LIGHT = "#675c44";
+const INK_DARK = "#c9bfa9";
 
 const YEAR_WIDTH = 10;
 const MIN = timelineBounds.min;
@@ -42,6 +45,23 @@ function clampYear(year: number) {
 
 function yearToOffset(year: number) {
   return (year - MIN) * YEAR_WIDTH;
+}
+
+/** Tracks the active theme via the `.dark` class toggled by the host app. */
+function useIsDark() {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const check = () =>
+      setDark(document.documentElement.classList.contains("dark"));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+  return dark;
 }
 
 /** A tiny Mexican tricolour standing in for OldMapsOnline's country flags. */
@@ -66,6 +86,8 @@ export function OldMapsTimeline({
   onHoverMap,
 }: OldMapsTimelineProps) {
   const dragRef = useRef<{ x: number; year: number } | null>(null);
+  const isDark = useIsDark();
+  const INK = isDark ? INK_DARK : INK_LIGHT;
 
   const currentOffset = yearToOffset(year);
 
@@ -111,9 +133,9 @@ export function OldMapsTimeline({
         className,
       )}
     >
-      {/* Parchment fade — kept constant across themes so the OldMapsOnline
-          ruler stays readable on both light and dark basemaps. */}
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,#fdfaf2_0%,#fdfaf2_38%,rgba(253,250,242,0.85)_62%,rgba(253,250,242,0)_100%)]" />
+      {/* Parchment fade in light mode, a matching warm-dark fade in dark mode,
+          so the ruler stays readable without a glowing light panel. */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,#fdfaf2_0%,#fdfaf2_38%,rgba(253,250,242,0.85)_62%,rgba(253,250,242,0)_100%)] dark:bg-[linear-gradient(0deg,#1a1714_0%,#1a1714_38%,rgba(26,23,20,0.85)_62%,rgba(26,23,20,0)_100%)]" />
 
       {/* Centre guide connecting the year flag to the handle. */}
       <div
