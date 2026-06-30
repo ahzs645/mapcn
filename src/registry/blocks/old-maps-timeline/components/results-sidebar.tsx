@@ -52,7 +52,7 @@ export function ResultsSidebar({
       <div className="space-y-3 border-b p-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="grid size-7 place-items-center rounded-md bg-[#ab1000] text-white">
+            <span className="bg-primary text-primary-foreground grid size-7 place-items-center rounded-md">
               <MapPin className="size-4" />
             </span>
             <div className="leading-tight">
@@ -122,13 +122,13 @@ export function ResultsSidebar({
                     className={cn(
                       "flex w-full gap-3 border-l-2 border-transparent px-4 py-3 text-left transition-colors",
                       hovered && !selected && "bg-muted/60",
-                      selected && "border-l-[#ab1000] bg-[#ab1000]/10",
+                      selected && "border-l-primary bg-primary/10",
                     )}
                   >
                     <span
                       className={cn(
                         "size-14 shrink-0 overflow-hidden rounded-sm border shadow-sm",
-                        selected && "ring-2 ring-[#ab1000]",
+                        selected && "ring-primary ring-2",
                       )}
                     >
                       <MapThumbnail seed={map.id} />

@@ -68,14 +68,14 @@ export function OldMapsTimeline({
         className,
       )}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(360deg,#ffffff_0%,rgba(255,255,255,0.53)_60.31%,rgba(255,255,255,0)_90.02%)] dark:bg-[linear-gradient(360deg,#4d4533_0%,rgba(77,69,51,0.53)_60.31%,rgba(77,69,51,0.03)_90.02%)]" />
+      <div className="from-background via-background/60 pointer-events-none absolute inset-0 bg-gradient-to-t to-transparent" />
 
-      <div className="group absolute top-3 left-1/2 z-20 flex -translate-x-1/2 items-center rounded-lg bg-[#ab1000] shadow-[0_2px_5px_rgba(0,0,0,0.15)] md:top-0">
+      <div className="group bg-primary absolute top-3 left-1/2 z-20 flex -translate-x-1/2 items-center rounded-lg shadow-[0_2px_5px_rgba(0,0,0,0.15)] md:top-0">
         <button
           type="button"
           aria-label="Previous year"
           onClick={() => onYearChange(clampYear(year - 1))}
-          className="grid h-[36px] w-[28px] place-items-center text-white/90 opacity-0 transition-opacity group-hover:opacity-100 hover:text-white focus:opacity-100"
+          className="text-primary-foreground/80 hover:text-primary-foreground grid h-[36px] w-[28px] place-items-center opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
         >
           <ChevronUp className="size-4" />
         </button>
@@ -90,13 +90,13 @@ export function OldMapsTimeline({
             const nextYear = Number(event.target.value);
             if (Number.isFinite(nextYear)) onYearChange(clampYear(nextYear));
           }}
-          className="h-9 w-[66px] [appearance:textfield] rounded-lg bg-white text-center text-lg font-medium text-[#3e2b13] outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="bg-background text-foreground h-9 w-[66px] [appearance:textfield] rounded-lg text-center text-lg font-medium outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
         <button
           type="button"
           aria-label="Next year"
           onClick={() => onYearChange(clampYear(year + 1))}
-          className="grid h-[36px] w-[28px] place-items-center text-white/90 opacity-0 transition-opacity group-hover:opacity-100 hover:text-white focus:opacity-100"
+          className="text-primary-foreground/80 hover:text-primary-foreground grid h-[36px] w-[28px] place-items-center opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
         >
           <ChevronDown className="size-4" />
         </button>
@@ -113,7 +113,7 @@ export function OldMapsTimeline({
             type="button"
             aria-label="Previous map"
             onClick={() => onYearChange(clampYear(year - 1))}
-            className="pointer-events-auto grid size-8 place-items-center rounded-full bg-[#ab1000] text-white opacity-0 shadow-sm transition-opacity hover:opacity-100 focus:opacity-100"
+            className="bg-primary text-primary-foreground pointer-events-auto grid size-8 place-items-center rounded-full opacity-0 shadow-sm transition-opacity hover:opacity-100 focus:opacity-100"
           >
             <ChevronLeft className="size-4" />
           </button>
@@ -121,7 +121,7 @@ export function OldMapsTimeline({
             type="button"
             aria-label="Next map"
             onClick={() => onYearChange(clampYear(year + 1))}
-            className="pointer-events-auto grid size-8 place-items-center rounded-full bg-[#ab1000] text-white opacity-0 shadow-sm transition-opacity hover:opacity-100 focus:opacity-100"
+            className="bg-primary text-primary-foreground pointer-events-auto grid size-8 place-items-center rounded-full opacity-0 shadow-sm transition-opacity hover:opacity-100 focus:opacity-100"
           >
             <ChevronRight className="size-4" />
           </button>
@@ -159,17 +159,17 @@ export function OldMapsTimeline({
               >
                 <div
                   className={cn(
-                    "absolute bottom-0 left-0 w-px bg-[#675c44]/40",
-                    major && "h-5 bg-[#675c44]/75",
-                    bold && "h-6 bg-[#675c44]",
+                    "bg-muted-foreground/40 absolute bottom-0 left-0 w-px",
+                    major && "bg-muted-foreground/70 h-5",
+                    bold && "bg-foreground h-6",
                     !major && !bold && "h-[7px]",
                   )}
                 />
                 {count ? (
                   <div
                     className={cn(
-                      "absolute bottom-0 left-0 w-[6px] origin-bottom rounded-t-sm bg-[#e7903a] opacity-50 transition-transform duration-500",
-                      Math.abs(sliceYear - year) <= 10 && "opacity-100",
+                      "bg-primary absolute bottom-0 left-0 w-[6px] origin-bottom rounded-t-sm opacity-40 transition-transform duration-500",
+                      Math.abs(sliceYear - year) <= 10 && "opacity-90",
                     )}
                     style={{
                       height: 30,
@@ -186,7 +186,7 @@ export function OldMapsTimeline({
               key={tick}
               type="button"
               onClick={() => onYearChange(tick)}
-              className="absolute bottom-0 w-[42px] -translate-x-[21px] text-sm text-[#675c44] tabular-nums transition-colors hover:text-[#3e2b13]"
+              className="text-muted-foreground hover:text-foreground absolute bottom-0 w-[42px] -translate-x-[21px] text-sm tabular-nums transition-colors"
               style={{ left: yearToOffset(tick) }}
             >
               {tick}
@@ -209,12 +209,12 @@ export function OldMapsTimeline({
                 onPointerEnter={() => onHoverMap?.(map.id)}
                 onPointerLeave={() => onHoverMap?.(null)}
                 className={cn(
-                  "absolute bottom-[39px] -translate-x-1/2 rounded-full border-2 border-white transition-transform hover:scale-110",
+                  "border-background absolute bottom-[39px] -translate-x-1/2 rounded-full border-2 transition-transform hover:scale-110",
                   isSelected
-                    ? "z-10 size-[34px] cursor-grab bg-white shadow-md ring-[10px] ring-[#ab1000] active:cursor-grabbing"
+                    ? "bg-background ring-primary z-10 size-[34px] cursor-grab shadow-md ring-[10px] active:cursor-grabbing"
                     : isHovered
-                      ? "z-[5] size-4 bg-[#e7903a] shadow-md"
-                      : "size-3 bg-[#a39b8b] shadow-sm",
+                      ? "bg-primary/70 z-[5] size-4 shadow-md"
+                      : "bg-muted-foreground size-3 shadow-sm",
                 )}
                 style={{ left: yearToOffset(map.year) }}
               />

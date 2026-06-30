@@ -176,15 +176,15 @@ export default function Page() {
                     >
                       <span
                         className={cn(
-                          "grid place-items-center rounded-full border-2 border-white shadow-md transition-all",
+                          "border-background grid place-items-center rounded-full border-2 shadow-md transition-all",
                           selected
-                            ? "size-9 bg-[#ab1000]"
+                            ? "bg-primary size-9"
                             : hovered
-                              ? "size-7 bg-[#e7903a]"
-                              : "size-5 bg-[#675c44]",
+                              ? "bg-primary/70 size-7"
+                              : "bg-muted-foreground size-5",
                         )}
                       >
-                        <span className="size-2 rounded-full bg-white" />
+                        <span className="bg-background size-2 rounded-full" />
                       </span>
                     </span>
                   </MarkerContent>
